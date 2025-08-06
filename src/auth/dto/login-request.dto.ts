@@ -18,12 +18,12 @@ export class LoginRequest {
   password: string;
 }
 
-export class LoginUserGoogleDto {
+export class LoginGoogleRequestDto {
   @IsString()
   token: string;
 }
 
-export class LoginUserFacebookDto {
+export class LoginFacebookRequestDto {
   @IsString()
   token: string;
 

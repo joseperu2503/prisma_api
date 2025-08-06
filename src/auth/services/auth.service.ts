@@ -9,9 +9,9 @@ import * as bcrypt from 'bcrypt';
 import { DataSource, Repository } from 'typeorm';
 import { AuthResponse } from '../dto/auth-response.dto';
 import {
+  LoginFacebookRequestDto,
+  LoginGoogleRequestDto,
   LoginRequest,
-  LoginUserFacebookDto,
-  LoginUserGoogleDto,
 } from '../dto/login-request.dto';
 import { RegisterRequest } from '../dto/register-request.dto';
 import { UserEntity } from '../entities/user.entity';
@@ -31,9 +31,9 @@ export class AuthService {
     private readonly googleService: GoogleService,
   ) {}
 
-  async register(registerUserDto: RegisterRequest): Promise<AuthResponse> {
+  async register(params: RegisterRequest): Promise<AuthResponse> {
     return this.dataSource.transaction(async (manager) => {
-      const { password, ...userData } = registerUserDto;
+      const { password, ...userData } = params;
 
       const exist = await manager.findOne(UserEntity, {
         where: { email: userData.email },
@@ -52,8 +52,8 @@ export class AuthService {
     });
   }
 
-  async login(loginUserDto: LoginRequest) {
-    const { password, email } = loginUserDto;
+  async login(params: LoginRequest) {
+    const { password, email } = params;
 
     const user = await this.userRepository.findOne({
       where: { email },
@@ -72,8 +72,8 @@ export class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  async loginGoogle(loginUserDto: LoginUserGoogleDto): Promise<AuthResponse> {
-    const { token } = loginUserDto;
+  async loginGoogle(params: LoginGoogleRequestDto): Promise<AuthResponse> {
+    const { token } = params;
 
     const email = await this.googleService.validateToken(token);
 
@@ -92,10 +92,8 @@ export class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  async loginFacebook(
-    loginUserDto: LoginUserFacebookDto,
-  ): Promise<AuthResponse> {
-    const { token: accessToken, platform } = loginUserDto;
+  async loginFacebook(params: LoginFacebookRequestDto): Promise<AuthResponse> {
+    const { token: accessToken, platform } = params;
 
     const email: string | null = await this.facebookService.validateToken(
       accessToken,

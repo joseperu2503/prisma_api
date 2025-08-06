@@ -4,12 +4,12 @@ import {
   ApiExcludeEndpoint,
   ApiOperation,
   ApiResponse,
-  ApiTags
+  ApiTags,
 } from '@nestjs/swagger';
 import {
+  LoginFacebookRequestDto,
+  LoginGoogleRequestDto,
   LoginRequest,
-  LoginUserFacebookDto,
-  LoginUserGoogleDto,
 } from '../dto/login-request.dto';
 import { RegisterRequest } from '../dto/register-request.dto';
 import { AuthService } from '../services/auth.service';
@@ -54,19 +54,19 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized - Invalid email or password.',
   })
-  login(@Body() loginUserDto: LoginRequest) {
-    return this.authService.login(loginUserDto);
+  login(@Body() request: LoginRequest) {
+    return this.authService.login(request);
   }
 
   @ApiExcludeEndpoint()
   @Post('login-google')
-  loginGoogle(@Body() loginUserDto: LoginUserGoogleDto) {
-    return this.authService.loginGoogle(loginUserDto);
+  loginGoogle(@Body() request: LoginGoogleRequestDto) {
+    return this.authService.loginGoogle(request);
   }
 
   @ApiExcludeEndpoint()
   @Post('login-facebook')
-  loginFacebook(@Body() loginUserDto: LoginUserFacebookDto) {
-    return this.authService.loginFacebook(loginUserDto);
+  loginFacebook(@Body() request: LoginFacebookRequestDto) {
+    return this.authService.loginFacebook(request);
   }
 }
