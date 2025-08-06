@@ -14,7 +14,6 @@ services:
     image: traceway_api_${ENV}
     networks:
       - traceway_net
-    restart: no
     env_file:
       - .env.${ENV}
 
@@ -29,8 +28,9 @@ services:
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+      PGPORT: ${DB_PORT}
     volumes:
-      - ./postgres:/var/lib/postgresql/data
+      - ./postgres/${ENV}:/var/lib/postgresql/data
 
 networks:
   traceway_net:
