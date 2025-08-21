@@ -7,13 +7,13 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { DataSource, Repository } from 'typeorm';
-import { AuthResponse } from '../dto/auth-response.dto';
+import { AuthResponseDto } from '../dto/auth-response.dto';
 import {
   LoginFacebookRequestDto,
   LoginGoogleRequestDto,
-  LoginRequest,
+  LoginRequestDto,
 } from '../dto/login-request.dto';
-import { RegisterRequest } from '../dto/register-request.dto';
+import { RegisterRequestDto } from '../dto/register-request.dto';
 import { UserEntity } from '../entities/user.entity';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { User } from '../models/user.model';
@@ -31,7 +31,7 @@ export class AuthService {
     private readonly googleService: GoogleService,
   ) {}
 
-  async register(params: RegisterRequest): Promise<AuthResponse> {
+  async register(params: RegisterRequestDto): Promise<AuthResponseDto> {
     return this.dataSource.transaction(async (manager) => {
       const { password, ...userData } = params;
 
@@ -52,7 +52,7 @@ export class AuthService {
     });
   }
 
-  async login(params: LoginRequest) {
+  async login(params: LoginRequestDto) {
     const { password, email } = params;
 
     const user = await this.userRepository.findOne({
@@ -72,7 +72,7 @@ export class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  async loginGoogle(params: LoginGoogleRequestDto): Promise<AuthResponse> {
+  async loginGoogle(params: LoginGoogleRequestDto): Promise<AuthResponseDto> {
     const { token } = params;
 
     const email = await this.googleService.validateToken(token);
@@ -92,7 +92,7 @@ export class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  async loginFacebook(params: LoginFacebookRequestDto): Promise<AuthResponse> {
+  async loginFacebook(params: LoginFacebookRequestDto): Promise<AuthResponseDto> {
     const { token: accessToken, platform } = params;
 
     const email: string | null = await this.facebookService.validateToken(
@@ -120,7 +120,7 @@ export class AuthService {
     return token;
   }
 
-  private buildAuthResponse(user: User): AuthResponse {
+  private buildAuthResponse(user: User): AuthResponseDto {
     return {
       user: {
         id: user.id,

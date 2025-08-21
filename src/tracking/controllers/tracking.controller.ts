@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
-import { JwtAuth } from 'src/auth/decorators/jwt-auth.decorator';
 import { User } from 'src/auth/models/user.model';
 import { CancelTrackingSessionRequest } from '../dto/cancel-tracking-session-request.dto';
 import { FinishTrackingSessionRequest } from '../dto/finish-tracking-session-request.dto';
@@ -12,7 +12,7 @@ export class TrackingController {
   constructor(private readonly trackingService: TrackingService) {}
 
   @Post('start')
-  @JwtAuth()
+  @Auth()
   async startTrackingSession(
     @GetUser() user: User,
     @Body() request: StartTrackingSessionRequest,
@@ -25,7 +25,7 @@ export class TrackingController {
   }
 
   @Post('finish')
-  @JwtAuth()
+  @Auth()
   async finishTrackingSession(
     @GetUser() user: User,
     @Body() request: FinishTrackingSessionRequest,
@@ -37,7 +37,7 @@ export class TrackingController {
   }
 
   @Post('cancel')
-  @JwtAuth()
+  @Auth()
   async cancelTrackingSession(
     @GetUser() user: User,
     @Body() request: CancelTrackingSessionRequest,
@@ -49,7 +49,7 @@ export class TrackingController {
   }
 
   @Get('current')
-  @JwtAuth()
+  @Auth()
   async getCurrentTrackingSession(@GetUser() user: User) {
     return this.trackingService.getCurrentTrackingSession(user.id);
   }

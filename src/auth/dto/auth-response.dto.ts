@@ -1,4 +1,4 @@
-export interface AuthResponse {
+export interface AuthResponseDto {
   user: {
     id: string;
     email: string;

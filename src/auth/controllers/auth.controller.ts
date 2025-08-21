@@ -9,9 +9,9 @@ import {
 import {
   LoginFacebookRequestDto,
   LoginGoogleRequestDto,
-  LoginRequest,
+  LoginRequestDto,
 } from '../dto/login-request.dto';
-import { RegisterRequest } from '../dto/register-request.dto';
+import { RegisterRequestDto } from '../dto/register-request.dto';
 import { AuthService } from '../services/auth.service';
 
 @ApiTags('Authentication')
@@ -26,13 +26,13 @@ export class AuthController {
       'Creates a new user account with email, password, name, surname, and phone.',
   })
   @ApiBody({
-    type: RegisterRequest,
+    type: RegisterRequestDto,
   })
   @ApiResponse({
     status: 201,
     description: 'User registered successfully.',
   })
-  register(@Body() registerUserDto: RegisterRequest) {
+  register(@Body() registerUserDto: RegisterRequestDto) {
     return this.authService.register(registerUserDto);
   }
 
@@ -44,7 +44,7 @@ export class AuthController {
       'Authenticates a user with their email and password, returning an access token.',
   })
   @ApiBody({
-    type: LoginRequest,
+    type: LoginRequestDto,
   })
   @ApiResponse({
     status: 200,
@@ -54,7 +54,7 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized - Invalid email or password.',
   })
-  login(@Body() request: LoginRequest) {
+  login(@Body() request: LoginRequestDto) {
     return this.authService.login(request);
   }
 

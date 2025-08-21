@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
-import { JwtAuth } from 'src/auth/decorators/jwt-auth.decorator';
 import { User } from 'src/auth/models/user.model';
 import { FindOrCreatePlaceRequest } from '../dto/find-or-create-place-request.dto';
 import { getSuggestionGeometryRequest } from '../dto/get-suggestion-geometry-request.dto';
@@ -18,7 +18,7 @@ export class PlacesController {
   ) {}
 
   @Post('find-or-create')
-  @JwtAuth()
+  @Auth()
   async findPlace(
     @GetUser() user: User,
     @Body() request: FindOrCreatePlaceRequest,
@@ -29,13 +29,13 @@ export class PlacesController {
   }
 
   @Get()
-  @JwtAuth()
+  @Auth()
   findAll(@GetUser() user: User) {
     return this.placesService.findAllByUser(user.id);
   }
 
   @Delete(':placeId')
-  @JwtAuth()
+  @Auth()
   async delete(@GetUser() user: User, @Param('placeId') placeId: string) {
     return this.userPlaceService.delete(user.id, placeId);
   }

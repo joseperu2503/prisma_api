@@ -1,8 +1,8 @@
-import { RegisterRequest } from 'src/auth/dto/register-request.dto';
+import { RegisterRequestDto } from 'src/auth/dto/register-request.dto';
 import { TrackingSessionStatusEnum } from 'src/common/enums/tracking-session-status.enum';
 
 interface SeedData {
-  users: RegisterRequest[];
+  users: RegisterRequestDto[];
   trackingSessionsStatuses: { id: string; name: string }[];
 }
 
