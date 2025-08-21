@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
-import { User } from 'src/auth/models/user.model';
+import { UserEntity } from 'src/auth/entities/user.entity';
 import { CancelTrackingSessionRequest } from '../dto/cancel-tracking-session-request.dto';
 import { FinishTrackingSessionRequest } from '../dto/finish-tracking-session-request.dto';
 import { StartTrackingSessionRequest } from '../dto/start-tracking-session-request.dto';
@@ -14,7 +14,7 @@ export class TrackingController {
   @Post('start')
   @Auth()
   async startTrackingSession(
-    @GetUser() user: User,
+    @GetUser() user: UserEntity,
     @Body() request: StartTrackingSessionRequest,
   ) {
     return await this.trackingService.startTrackingSession({
@@ -27,7 +27,7 @@ export class TrackingController {
   @Post('finish')
   @Auth()
   async finishTrackingSession(
-    @GetUser() user: User,
+    @GetUser() user: UserEntity,
     @Body() request: FinishTrackingSessionRequest,
   ) {
     return this.trackingService.finishTrackingSession(
@@ -39,7 +39,7 @@ export class TrackingController {
   @Post('cancel')
   @Auth()
   async cancelTrackingSession(
-    @GetUser() user: User,
+    @GetUser() user: UserEntity,
     @Body() request: CancelTrackingSessionRequest,
   ) {
     return this.trackingService.cancelTrackingSession(
@@ -50,7 +50,7 @@ export class TrackingController {
 
   @Get('current')
   @Auth()
-  async getCurrentTrackingSession(@GetUser() user: User) {
+  async getCurrentTrackingSession(@GetUser() user: UserEntity) {
     return this.trackingService.getCurrentTrackingSession(user.id);
   }
 }

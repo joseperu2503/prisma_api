@@ -16,7 +16,6 @@ import {
 import { RegisterRequestDto } from '../dto/register-request.dto';
 import { UserEntity } from '../entities/user.entity';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
-import { User } from '../models/user.model';
 import { FacebookService } from './facebook.service';
 import { GoogleService } from './google.service';
 
@@ -92,7 +91,9 @@ export class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  async loginFacebook(params: LoginFacebookRequestDto): Promise<AuthResponseDto> {
+  async loginFacebook(
+    params: LoginFacebookRequestDto,
+  ): Promise<AuthResponseDto> {
     const { token: accessToken, platform } = params;
 
     const email: string | null = await this.facebookService.validateToken(
@@ -120,7 +121,7 @@ export class AuthService {
     return token;
   }
 
-  private buildAuthResponse(user: User): AuthResponseDto {
+  private buildAuthResponse(user: UserEntity): AuthResponseDto {
     return {
       user: {
         id: user.id,
