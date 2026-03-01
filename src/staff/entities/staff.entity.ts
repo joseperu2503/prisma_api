@@ -1,34 +1,14 @@
-import { Person } from 'src/person/entities/person.entity';
 import {
-  Column,
   CreateDateColumn,
   Entity,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('users')
-export class User {
+@Entity('staff')
+export class Staff {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column('text', {
-    unique: true,
-  })
-  email: string;
-
-  @Column('text')
-  password: string;
-
-  @Column('bool', {
-    default: true,
-    name: 'is_active',
-  })
-  isActive: boolean;
-
-  @OneToOne(() => Person, (person) => person.user)
-  person: Person;
 
   @CreateDateColumn({
     type: 'timestamptz',

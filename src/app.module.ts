@@ -3,10 +3,11 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
-import { PlacesModule } from './places/places.module';
+import { PersonModule } from './person/person.module';
 import { SeedCommand } from './seed/seed.command';
 import { SeedModule } from './seed/seed.module';
-import { TrackingModule } from './tracking/tracking.module';
+import { StudentModule } from './student/student.module';
+import { TeacherModule } from './teacher/teacher.module';
 
 @Module({
   controllers: [AppController],
@@ -20,12 +21,13 @@ import { TrackingModule } from './tracking/tracking.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true,
     }),
     SeedModule,
     AuthModule,
-    PlacesModule,
-    TrackingModule,
+    PersonModule,
+    StudentModule,
+    TeacherModule,
   ],
   providers: [SeedCommand],
 })

@@ -2,7 +2,7 @@
 <img src="assets/icons/icon.png" width="150"  alt="logo">
 </p>
 
-# TraceWay API
+# Prisma API
 
 ## Installation
 
@@ -19,13 +19,13 @@ nano .env
 ## Start all services in development mode with Docker:
 
 ```bash
-docker compose -f docker-compose.dev.yml --env-file .env.dev -p traceway_api_dev up --build
+docker compose -f docker-compose.dev.yml --env-file .env.dev -p prisma_api_dev up --build
 ```
 
 ## Run the API in detached, production-ready mode:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.prod -p traceway_api_prod up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.prod -p prisma_api_prod up -d --build
 ```
 
 ## Running Migrations
@@ -33,7 +33,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod -p traceway_api_p
 1. Enter the running container:
 
 ```bash
-docker exec -it traceway_api sh
+docker exec -it prisma_api sh
 ```
 
 2. Execute pending migrations:

@@ -1,6 +1,5 @@
-import { Person } from 'src/person/entities/person.entity';
+import { User } from 'src/auth/entities/user.entity';
 import {
-  Column,
   CreateDateColumn,
   Entity,
   OneToOne,
@@ -8,27 +7,15 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('users')
-export class User {
+@Entity('people')
+export class Person {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('text', {
-    unique: true,
+  @OneToOne(() => User, (user) => user.person, {
+    nullable: true,
   })
-  email: string;
-
-  @Column('text')
-  password: string;
-
-  @Column('bool', {
-    default: true,
-    name: 'is_active',
-  })
-  isActive: boolean;
-
-  @OneToOne(() => Person, (person) => person.user)
-  person: Person;
+  user: User | null;
 
   @CreateDateColumn({
     type: 'timestamptz',

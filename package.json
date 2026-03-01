@@ -1,5 +1,5 @@
 {
-  "name": "traceway-api",
+  "name": "prisma-api",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -37,7 +37,6 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-socket.io": "^10.3.10",
-    "@nestjs/swagger": "^7.4.2",
     "@nestjs/typeorm": "^10.0.2",
     "@nestjs/websockets": "^10.3.10",
     "@types/moment": "^2.13.0",

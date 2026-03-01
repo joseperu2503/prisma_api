@@ -1,6 +1,6 @@
 services:
   api:
-    container_name: traceway_api_${ENV}
+    container_name: prisma_api_${ENV}
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -11,9 +11,9 @@ services:
       - '${SERVER_PORT}:${SERVER_PORT}'
     depends_on:
       - db
-    image: traceway_api_${ENV}
+    image: prisma_api_${ENV}
     networks:
-      - traceway_net
+      - prisma_net
     env_file:
       - .env.${ENV}
 
@@ -24,7 +24,7 @@ services:
     ports:
       - '${DB_EXPOSED_PORT}:${DB_PORT}'
     networks:
-      - traceway_net
+      - prisma_net
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
@@ -33,4 +33,4 @@ services:
       - ./postgres/${ENV}:/var/lib/postgresql/data
 
 networks:
-  traceway_net:
+  prisma_net:

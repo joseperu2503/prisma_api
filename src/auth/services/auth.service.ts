@@ -14,7 +14,7 @@ import {
   LoginRequestDto,
 } from '../dto/login-request.dto';
 import { RegisterRequestDto } from '../dto/register-request.dto';
-import { UserEntity } from '../entities/user.entity';
+import { User } from '../entities/user.entity';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { FacebookService } from './facebook.service';
 import { GoogleService } from './google.service';
@@ -22,8 +22,8 @@ import { GoogleService } from './google.service';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly dataSource: DataSource,
     private readonly facebookService: FacebookService,
@@ -34,14 +34,14 @@ export class AuthService {
     return this.dataSource.transaction(async (manager) => {
       const { password, ...userData } = params;
 
-      const exist = await manager.findOne(UserEntity, {
+      const exist = await manager.findOne(User, {
         where: { email: userData.email },
       });
       if (exist) {
         throw new BadRequestException('Email already exists');
       }
 
-      const user = manager.create(UserEntity, {
+      const user = manager.create(User, {
         ...userData,
         password: bcrypt.hashSync(password, 10),
       });
@@ -121,12 +121,12 @@ export class AuthService {
     return token;
   }
 
-  private buildAuthResponse(user: UserEntity): AuthResponseDto {
+  private buildAuthResponse(user: User): AuthResponseDto {
     return {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: 'John Doe',
       },
       token: this.getJwt({ id: user.id }),
     };
