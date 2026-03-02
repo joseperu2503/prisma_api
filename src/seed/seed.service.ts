@@ -2,17 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { AuthService } from 'src/auth/services/auth.service';
 import { DataSource } from 'typeorm';
 import { initialData } from './data/seed-data';
+import { DocumentTypeSeed } from './services/document-type.seed';
+import { GenderSeed } from './services/gender.seed';
 
 @Injectable()
 export class SeedService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly authService: AuthService,
+    private readonly documentTypeSeed: DocumentTypeSeed,
+    private readonly genderSeed: GenderSeed,
   ) {}
 
   async runSeed() {
-    // await this.dropAllTables();
+    await this.dropAllTables();
     // await this.userSeed();
+    await this.documentTypeSeed.run();
+    await this.genderSeed.run();
   }
 
   private async userSeed() {

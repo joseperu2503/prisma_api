@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -27,8 +28,12 @@ export class User {
   })
   isActive: boolean;
 
-  @OneToOne(() => Person, (person) => person.user)
+  @OneToOne(() => Person)
+  @JoinColumn({ name: 'person_id' })
   person: Person;
+
+  @Column('uuid', { name: 'person_id' })
+  personId: string;
 
   @CreateDateColumn({
     type: 'timestamptz',

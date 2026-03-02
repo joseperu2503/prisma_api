@@ -1,6 +1,10 @@
+import { Person } from 'src/person/entities/person.entity';
 import {
+  Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -9,6 +13,13 @@ import {
 export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @ManyToOne(() => Person)
+  @JoinColumn({ name: 'person_id' })
+  person: Person;
+
+  @Column('uuid', { name: 'person_id' })
+  personId: string;
 
   @CreateDateColumn({
     type: 'timestamptz',

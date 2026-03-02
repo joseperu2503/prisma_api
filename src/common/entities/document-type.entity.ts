@@ -1,13 +1,9 @@
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('document_types')
 export class DocumentType {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn()
+  id: string;
 
   @Column({ type: 'varchar', length: 100 })
   name: string;

@@ -56,8 +56,8 @@ export class Person {
   @JoinColumn({ name: 'gender_id' })
   gender: Gender | null;
 
-  @Column({ name: 'gender_id', type: 'integer', nullable: true })
-  genderId: number | null;
+  @Column({ name: 'gender_id', type: 'uuid', nullable: true })
+  genderId: string | null;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string | null;

@@ -1,9 +1,7 @@
 import { RegisterRequestDto } from 'src/auth/dto/register-request.dto';
-import { TrackingSessionStatusEnum } from 'src/common/enums/tracking-session-status.enum';
 
 interface SeedData {
   users: RegisterRequestDto[];
-  trackingSessionsStatuses: { id: string; name: string }[];
 }
 
 export const initialData: SeedData = {
@@ -27,20 +25,6 @@ export const initialData: SeedData = {
       email: 'juniorp2503@hotmail.com',
       name: 'Jose',
       password: 'Abc123',
-    },
-  ],
-  trackingSessionsStatuses: [
-    {
-      id: TrackingSessionStatusEnum.IN_PROGRESS,
-      name: 'In progress',
-    },
-    {
-      id: TrackingSessionStatusEnum.FINISHED,
-      name: 'Finished',
-    },
-    {
-      id: TrackingSessionStatusEnum.CANCELLED,
-      name: 'Cancelled',
     },
   ],
 };

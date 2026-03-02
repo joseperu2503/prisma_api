@@ -7,6 +7,6 @@ import { Gender } from './entities/gender.entity';
   controllers: [],
   providers: [],
   imports: [TypeOrmModule.forFeature([Gender, DocumentType])],
-  exports: [],
+  exports: [TypeOrmModule],
 })
 export class CommonModule {}
