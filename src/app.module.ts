@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
+import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
+import { CommonModule } from './common/common.module';
 import { PersonModule } from './person/person.module';
 import { SeedCommand } from './seed/seed.command';
 import { SeedModule } from './seed/seed.module';
@@ -28,6 +30,8 @@ import { TeacherModule } from './teacher/teacher.module';
     PersonModule,
     StudentModule,
     TeacherModule,
+    CommonModule,
+    AttendanceModule,
   ],
   providers: [SeedCommand],
 })
