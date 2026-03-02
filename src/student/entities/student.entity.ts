@@ -1,3 +1,4 @@
+import { User } from 'src/auth/entities/user.entity';
 import { Person } from 'src/person/entities/person.entity';
 import {
   Column,
@@ -20,6 +21,13 @@ export class Student {
 
   @Column('uuid', { name: 'person_id' })
   personId: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @Column('uuid', { name: 'user_id' })
+  userId: string;
 
   @CreateDateColumn({
     type: 'timestamptz',

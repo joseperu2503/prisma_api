@@ -50,6 +50,9 @@ export class Person {
   @Column({ name: 'birth_date', type: 'date', nullable: true })
   birthDate: Date | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  email: string;
+
   @ManyToOne(() => Gender, {
     nullable: true,
   })

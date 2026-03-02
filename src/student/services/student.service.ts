@@ -32,6 +32,7 @@ export class StudentService {
         genderId: registerStudentDto.genderId,
         phone: registerStudentDto.phone,
         address: registerStudentDto.address,
+        email: registerStudentDto.email,
       });
 
       const savedPerson: Person = await this.personRepository.save(person);
@@ -45,7 +46,6 @@ export class StudentService {
 
       //crear nuevo usuario
       const user = this.userRepository.create({
-        email: registerStudentDto.email,
         password: registerStudentDto.password,
         personId: savedPerson.id,
       });

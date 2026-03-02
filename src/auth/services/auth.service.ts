@@ -35,8 +35,13 @@ export class AuthService {
       const { password, ...userData } = params;
 
       const exist = await manager.findOne(User, {
-        where: { email: userData.email },
+        where: {
+          person: {
+            email: userData.email,
+          },
+        },
       });
+
       if (exist) {
         throw new BadRequestException('Email already exists');
       }
@@ -55,7 +60,7 @@ export class AuthService {
     const { password, email } = params;
 
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { person: { email } },
     });
 
     //si el usuario con el email no existe
@@ -81,7 +86,7 @@ export class AuthService {
     }
 
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { person: { email } },
     });
 
     if (!user) {
@@ -106,7 +111,7 @@ export class AuthService {
     }
 
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { person: { email } },
     });
 
     if (!user) {
@@ -125,7 +130,6 @@ export class AuthService {
     return {
       user: {
         id: user.id,
-        email: user.email,
         name: 'John Doe',
       },
       token: this.getJwt({ id: user.id }),
