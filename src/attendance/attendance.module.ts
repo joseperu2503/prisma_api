@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Student } from 'src/student/entities/student.entity';
 import { AttendanceController } from './controllers/attendance.controller';
-import { AttendanceStatus } from './entities/attendance-status.entity';
+import { AttendanceType } from './entities/attendance-type.entity';
 import { StudentAttendanceDay } from './entities/student-attendance-day.entity';
 import { StudentAttendanceDayLog } from './entities/student-attendance-log.entity';
 import { AttendanceService } from './services/attendance.service';
@@ -13,9 +14,10 @@ import { AttendanceService } from './services/attendance.service';
     TypeOrmModule.forFeature([
       StudentAttendanceDay,
       StudentAttendanceDayLog,
-      AttendanceStatus,
+      Student,
+      AttendanceType,
     ]),
   ],
-  exports: [],
+  exports: [TypeOrmModule],
 })
 export class AttendanceModule {}

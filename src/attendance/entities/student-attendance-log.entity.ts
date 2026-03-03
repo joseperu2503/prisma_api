@@ -7,27 +7,27 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { AttendanceType } from './attendance-type.entity';
 import { StudentAttendanceDay } from './student-attendance-day.entity';
-
-export enum StudentAttendanceDayLogType {
-  CHECK_IN = 'CHECK_IN',
-  CHECK_OUT = 'CHECK_OUT',
-}
 
 @Entity('student_attendance_day_logs')
 export class StudentAttendanceDayLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => StudentAttendanceDay, (day) => day.logs, { nullable: false })
+  @ManyToOne(() => StudentAttendanceDay, (day) => day.logs)
   @JoinColumn({ name: 'attendance_day_id' })
   attendanceDay: StudentAttendanceDay;
 
-  @Column({
-    type: 'enum',
-    enum: StudentAttendanceDayLogType,
-  })
-  type: StudentAttendanceDayLogType;
+  @Column('uuid', { name: 'attendance_day_id' })
+  attendanceDayId: string;
+
+  @ManyToOne(() => AttendanceType)
+  @JoinColumn({ name: 'type_id' })
+  type: AttendanceType;
+
+  @Column('uuid', { name: 'type_id' })
+  typeId: string;
 
   @Column({
     type: 'timestamptz',

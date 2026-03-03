@@ -1,6 +1,9 @@
-import { IsUUID } from 'class-validator';
+import { IsString, IsUUID } from 'class-validator';
 
-export class RegisterStudentRequestDto {
+export class RegisterStudentAttendanceRequestDto {
   @IsUUID()
   studentId: string;
+
+  @IsString()
+  type: string;
 }

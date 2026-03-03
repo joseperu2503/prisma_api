@@ -27,15 +27,15 @@ export class DocumentTypeSeed {
     const { id, name } = params;
 
     // Verificar si el registro ya existe
-    const existingCountry = await this.documentTypeRepository.findOne({
+    const isExist = await this.documentTypeRepository.findOne({
       where: { id },
     });
 
-    if (existingCountry) {
+    if (isExist) {
       // Actualizar el registro existente
-      existingCountry.name = name;
+      isExist.name = name;
 
-      return this.documentTypeRepository.save(existingCountry);
+      return this.documentTypeRepository.save(isExist);
     } else {
       // Crear un nuevo registro
       const newDocumentType = this.documentTypeRepository.create(params);

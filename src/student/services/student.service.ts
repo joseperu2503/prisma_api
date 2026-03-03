@@ -37,13 +37,6 @@ export class StudentService {
 
       const savedPerson: Person = await this.personRepository.save(person);
 
-      // Crear nuevo estudiante
-      const student = this.studentRepository.create({
-        personId: savedPerson.id,
-      });
-
-      const savedStudent = await this.studentRepository.save(student);
-
       //crear nuevo usuario
       const user = this.userRepository.create({
         password: registerStudentDto.password,
@@ -51,6 +44,14 @@ export class StudentService {
       });
 
       const savedUser = await this.userRepository.save(user);
+
+      // Crear nuevo estudiante
+      const student = this.studentRepository.create({
+        personId: savedPerson.id,
+        userId: savedUser.id,
+      });
+
+      const savedStudent = await this.studentRepository.save(student);
 
       return {
         success: true,

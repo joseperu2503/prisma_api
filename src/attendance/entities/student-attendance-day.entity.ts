@@ -9,7 +9,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AttendanceStatus } from './attendance-status.entity';
 import { StudentAttendanceDayLog } from './student-attendance-log.entity';
 
 @Entity('student_attendance_days')
@@ -17,16 +16,15 @@ export class StudentAttendanceDay {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Student, { nullable: false })
+  @ManyToOne(() => Student)
   @JoinColumn({ name: 'student_id' })
   student: Student;
 
-  @Column({ type: 'date' })
-  date: string;
+  @Column('uuid', { name: 'student_id' })
+  studentId: string;
 
-  @ManyToOne(() => AttendanceStatus)
-  @JoinColumn({ name: 'status_id' })
-  status: AttendanceStatus;
+  @Column({ type: 'date' })
+  date: Date;
 
   @OneToMany(() => StudentAttendanceDayLog, (log) => log.attendanceDay)
   logs: StudentAttendanceDayLog[];

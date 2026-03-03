@@ -25,13 +25,13 @@ export class GenderSeed {
     const { id, name } = params;
 
     // prefer lookup by primary id
-    const existing = await this.genderRepository.findOne({
+    const isExist = await this.genderRepository.findOne({
       where: { id },
     });
 
-    if (existing) {
-      existing.name = name;
-      return this.genderRepository.save(existing);
+    if (isExist) {
+      isExist.name = name;
+      return this.genderRepository.save(isExist);
     } else {
       const newGender = this.genderRepository.create(params);
       return this.genderRepository.save(newGender);
