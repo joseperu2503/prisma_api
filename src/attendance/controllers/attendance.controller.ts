@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { RegisterStudentAttendanceRequestDto } from '../dto/register-student-request.dto';
 import { AttendanceService } from '../services/attendance.service';
 
@@ -9,5 +9,10 @@ export class AttendanceController {
   @Post('register-student')
   registerStudent(@Body() request: RegisterStudentAttendanceRequestDto) {
     return this.attendanceService.registerStudent(request);
+  }
+
+  @Get('last-attendances-day')
+  lastAttendancesDay() {
+    return this.attendanceService.lastAttendancesDay();
   }
 }

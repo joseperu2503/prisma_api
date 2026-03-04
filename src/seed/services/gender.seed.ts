@@ -11,8 +11,8 @@ export class GenderSeed {
   ) {}
 
   genders = [
-    { id: 'male', name: 'Male' },
-    { id: 'female', name: 'Female' },
+    { id: 'male', name: 'Masculino' },
+    { id: 'female', name: 'Femenino' },
   ];
 
   async run() {

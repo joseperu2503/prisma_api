@@ -24,13 +24,13 @@ export class Person {
   })
   user: User | null;
 
-  @Column({ name: 'first_name', type: 'varchar', length: 100 })
+  @Column({ name: 'names', type: 'varchar', length: 100 })
   names: string;
 
-  @Column({ name: 'last_name', type: 'varchar', length: 100 })
+  @Column({ name: 'paternal_last_name', type: 'varchar', length: 100 })
   paternal_last_name: string;
 
-  @Column({ name: 'middle_name', type: 'varchar', length: 100 })
+  @Column({ name: 'maternal_last_name', type: 'varchar', length: 100 })
   maternal_last_name: string;
 
   @ManyToOne(() => DocumentType)

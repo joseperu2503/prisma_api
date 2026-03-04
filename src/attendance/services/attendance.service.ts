@@ -58,4 +58,43 @@ export class AttendanceService {
       message: 'Student attendance registered successfully',
     };
   }
+
+  lastAttendancesDay() {
+    //quiero retornar los ultimas 20 asistencias registradas, ordenadas por fecha de registro descendente
+
+    return this.studentAttendanceDayLogRepository.find({
+      order: {
+        markedAt: 'DESC',
+      },
+      take: 20,
+      relations: {
+        attendanceDay: {
+          student: {
+            person: true,
+          },
+        },
+        type: true,
+      },
+      select: {
+        id: true,
+        attendanceDay: {
+          id: true,
+          date: true,
+          student: {
+            id: true,
+            person: {
+              names: true,
+              paternal_last_name: true,
+              maternal_last_name: true,
+            },
+          },
+        },
+        markedAt: true,
+        type: {
+          id: true,
+          name: true,
+        },
+      },
+    });
+  }
 }
