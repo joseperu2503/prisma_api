@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
 import { Person } from 'src/person/entities/person.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
 import { Student } from '../entities/student.entity';
 
@@ -17,56 +17,61 @@ export class StudentService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(registerStudentDto: CreateStudentDto) {
-    try {
-      //crear nuevo persona
-      const person = this.personRepository.create({
-        names: registerStudentDto.names,
-        paternal_last_name: registerStudentDto.paternal_last_name,
-        maternal_last_name: registerStudentDto.maternal_last_name,
-        documentTypeId: registerStudentDto.documentTypeId,
-        documentNumber: registerStudentDto.documentNumber,
-        birthDate: registerStudentDto.birthDate,
-        genderId: registerStudentDto.genderId,
-        phone: registerStudentDto.phone,
-        address: registerStudentDto.address,
-        email: registerStudentDto.email,
-      });
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        // 1️⃣ Crear persona
+        const person = manager.create(Person, {
+          names: registerStudentDto.names,
+          paternal_last_name: registerStudentDto.paternalLastName,
+          maternal_last_name: registerStudentDto.maternalLastName,
+          documentTypeId: registerStudentDto.documentTypeId,
+          documentNumber: registerStudentDto.documentNumber,
+          birthDate: registerStudentDto.birthDate,
+          genderId: registerStudentDto.genderId,
+          phone: registerStudentDto.phone,
+          address: registerStudentDto.address,
+          email: registerStudentDto.email,
+        });
 
-      const savedPerson: Person = await this.personRepository.save(person);
+        const savedPerson = await manager.save(person);
 
-      //crear nuevo usuario
-      const user = this.userRepository.create({
-        password: registerStudentDto.password,
-        personId: savedPerson.id,
-      });
+        // 2️⃣ Crear usuario
+        const user = manager.create(User, {
+          password: registerStudentDto.password,
+          personId: savedPerson.id,
+        });
 
-      const savedUser = await this.userRepository.save(user);
+        const savedUser = await manager.save(user);
 
-      // Crear nuevo estudiante
-      const student = this.studentRepository.create({
-        personId: savedPerson.id,
-        userId: savedUser.id,
-      });
+        // 3️⃣ Crear estudiante
+        const student = manager.create(Student, {
+          personId: savedPerson.id,
+          userId: savedUser.id,
+        });
 
-      const savedStudent = await this.studentRepository.save(student);
+        await manager.save(student);
 
-      return {
-        success: true,
-        message: 'Student created successfully',
-      };
-    } catch (error) {
-      throw new HttpException(
-        {
-          success: false,
-          message: 'An error occurred while creating the student',
-          error: error.message,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+        return {
+          success: true,
+          message: 'Student created successfully',
+        };
+      } catch (error) {
+        // Si algo falla, automáticamente hace rollback
+        throw new HttpException(
+          {
+            success: false,
+            message: 'An error occurred while creating the student',
+            error: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    });
   }
 
   async findAll() {

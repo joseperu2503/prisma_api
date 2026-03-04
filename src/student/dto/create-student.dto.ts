@@ -1,19 +1,14 @@
-import {
-  IsDateString,
-  IsEmail,
-  IsOptional,
-  IsString
-} from 'class-validator';
+import { IsDateString, IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class CreateStudentDto {
   @IsString()
   names: string;
 
   @IsString()
-  paternal_last_name: string;
+  paternalLastName: string;
 
   @IsString()
-  maternal_last_name: string;
+  maternalLastName: string;
 
   @IsString()
   documentTypeId: string;
