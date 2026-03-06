@@ -1,5 +1,5 @@
 # Etapa para instalar las dependencias
-FROM node:18-alpine3.15 AS deps
+FROM node:20.19.5-alpine3.22 AS deps
 
 # Instalar dependencias necesarias (en caso de que sean requeridas como libc6-compat)
 RUN apk add --no-cache libc6-compat
@@ -16,7 +16,7 @@ RUN npm ci
 # ----------------------------------------------------------
 
 # Etapa de construcción (build)
-FROM node:18-alpine3.15 AS builder
+FROM node:20.19.5-alpine3.22 AS builder
 
 # Establecer el directorio de trabajo
 WORKDIR /usr/src/app
@@ -33,7 +33,7 @@ RUN npm run build
 # ----------------------------------------------------------
 
 # Etapa para producción (solo dependencias necesarias y código compilado)
-FROM node:18-alpine3.15 AS runner
+FROM node:20.19.5-alpine3.22 AS runner
 
 # Establecer el directorio de trabajo
 WORKDIR /usr/src/app
