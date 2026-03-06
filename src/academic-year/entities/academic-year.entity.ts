@@ -11,8 +11,8 @@ export class AcademicYear {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'year', type: 'int', unique: true })
-  year: number;
+  @Column({ name: 'year', type: 'varchar', unique: true })
+  year: string;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
