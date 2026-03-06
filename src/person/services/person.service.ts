@@ -15,6 +15,7 @@ export class PersonService {
   async generateQrPdf(documentNumbers: string[]): Promise<Buffer> {
     const people = await this.personRepository.find({
       where: { documentNumber: In(documentNumbers) },
+      relations: ['employees', 'students'],
     });
 
     if (!people.length) {
@@ -23,18 +24,21 @@ export class PersonService {
       );
     }
 
-    const doc = new PDFDocument({ size: 'A4', margin: 40 });
+    const doc: PDFKit.PDFDocument = new PDFDocument({ size: 'A4', margin: 20 });
     const buffers: any[] = [];
 
     doc.on('data', (chunk: Buffer) => buffers.push(chunk));
 
     const result = new Promise<Buffer>((resolve, reject) => {
-      doc.on('end', () => resolve(Buffer.concat(buffers)));
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        resolve(pdfBuffer);
+      });
       doc.on('error', reject);
     });
 
     const cardWidth = 250;
-    const cardHeight = 150;
+    const cardHeight = 250;
     const padding = 20;
 
     const cardsPerRow = 2;
@@ -43,6 +47,7 @@ export class PersonService {
     for (let i = 0; i < people.length; i++) {
       const person = people[i];
 
+      // nueva página cada 6 tarjetas
       if (i > 0 && i % cardsPerPage === 0) {
         doc.addPage();
       }
@@ -52,28 +57,50 @@ export class PersonService {
       const row = Math.floor(indexInPage / cardsPerRow);
       const col = indexInPage % cardsPerRow;
 
-      const x = 40 + col * (cardWidth + padding);
-      const y = 40 + row * (cardHeight + padding);
+      const x = 20 + col * (cardWidth + padding);
+      const y = 20 + row * (cardHeight + padding);
 
-      const fullName = `${person.names} ${person.paternalLastName} ${person.maternalLastName}`;
+      // Determine Role
+      let role = 'VISITANTE';
+      let headerColor = '#A5B4FC'; // Vibrant Muted Lavender for Visitor
+      let badgeColor = '#6366F1';
+      let titleColor = '#FFFFFF';
+
+      if (person.employees && person.employees.length > 0) {
+        role = 'COLABORADOR';
+        headerColor = '#3730A3'; // Vibrant Deep Indigo (Authority/Superiority)
+        badgeColor = '#1E3A8A';
+        titleColor = '#FFFFFF';
+      } else if (person.students && person.students.length > 0) {
+        role = 'ESTUDIANTE';
+        headerColor = '#0EA5E9'; // Vibrant Sky Blue (Junior/Energy)
+        badgeColor = '#0891B2';
+        titleColor = '#FFFFFF';
+      }
 
       /** CARD BACKGROUND **/
       doc.roundedRect(x, y, cardWidth, cardHeight, 10).fill('#F8FAFC');
 
-      /** BORDER **/
+      /** CARD BORDER **/
       doc
         .roundedRect(x, y, cardWidth, cardHeight, 10)
         .lineWidth(1)
-        .stroke('#CBD5E1');
+        .strokeColor('#E2E8F0')
+        .stroke();
 
-      /** HEADER **/
-      doc.rect(x, y, cardWidth, 25).fill('#2563EB');
-
+      /** HEADER STRIPE **/
       doc
-        .fillColor('#FFFFFF')
-        .fontSize(10)
+        .path(
+          `M ${x + 10} ${y} L ${x + cardWidth - 10} ${y} Q ${x + cardWidth} ${y} ${x + cardWidth} ${y + 10} L ${x + cardWidth} ${y + 40} L ${x} ${y + 40} L ${x} ${y + 10} Q ${x} ${y} ${x + 10} ${y} Z`,
+        )
+        .fill(headerColor);
+
+      /** TITLE **/
+      doc
+        .fillColor(titleColor)
+        .fontSize(14)
         .font('Helvetica-Bold')
-        .text('ACCESO / ASISTENCIA', x, y + 7, {
+        .text('Credencial', x, y + 15, {
           width: cardWidth,
           align: 'center',
         });
@@ -86,28 +113,49 @@ export class PersonService {
       });
 
       const qrX = x + (cardWidth - 90) / 2;
-      const qrY = y + 35;
+      const qrY = y + 55; // Ajustado para dar espacio al rol
 
       doc.rect(qrX - 5, qrY - 5, 100, 100).fill('#FFFFFF');
 
       doc.image(qrBuffer, qrX, qrY, { width: 90 });
 
-      /** NAME **/
+      // Role Badge
+      doc
+        .fillColor(badgeColor)
+        .fontSize(14)
+        .font('Helvetica-Bold')
+        .text(role, x, y + 155, {
+          width: cardWidth,
+          align: 'center',
+        });
+
+      // Names
       doc
         .fillColor('#0F172A')
-        .fontSize(10)
+        .fontSize(15)
         .font('Helvetica-Bold')
-        .text(fullName, x + 10, y + 110, {
+        .text(person.names, x + 10, y + 185, {
           width: cardWidth - 20,
           align: 'center',
         });
 
-      /** DOCUMENT **/
+      // Surnames
+      const surnames = `${person.paternalLastName} ${person.maternalLastName}`;
+      doc
+        .fillColor('#0F172A')
+        .fontSize(15)
+        .font('Helvetica-Bold')
+        .text(surnames, x + 10, y + 206, {
+          width: cardWidth - 20,
+          align: 'center',
+        });
+
+      // Document
       doc
         .fillColor('#475569')
-        .fontSize(9)
+        .fontSize(10)
         .font('Helvetica')
-        .text(`DNI: ${person.documentNumber}`, x + 10, y + 128, {
+        .text(`DNI: ${person.documentNumber}`, x + 10, y + 230, {
           width: cardWidth - 20,
           align: 'center',
         });

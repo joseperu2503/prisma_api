@@ -15,7 +15,7 @@ export class RoleSeed {
     { id: 'STUDENT', name: 'Estudiante' },
     { id: 'TEACHER', name: 'Docente' },
     { id: 'GUARDIAN', name: 'Apoderado' },
-    { id: 'EMPLOYEE', name: 'Empleado' },
+    { id: 'EMPLOYEE', name: 'Colaborador' },
   ];
 
   async run() {
