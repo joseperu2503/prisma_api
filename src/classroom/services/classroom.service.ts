@@ -68,4 +68,16 @@ export class ClassroomService {
       order: { classroom: { name: 'ASC' } },
     });
   }
+
+  async findByName(name: string) {
+    return await this.classroomRepository.findOneBy({ name });
+  }
+
+  async findOrCreate(name: string) {
+    let classroom = await this.findByName(name);
+    if (!classroom) {
+      classroom = await this.create({ name });
+    }
+    return classroom;
+  }
 }

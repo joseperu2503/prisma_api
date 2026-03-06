@@ -1,10 +1,4 @@
-import {
-  IsDateString,
-  IsEmail,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsDateString, IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class CreateStudentDto {
   @IsString()
@@ -23,7 +17,8 @@ export class CreateStudentDto {
   documentNumber: string;
 
   @IsEmail()
-  email: string;
+  @IsOptional()
+  email?: string;
 
   @IsString()
   password: string;
@@ -43,12 +38,4 @@ export class CreateStudentDto {
   @IsOptional()
   @IsString()
   genderId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  classroomId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  academicYearId?: string;
 }

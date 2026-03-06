@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { AuthService } from 'src/auth/services/auth.service';
 import { DataSource } from 'typeorm';
-import { initialData } from './data/seed-data';
-import { AcademicYearSeed } from './services/academic-year.seed';
-import { AttendanceTypeSeed } from './services/attendance-type.seed';
-import { ClassroomSeed } from './services/classroom.seed';
-import { DocumentTypeSeed } from './services/document-type.seed';
-import { EmployeeTypeSeed } from './services/employee-type.seed';
-import { GenderSeed } from './services/gender.seed';
+import { initialData } from '../data/seed-data';
+import { AcademicYearSeed } from './academic-year.seed';
+import { AttendanceTypeSeed } from './attendance-type.seed';
+import { ClassroomSeed } from './classroom.seed';
+import { DocumentTypeSeed } from './document-type.seed';
+import { EmployeeTypeSeed } from './employee-type.seed';
+import { GenderSeed } from './gender.seed';
 
 @Injectable()
 export class SeedService {
@@ -29,8 +29,8 @@ export class SeedService {
     await this.genderSeed.run();
     await this.attendanceTypeSeed.run();
     await this.employeeTypeSeed.run();
-    await this.academicYearSeed.run();
-    await this.classroomSeed.run();
+    // await this.academicYearSeed.run();
+    // await this.classroomSeed.run();
   }
 
   private async userSeed() {

@@ -46,4 +46,22 @@ export class AcademicYearService {
     const academicYear = await this.findOne(id);
     return await this.academicYearRepository.remove(academicYear);
   }
+
+  async findByName(name: string) {
+    return await this.academicYearRepository.findOneBy({ name });
+  }
+
+  async findOrCreate(name: string) {
+    let academicYear = await this.findByName(name);
+    if (!academicYear) {
+      // Default to current year dates if not found
+      const year = parseInt(name) || new Date().getFullYear();
+      academicYear = await this.create({
+        name,
+        startDate: `${year}-03-01`,
+        endDate: `${year}-12-31`,
+      });
+    }
+    return academicYear;
+  }
 }

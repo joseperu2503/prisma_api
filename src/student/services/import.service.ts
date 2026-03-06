@@ -1,12 +1,19 @@
 // import.service.ts
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
-import { CreateStudentDto } from '../dto/create-student.dto';
+import { AcademicYearService } from 'src/academic-year/services/academic-year.service';
+import { ClassroomService } from 'src/classroom/services/classroom.service';
+import { EnrollmentService } from 'src/enrollment/services/enrollment.service';
 import { StudentService } from './student.service';
 
 @Injectable()
 export class ImportService {
-  constructor(private studentService: StudentService) {}
+  constructor(
+    private readonly studentService: StudentService,
+    private readonly classroomService: ClassroomService,
+    private readonly academicYearService: AcademicYearService,
+    private readonly enrollmentServce: EnrollmentService,
+  ) {}
 
   async processExcel(buffer: any) {
     const workbook = new ExcelJS.Workbook();
@@ -24,21 +31,38 @@ export class ImportService {
       };
     }
 
-    for (let i = 0; i < worksheet.lastRow.number; i++) {
-      if (i !== 0) {
-        const row = worksheet.getRow(i);
+    const rowsCount = worksheet.rowCount;
 
-        const student = new CreateStudentDto();
+    for (let i = 2; i <= rowsCount; i++) {
+      const row = worksheet.getRow(i);
 
-        student.names = row.getCell(2).text;
-        student.paternalLastName = row.getCell(3).text;
-        student.maternalLastName = row.getCell(4).text;
-        student.documentTypeId = 'dni';
-        student.documentNumber = row.getCell(1).text;
-        student.password = '123456';
+      // Skip empty rows
+      if (!row.getCell(1).value) continue;
 
-        await this.studentService.create(student);
-      }
+      const classroomName = row.getCell(5).text;
+      const academicYearName = row.getCell(6).text;
+
+      // Validar/Crear Aula
+      const classroom = await this.classroomService.findOrCreate(classroomName);
+
+      // Validar/Crear Año Académico
+      const academicYear =
+        await this.academicYearService.findOrCreate(academicYearName);
+
+      const student = await this.studentService.create({
+        names: row.getCell(2).text,
+        paternalLastName: row.getCell(3).text,
+        maternalLastName: row.getCell(4).text,
+        documentTypeId: 'dni',
+        documentNumber: row.getCell(1).text,
+        password: '123456',
+      });
+
+      await this.enrollmentServce.create({
+        academicYearId: academicYear.id,
+        classroomId: classroom.id,
+        studentId: student.id,
+      });
     }
 
     return {

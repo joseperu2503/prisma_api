@@ -59,19 +59,8 @@ export class StudentService {
 
         const savedStudent = await manager.save(student);
 
-        // 4️⃣ Matricular (opcional)
-        if (
-          registerStudentDto.classroomId &&
-          registerStudentDto.academicYearId
-        ) {
-          await this.enrollmentService.create({
-            studentId: savedStudent.id,
-            classroomId: registerStudentDto.classroomId,
-            academicYearId: registerStudentDto.academicYearId,
-          });
-        }
-
         return {
+          id: savedStudent.id,
           success: true,
           message: 'Student created successfully',
         };

@@ -11,7 +11,7 @@ import { CommonModule } from './common/common.module';
 import { EmployeeModule } from './employee/employee.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
 import { PersonModule } from './person/person.module';
-import { SeedCommand } from './seed/seed.command';
+import { SeedCommand } from './seed/commands/seed.command';
 import { SeedModule } from './seed/seed.module';
 import { StudentModule } from './student/student.module';
 
