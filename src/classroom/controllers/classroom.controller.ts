@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { AssignClassroomToYearDto } from '../dto/assign-classroom-to-year.dto';
 import { CreateClassroomDto } from '../dto/create-classroom.dto';
 import { UpdateClassroomDto } from '../dto/update-classroom.dto';
 import { ClassroomService } from '../services/classroom.service';
@@ -24,6 +25,16 @@ export class ClassroomController {
   @Get()
   findAll() {
     return this.classroomService.findAll();
+  }
+
+  @Post('assign')
+  assignToYear(@Body() assignDto: AssignClassroomToYearDto) {
+    return this.classroomService.assignToYear(assignDto);
+  }
+
+  @Get('year/:yearId')
+  findAssignmentsByYear(@Param('yearId', ParseUUIDPipe) yearId: string) {
+    return this.classroomService.findAssignmentsByYear(yearId);
   }
 
   @Get(':id')

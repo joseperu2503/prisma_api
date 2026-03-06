@@ -1,8 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AcademicYearService } from 'src/academic-year/services/academic-year.service';
 import { Repository } from 'typeorm';
+import { AssignClassroomToYearDto } from '../dto/assign-classroom-to-year.dto';
 import { CreateClassroomDto } from '../dto/create-classroom.dto';
 import { UpdateClassroomDto } from '../dto/update-classroom.dto';
+import { ClassroomYear } from '../entities/classroom-year.entity';
 import { Classroom } from '../entities/classroom.entity';
 
 @Injectable()
@@ -10,6 +13,11 @@ export class ClassroomService {
   constructor(
     @InjectRepository(Classroom)
     private readonly classroomRepository: Repository<Classroom>,
+
+    @InjectRepository(ClassroomYear)
+    private readonly classroomYearRepository: Repository<ClassroomYear>,
+
+    private readonly academicYearService: AcademicYearService,
   ) {}
 
   async create(createClassroomDto: CreateClassroomDto) {
@@ -43,5 +51,21 @@ export class ClassroomService {
   async remove(id: string) {
     const classroom = await this.findOne(id);
     return await this.classroomRepository.remove(classroom);
+  }
+
+  async assignToYear(assignDto: AssignClassroomToYearDto) {
+    await this.academicYearService.findOne(assignDto.academicYearId);
+    await this.findOne(assignDto.classroomId);
+
+    const assignment = this.classroomYearRepository.create(assignDto);
+    return await this.classroomYearRepository.save(assignment);
+  }
+
+  async findAssignmentsByYear(yearId: string) {
+    return await this.classroomYearRepository.find({
+      where: { academicYearId: yearId },
+      relations: { classroom: true },
+      order: { classroom: { name: 'ASC' } },
+    });
   }
 }
