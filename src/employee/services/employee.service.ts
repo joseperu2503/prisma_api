@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { isUUID } from 'class-validator';
 import { UserRole } from 'src/auth/entities/user-role.entity';
 import { User } from 'src/auth/entities/user.entity';
 import { Person } from 'src/person/entities/person.entity';
@@ -75,7 +74,10 @@ export class EmployeeService {
           createEmployeeDto;
 
         // 1️⃣ Validar el tipo de empleado (por ID o por Code)
-        const isUuid = isUUID(employeeTypeId);
+        const isUuid =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            employeeTypeId,
+          );
 
         const type = await manager.findOne(EmployeeType, {
           where: isUuid ? { id: employeeTypeId } : { code: employeeTypeId },

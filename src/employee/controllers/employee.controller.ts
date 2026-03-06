@@ -71,7 +71,6 @@ export class EmployeeController {
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.employeeService.remove(id);
   }
-
   @Get('role/:role')
   findByRole(@Param('role') role: string) {
     return this.employeeService.findByType(role);
