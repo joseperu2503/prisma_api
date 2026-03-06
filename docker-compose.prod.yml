@@ -27,6 +27,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
       PGPORT: ${DB_PORT}
+      TZ: America/Lima
     volumes:
       - ./postgres/${ENV}:/var/lib/postgresql/data
 
