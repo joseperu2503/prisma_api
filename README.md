@@ -33,13 +33,15 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod -p prisma_api_pro
 1. Enter the running container:
 
 ```bash
-docker exec -it prisma_api sh
+docker exec -it prisma_api_dev sh
+docker exec -it prisma_api_prod sh
 ```
 
 2. Execute pending migrations:
 
 ```bash
 npm run migrations:run
+npm run migrations:run:prod
 ```
 
 3. Seed the database inside the container:
