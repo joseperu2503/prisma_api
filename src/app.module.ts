@@ -8,6 +8,7 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
 import { ClassroomModule } from './classroom/classroom.module';
 import { CommonModule } from './common/common.module';
+import { EnrollmentModule } from './enrollment/enrollment.module';
 import { PersonModule } from './person/person.module';
 import { SeedCommand } from './seed/seed.command';
 import { SeedModule } from './seed/seed.module';
@@ -38,6 +39,7 @@ import { TeacherModule } from './teacher/teacher.module';
     ClassroomModule,
     AcademicYearModule,
     AcademicPeriodModule,
+    EnrollmentModule,
   ],
   providers: [SeedCommand],
 })
