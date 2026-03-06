@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import PDFDocument from 'pdfkit';
 import * as QRCode from 'qrcode';
+import { Role } from 'src/auth/entities/role.entity';
 import { In, Repository } from 'typeorm';
 import { Person } from '../entities/person.entity';
 
@@ -10,12 +11,30 @@ export class PersonService {
   constructor(
     @InjectRepository(Person)
     private readonly personRepository: Repository<Person>,
+
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
+
+  async getRoles(documentNumbers: string) {
+    const roles = await this.roleRepository.find({
+      where: {
+        userRoles: {
+          user: {
+            person: {
+              documentNumber: documentNumbers,
+            },
+          },
+        },
+      },
+    });
+
+    return roles;
+  }
 
   async generateQrPdf(documentNumbers: string[]): Promise<Buffer> {
     const people = await this.personRepository.find({
       where: { documentNumber: In(documentNumbers) },
-      relations: ['employees', 'students'],
     });
 
     if (!people.length) {
@@ -47,6 +66,15 @@ export class PersonService {
     for (let i = 0; i < people.length; i++) {
       const person = people[i];
 
+      const roles = await this.getRoles(person.documentNumber);
+      console.log({ roles });
+
+      if (roles.length === 0) {
+        continue;
+      }
+
+      const rol = roles[0];
+
       // nueva página cada 6 tarjetas
       if (i > 0 && i % cardsPerPage === 0) {
         doc.addPage();
@@ -66,12 +94,12 @@ export class PersonService {
       let badgeColor = '#6366F1';
       let titleColor = '#FFFFFF';
 
-      if (person.employees && person.employees.length > 0) {
+      if (rol.id == 'EMPLOYEE') {
         role = 'COLABORADOR';
         headerColor = '#3730A3'; // Vibrant Deep Indigo (Authority/Superiority)
         badgeColor = '#1E3A8A';
         titleColor = '#FFFFFF';
-      } else if (person.students && person.students.length > 0) {
+      } else if (rol.id == 'STUDENT') {
         role = 'ESTUDIANTE';
         headerColor = '#0EA5E9'; // Vibrant Sky Blue (Junior/Energy)
         badgeColor = '#0891B2';
@@ -100,7 +128,7 @@ export class PersonService {
         .fillColor(titleColor)
         .fontSize(14)
         .font('Helvetica-Bold')
-        .text('Credencial', x, y + 15, {
+        .text('CREDENCIAL', x, y + 15, {
           width: cardWidth,
           align: 'center',
         });
@@ -124,7 +152,7 @@ export class PersonService {
         .fillColor(badgeColor)
         .fontSize(14)
         .font('Helvetica-Bold')
-        .text(role, x, y + 155, {
+        .text(role.toUpperCase(), x, y + 155, {
           width: cardWidth,
           align: 'center',
         });
@@ -132,9 +160,9 @@ export class PersonService {
       // Names
       doc
         .fillColor('#0F172A')
-        .fontSize(15)
+        .fontSize(12)
         .font('Helvetica-Bold')
-        .text(person.names, x + 10, y + 185, {
+        .text(person.names.toUpperCase(), x + 10, y + 185, {
           width: cardWidth - 20,
           align: 'center',
         });
@@ -143,9 +171,9 @@ export class PersonService {
       const surnames = `${person.paternalLastName} ${person.maternalLastName}`;
       doc
         .fillColor('#0F172A')
-        .fontSize(15)
+        .fontSize(12)
         .font('Helvetica-Bold')
-        .text(surnames, x + 10, y + 206, {
+        .text(surnames.toUpperCase(), x + 10, y + 206, {
           width: cardWidth - 20,
           align: 'center',
         });
