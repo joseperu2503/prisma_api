@@ -63,6 +63,9 @@ export class AuthService {
       where: { person: { documentNumber } },
       relations: {
         person: true,
+        userRoles: {
+          role: true,
+        },
       },
     });
 
@@ -138,6 +141,7 @@ export class AuthService {
           paternalLastName: user.person.paternalLastName,
           maternalLastName: user.person.maternalLastName,
         },
+        roles: user.userRoles.map((ur) => ur.roleId),
       },
       token: this.getJwt({ id: user.id }),
     };

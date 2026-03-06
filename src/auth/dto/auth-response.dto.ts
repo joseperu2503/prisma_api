@@ -6,6 +6,7 @@ export interface AuthResponseDto {
       paternalLastName: string;
       maternalLastName: string;
     };
+    roles: string[];
   };
   token: string;
 }

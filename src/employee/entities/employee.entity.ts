@@ -6,11 +6,13 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { EmployeeType } from './employee-type.entity';
 
 @Entity('employees')
+@Unique(['personId', 'employeeTypeId'])
 export class Employee {
   @PrimaryGeneratedColumn('uuid')
   id: string;

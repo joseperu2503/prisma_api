@@ -15,7 +15,7 @@ import {
 } from '../dto/update-employee.dto';
 import { EmployeeService } from '../services/employee.service';
 
-@Controller('employee')
+@Controller('employees')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
@@ -44,7 +44,7 @@ export class EmployeeController {
   }
 
   // Employee Endpoints
-  @Post()
+  @Post('create')
   create(@Body() createEmployeeDto: CreateEmployeeDto) {
     return this.employeeService.create(createEmployeeDto);
   }
