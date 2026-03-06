@@ -22,8 +22,8 @@ export class StudentService {
         // 1️⃣ Crear persona
         const person = manager.create(Person, {
           names: registerStudentDto.names,
-          paternal_last_name: registerStudentDto.paternalLastName,
-          maternal_last_name: registerStudentDto.maternalLastName,
+          paternalLastName: registerStudentDto.paternalLastName,
+          maternalLastName: registerStudentDto.maternalLastName,
           documentTypeId: registerStudentDto.documentTypeId,
           documentNumber: registerStudentDto.documentNumber,
           birthDate: registerStudentDto.birthDate,

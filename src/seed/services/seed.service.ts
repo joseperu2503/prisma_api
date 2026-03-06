@@ -7,6 +7,7 @@ import { ClassroomSeed } from './classroom.seed';
 import { DocumentTypeSeed } from './document-type.seed';
 import { EmployeeTypeSeed } from './employee-type.seed';
 import { GenderSeed } from './gender.seed';
+import { RelationshipTypeSeed } from './relationship-type.seed';
 
 @Injectable()
 export class SeedService {
@@ -17,6 +18,7 @@ export class SeedService {
     private readonly genderSeed: GenderSeed,
     private readonly attendanceTypeSeed: AttendanceTypeSeed,
     private readonly employeeTypeSeed: EmployeeTypeSeed,
+    private readonly relationshipTypeSeed: RelationshipTypeSeed,
     private readonly academicYearSeed: AcademicYearSeed,
     private readonly classroomSeed: ClassroomSeed,
   ) {}
@@ -26,6 +28,7 @@ export class SeedService {
     await this.documentTypeSeed.run();
     await this.genderSeed.run();
     await this.attendanceTypeSeed.run();
+    await this.relationshipTypeSeed.run();
     await this.employeeTypeSeed.run();
     // await this.academicYearSeed.run();
     // await this.classroomSeed.run();

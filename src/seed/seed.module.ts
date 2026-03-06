@@ -11,6 +11,7 @@ import { ClassroomSeed } from './services/classroom.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
 import { EmployeeTypeSeed } from './services/employee-type.seed';
 import { GenderSeed } from './services/gender.seed';
+import { RelationshipTypeSeed } from './services/relationship-type.seed';
 import { SeedService } from './services/seed.service';
 
 @Module({
@@ -22,6 +23,7 @@ import { SeedService } from './services/seed.service';
     EmployeeTypeSeed,
     AcademicYearSeed,
     ClassroomSeed,
+    RelationshipTypeSeed,
   ],
   imports: [
     AuthModule,
