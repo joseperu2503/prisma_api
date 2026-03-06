@@ -73,7 +73,7 @@ export class PersonService {
         continue;
       }
 
-      const rol = roles[0];
+      const role = roles[0];
 
       // nueva página cada 6 tarjetas
       if (i > 0 && i % cardsPerPage === 0) {
@@ -89,18 +89,15 @@ export class PersonService {
       const y = 20 + row * (cardHeight + padding);
 
       // Determine Role
-      let role = 'VISITANTE';
       let headerColor = '#A5B4FC'; // Vibrant Muted Lavender for Visitor
       let badgeColor = '#6366F1';
       let titleColor = '#FFFFFF';
 
-      if (rol.id == 'EMPLOYEE') {
-        role = 'COLABORADOR';
+      if (role.id == 'EMPLOYEE') {
         headerColor = '#3730A3'; // Vibrant Deep Indigo (Authority/Superiority)
         badgeColor = '#1E3A8A';
         titleColor = '#FFFFFF';
-      } else if (rol.id == 'STUDENT') {
-        role = 'ESTUDIANTE';
+      } else if (role.id == 'STUDENT') {
         headerColor = '#0EA5E9'; // Vibrant Sky Blue (Junior/Energy)
         badgeColor = '#0891B2';
         titleColor = '#FFFFFF';
@@ -148,12 +145,21 @@ export class PersonService {
       doc.image(qrBuffer, qrX, qrY, { width: 90 });
 
       // Role Badge
+      const badgeWidth = 140;
+      const badgeHeight = 22;
+      const badgeX = x + (cardWidth - badgeWidth) / 2;
+      const badgeY = y + 152;
+
       doc
-        .fillColor(badgeColor)
-        .fontSize(14)
+        .roundedRect(badgeX, badgeY, badgeWidth, badgeHeight, 5)
+        .fill(badgeColor);
+
+      doc
+        .fillColor('#FFFFFF')
+        .fontSize(12)
         .font('Helvetica-Bold')
-        .text(role.toUpperCase(), x, y + 155, {
-          width: cardWidth,
+        .text(role.name.toUpperCase(), badgeX, badgeY + 6, {
+          width: badgeWidth,
           align: 'center',
         });
 
