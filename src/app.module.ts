@@ -8,12 +8,12 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
 import { ClassroomModule } from './classroom/classroom.module';
 import { CommonModule } from './common/common.module';
+import { EmployeeModule } from './employee/employee.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
 import { PersonModule } from './person/person.module';
 import { SeedCommand } from './seed/seed.command';
 import { SeedModule } from './seed/seed.module';
 import { StudentModule } from './student/student.module';
-import { TeacherModule } from './teacher/teacher.module';
 
 @Module({
   controllers: [AppController],
@@ -33,7 +33,7 @@ import { TeacherModule } from './teacher/teacher.module';
     AuthModule,
     PersonModule,
     StudentModule,
-    TeacherModule,
+    EmployeeModule,
     CommonModule,
     AttendanceModule,
     ClassroomModule,
