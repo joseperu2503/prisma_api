@@ -5,52 +5,57 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Student } from 'src/student/entities/student.entity';
+import { Person } from 'src/person/entities/person.entity';
 import { DataSource, Repository } from 'typeorm';
-import { RegisterStudentAttendanceRequestDto } from '../dto/register-student-request.dto';
-import { StudentAttendanceDay } from '../entities/student-attendance-day.entity';
-import { StudentAttendanceDayLog } from '../entities/student-attendance-log.entity';
+import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
+import { AttendanceDay } from '../entities/attendance-day.entity';
+import { AttendanceLog } from '../entities/attendance-log.entity';
 
 @Injectable()
 export class AttendanceService {
   constructor(
-    @InjectRepository(StudentAttendanceDayLog)
-    private readonly studentAttendanceDayLogRepository: Repository<StudentAttendanceDayLog>,
+    @InjectRepository(AttendanceLog)
+    private readonly attendanceLogRepository: Repository<AttendanceLog>,
 
     private readonly dataSource: DataSource,
   ) {}
 
-  async registerStudent(params: RegisterStudentAttendanceRequestDto) {
+  async registerAttendance(params: RegisterAttendanceDto) {
     return await this.dataSource.transaction(async (manager) => {
       try {
-        const student = await manager.findOne(Student, {
-          where: { id: params.studentId },
+        const person = await manager.findOne(Person, {
+          where: {
+            documentTypeId: params.documentTypeId,
+            documentNumber: params.documentNumber,
+          },
         });
 
-        if (!student) {
-          throw new NotFoundException('Estudiante no encontrado');
+        if (!person) {
+          throw new NotFoundException(
+            'Persona no encontrada con el documento proporcionado',
+          );
         }
 
         const today = new Date();
 
-        let studentAttendanceDay = await manager.findOne(StudentAttendanceDay, {
-          where: { studentId: student.id, date: today },
+        let attendanceDay = await manager.findOne(AttendanceDay, {
+          where: { personId: person.id, date: today },
         });
 
-        if (!studentAttendanceDay) {
-          studentAttendanceDay = manager.create(StudentAttendanceDay, {
-            studentId: student.id,
+        if (!attendanceDay) {
+          attendanceDay = manager.create(AttendanceDay, {
+            personId: person.id,
             date: today,
           });
         }
 
-        await manager.save(studentAttendanceDay);
+        await manager.save(attendanceDay);
 
         //verificar si ya hay algun log del mismo type el mismo dia
 
-        const existLog = await manager.findOne(StudentAttendanceDayLog, {
+        const existLog = await manager.findOne(AttendanceLog, {
           where: {
-            attendanceDayId: studentAttendanceDay.id,
+            attendanceDayId: attendanceDay.id,
             typeId: params.type,
           },
         });
@@ -69,16 +74,13 @@ export class AttendanceService {
           );
         }
 
-        const studentAttendanceDayLog = manager.create(
-          StudentAttendanceDayLog,
-          {
-            attendanceDayId: studentAttendanceDay.id,
-            typeId: params.type,
-            markedAt: today,
-          },
-        );
+        const attendanceLog = manager.create(AttendanceLog, {
+          attendanceDayId: attendanceDay.id,
+          typeId: params.type,
+          markedAt: today,
+        });
 
-        await manager.save(studentAttendanceDayLog);
+        await manager.save(attendanceLog);
 
         return {
           success: true,
@@ -104,16 +106,14 @@ export class AttendanceService {
   lastAttendancesDay() {
     //quiero retornar los ultimas 20 asistencias registradas, ordenadas por fecha de registro descendente
 
-    return this.studentAttendanceDayLogRepository.find({
+    return this.attendanceLogRepository.find({
       order: {
         markedAt: 'DESC',
       },
       take: 20,
       relations: {
         attendanceDay: {
-          student: {
-            person: true,
-          },
+          person: true,
         },
         type: true,
       },
@@ -122,13 +122,11 @@ export class AttendanceService {
         attendanceDay: {
           id: true,
           date: true,
-          student: {
+          person: {
             id: true,
-            person: {
-              names: true,
-              paternal_last_name: true,
-              maternal_last_name: true,
-            },
+            names: true,
+            paternal_last_name: true,
+            maternal_last_name: true,
           },
         },
         markedAt: true,

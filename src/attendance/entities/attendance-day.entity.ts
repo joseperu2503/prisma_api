@@ -1,4 +1,4 @@
-import { Student } from 'src/student/entities/student.entity';
+import { Person } from 'src/person/entities/person.entity';
 import {
   Column,
   CreateDateColumn,
@@ -9,25 +9,25 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { StudentAttendanceDayLog } from './student-attendance-log.entity';
+import { AttendanceLog } from './attendance-log.entity';
 
-@Entity('student_attendance_days')
-export class StudentAttendanceDay {
+@Entity('attendance_days')
+export class AttendanceDay {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Student)
-  @JoinColumn({ name: 'student_id' })
-  student: Student;
+  @ManyToOne(() => Person)
+  @JoinColumn({ name: 'person_id' })
+  person: Person;
 
-  @Column('uuid', { name: 'student_id' })
-  studentId: string;
+  @Column('uuid', { name: 'person_id' })
+  personId: string;
 
   @Column({ type: 'date' })
   date: Date;
 
-  @OneToMany(() => StudentAttendanceDayLog, (log) => log.attendanceDay)
-  logs: StudentAttendanceDayLog[];
+  @OneToMany(() => AttendanceLog, (log) => log.attendanceDay)
+  logs: AttendanceLog[];
 
   @CreateDateColumn({
     type: 'timestamptz',
