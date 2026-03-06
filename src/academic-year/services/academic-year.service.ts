@@ -21,7 +21,7 @@ export class AcademicYearService {
 
   async findAll() {
     return await this.academicYearRepository.find({
-      order: { year: 'DESC' },
+      order: { startDate: 'DESC' },
     });
   }
 

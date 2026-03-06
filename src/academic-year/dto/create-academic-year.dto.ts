@@ -1,6 +1,15 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateAcademicYearDto {
+  @IsString()
   @IsNotEmpty()
-  year: string;
+  name: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  startDate: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  endDate: string;
 }

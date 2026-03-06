@@ -25,9 +25,6 @@ export class ImportService {
     }
 
     for (let i = 0; i < worksheet.lastRow.number; i++) {
-      //   const row = worksheet.getRow(i);
-      //   console.log(row.values);
-
       if (i !== 0) {
         const row = worksheet.getRow(i);
 

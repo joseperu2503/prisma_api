@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
+import { EnrollmentService } from 'src/enrollment/services/enrollment.service';
 import { Person } from 'src/person/entities/person.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
@@ -19,6 +20,8 @@ export class StudentService {
     private readonly userRepository: Repository<User>,
 
     private readonly dataSource: DataSource,
+
+    private readonly enrollmentService: EnrollmentService,
   ) {}
 
   async create(registerStudentDto: CreateStudentDto) {
@@ -54,7 +57,19 @@ export class StudentService {
           userId: savedUser.id,
         });
 
-        await manager.save(student);
+        const savedStudent = await manager.save(student);
+
+        // 4️⃣ Matricular (opcional)
+        if (
+          registerStudentDto.classroomId &&
+          registerStudentDto.academicYearId
+        ) {
+          await this.enrollmentService.create({
+            studentId: savedStudent.id,
+            classroomId: registerStudentDto.classroomId,
+            academicYearId: registerStudentDto.academicYearId,
+          });
+        }
 
         return {
           success: true,

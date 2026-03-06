@@ -14,9 +14,6 @@ export class Classroom {
   @Column({ name: 'name', type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ name: 'capacity', type: 'int', nullable: true })
-  capacity: number | null;
-
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
