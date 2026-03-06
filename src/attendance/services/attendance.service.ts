@@ -125,8 +125,8 @@ export class AttendanceService {
           person: {
             id: true,
             names: true,
-            paternal_last_name: true,
-            maternal_last_name: true,
+            paternalLastName: true,
+            maternalLastName: true,
           },
         },
         markedAt: true,

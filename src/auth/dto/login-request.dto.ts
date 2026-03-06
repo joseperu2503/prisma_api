@@ -1,9 +1,8 @@
-import { IsEmail, IsIn, IsString } from 'class-validator';
+import { IsIn, IsString } from 'class-validator';
 
 export class LoginRequestDto {
   @IsString()
-  @IsEmail()
-  email: string;
+  documentNumber: string;
 
   @IsString()
   password: string;

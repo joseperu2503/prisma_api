@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AuthService } from 'src/auth/services/auth.service';
 import { DataSource } from 'typeorm';
-import { initialData } from '../data/seed-data';
 import { AcademicYearSeed } from './academic-year.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
 import { ClassroomSeed } from './classroom.seed';
@@ -24,20 +23,12 @@ export class SeedService {
 
   async runSeed() {
     await this.dropAllTables();
-    // await this.userSeed();
     await this.documentTypeSeed.run();
     await this.genderSeed.run();
     await this.attendanceTypeSeed.run();
     await this.employeeTypeSeed.run();
     // await this.academicYearSeed.run();
     // await this.classroomSeed.run();
-  }
-
-  private async userSeed() {
-    const users = initialData.users;
-    for (const user of users) {
-      await this.authService.register(user);
-    }
   }
 
   async dropAllTables(): Promise<void> {

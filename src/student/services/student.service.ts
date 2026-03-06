@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { User } from 'src/auth/entities/user.entity';
-import { EnrollmentService } from 'src/enrollment/services/enrollment.service';
 import { Person } from 'src/person/entities/person.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
@@ -13,15 +13,7 @@ export class StudentService {
     @InjectRepository(Student)
     private readonly studentRepository: Repository<Student>,
 
-    @InjectRepository(Person)
-    private readonly personRepository: Repository<Person>,
-
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-
     private readonly dataSource: DataSource,
-
-    private readonly enrollmentService: EnrollmentService,
   ) {}
 
   async create(registerStudentDto: CreateStudentDto) {
@@ -45,7 +37,7 @@ export class StudentService {
 
         // 2️⃣ Crear usuario
         const user = manager.create(User, {
-          password: registerStudentDto.password,
+          password: bcrypt.hashSync(registerStudentDto.password, 10),
           personId: savedPerson.id,
         });
 

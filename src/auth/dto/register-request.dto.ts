@@ -1,20 +1,14 @@
 import {
-  IsEmail,
-  IsNotEmpty,
   IsString,
+  IsUUID,
   Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
 
 export class RegisterRequestDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @IsString()
-  @IsEmail()
-  email: string;
+  @IsUUID()
+  personId: string;
 
   @IsString()
   @MinLength(6)

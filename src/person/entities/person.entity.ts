@@ -28,10 +28,10 @@ export class Person {
   names: string;
 
   @Column({ name: 'paternal_last_name', type: 'varchar', length: 100 })
-  paternal_last_name: string;
+  paternalLastName: string;
 
   @Column({ name: 'maternal_last_name', type: 'varchar', length: 100 })
-  maternal_last_name: string;
+  maternalLastName: string;
 
   @ManyToOne(() => DocumentType)
   @JoinColumn({ name: 'document_type_id' })

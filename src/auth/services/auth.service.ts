@@ -37,17 +37,17 @@ export class AuthService {
       const exist = await manager.findOne(User, {
         where: {
           person: {
-            email: userData.email,
+            id: userData.personId,
           },
         },
       });
 
       if (exist) {
-        throw new BadRequestException('Email already exists');
+        throw new BadRequestException('El usuario ya existe');
       }
 
       const user = manager.create(User, {
-        ...userData,
+        personId: userData.personId,
         password: bcrypt.hashSync(password, 10),
       });
       await manager.save(user);
@@ -57,13 +57,16 @@ export class AuthService {
   }
 
   async login(params: LoginRequestDto) {
-    const { password, email } = params;
+    const { password, documentNumber } = params;
 
     const user = await this.userRepository.findOne({
-      where: { person: { email } },
+      where: { person: { documentNumber } },
+      relations: {
+        person: true,
+      },
     });
 
-    //si el usuario con el email no existe
+    //si el usuario con el documentNumber no existe
     if (!user) {
       throw new UnauthorizedException(`Credentials are not valid`);
     }
@@ -130,7 +133,11 @@ export class AuthService {
     return {
       user: {
         id: user.id,
-        name: 'John Doe',
+        person: {
+          names: user.person.names,
+          paternalLastName: user.person.paternalLastName,
+          maternalLastName: user.person.maternalLastName,
+        },
       },
       token: this.getJwt({ id: user.id }),
     };
