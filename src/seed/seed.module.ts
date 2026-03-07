@@ -9,7 +9,6 @@ import { AcademicYearSeed } from './services/academic-year.seed';
 import { AttendanceTypeSeed } from './services/attendance-type.seed';
 import { ClassroomSeed } from './services/classroom.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
-import { EmployeeTypeSeed } from './services/employee-type.seed';
 import { GenderSeed } from './services/gender.seed';
 import { PermissionSeed } from './services/permission.seed';
 import { RelationshipTypeSeed } from './services/relationship-type.seed';
@@ -22,7 +21,6 @@ import { SeedService } from './services/seed.service';
     DocumentTypeSeed,
     GenderSeed,
     AttendanceTypeSeed,
-    EmployeeTypeSeed,
     AcademicYearSeed,
     ClassroomSeed,
     RelationshipTypeSeed,

@@ -5,7 +5,6 @@ import { AcademicYearSeed } from './academic-year.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
 import { ClassroomSeed } from './classroom.seed';
 import { DocumentTypeSeed } from './document-type.seed';
-import { EmployeeTypeSeed } from './employee-type.seed';
 import { GenderSeed } from './gender.seed';
 import { PermissionSeed } from './permission.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
@@ -19,7 +18,6 @@ export class SeedService {
     private readonly documentTypeSeed: DocumentTypeSeed,
     private readonly genderSeed: GenderSeed,
     private readonly attendanceTypeSeed: AttendanceTypeSeed,
-    private readonly employeeTypeSeed: EmployeeTypeSeed,
     private readonly relationshipTypeSeed: RelationshipTypeSeed,
     private readonly roleSeed: RoleSeed,
     private readonly permissionSeed: PermissionSeed,
@@ -35,7 +33,6 @@ export class SeedService {
     await this.relationshipTypeSeed.run();
     await this.permissionSeed.run();
     await this.roleSeed.run();
-    await this.employeeTypeSeed.run();
     // await this.academicYearSeed.run();
     // await this.classroomSeed.run();
   }

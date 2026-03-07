@@ -17,36 +17,45 @@ export class RoleSeed {
   ) {}
 
   roles = [
-    { id: 'ADMIN', name: 'Administrador' },
-    { id: 'STUDENT', name: 'Estudiante' },
-    { id: 'TEACHER', name: 'Docente' },
-    { id: 'GUARDIAN', name: 'Apoderado' },
-    { id: 'EMPLOYEE', name: 'Colaborador' },
+    { code: 'ADMIN', name: 'Administrador', isEmployee: false },
+    { code: 'STUDENT', name: 'Estudiante', isEmployee: false },
+    { code: 'TEACHER', name: 'Docente', isEmployee: true },
+    { code: 'GUARDIAN', name: 'Apoderado', isEmployee: false },
+    { code: 'SECRETARY', name: 'Secretaria', isEmployee: true },
   ];
 
   async run() {
-    for (const role of this.roles) {
-      await this.create(role);
+    for (const roleData of this.roles) {
+      await this.create(roleData);
     }
   }
 
-  private async create(params: { id: string; name: string }) {
-    const { id, name } = params;
+  private async create(params: {
+    code: string;
+    name: string;
+    isEmployee: boolean;
+  }) {
+    const { code, name, isEmployee } = params;
 
     let role = await this.roleRepository.findOne({
-      where: { id },
+      where: { code },
     });
 
     if (!role) {
-      role = this.roleRepository.create(params);
+      role = this.roleRepository.create({
+        code,
+        name,
+        isEmployee,
+      });
       role = await this.roleRepository.save(role);
     } else {
       role.name = name;
+      role.isEmployee = isEmployee;
       role = await this.roleRepository.save(role);
     }
 
     // Si es ADMIN, le asignamos todos los permisos por defecto
-    if (id === 'ADMIN') {
+    if (code === 'ADMIN') {
       const allPermissions = await this.permissionRepository.find();
       for (const permission of allPermissions) {
         const exist = await this.rolePermissionRepository.findOne({

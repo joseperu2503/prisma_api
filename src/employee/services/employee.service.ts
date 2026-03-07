@@ -7,16 +7,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { DataSource, Repository } from 'typeorm';
-import { CreateEmployeeDto, CreateEmployeeTypeDto } from '../dto/employee.dto';
-import {
-  UpdateEmployeeDto,
-  UpdateEmployeeTypeDto,
-} from '../dto/update-employee.dto';
-import { EmployeeType } from '../entities/employee-type.entity';
+import { CreateEmployeeDto } from '../dto/employee.dto';
+import { UpdateEmployeeDto } from '../dto/update-employee.dto';
 import { Employee } from '../entities/employee.entity';
 
 @Injectable()
@@ -24,68 +21,42 @@ export class EmployeeService {
   constructor(
     @InjectRepository(Employee)
     private readonly employeeRepository: Repository<Employee>,
-    @InjectRepository(EmployeeType)
-    private readonly employeeTypeRepository: Repository<EmployeeType>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
     private readonly dataSource: DataSource,
   ) {}
-
-  // Employee Type Methods
-  async createType(createEmployeeTypeDto: CreateEmployeeTypeDto) {
-    const existingType = await this.employeeTypeRepository.findOne({
-      where: { name: createEmployeeTypeDto.name },
-    });
-    if (existingType) {
-      throw new ConflictException(
-        `Employee type '${createEmployeeTypeDto.name}' already exists`,
-      );
-    }
-    const type = this.employeeTypeRepository.create(createEmployeeTypeDto);
-    return await this.employeeTypeRepository.save(type);
-  }
-
-  async findAllTypes() {
-    return await this.employeeTypeRepository.find({
-      order: { name: 'ASC' },
-    });
-  }
-
-  async findOneType(id: string) {
-    const type = await this.employeeTypeRepository.findOneBy({ id });
-    if (!type) {
-      throw new NotFoundException(`Employee type with ID ${id} not found`);
-    }
-    return type;
-  }
-
-  async updateType(id: string, updateEmployeeTypeDto: UpdateEmployeeTypeDto) {
-    const type = await this.findOneType(id);
-    const updatedType = this.employeeTypeRepository.merge(
-      type,
-      updateEmployeeTypeDto,
-    );
-    return await this.employeeTypeRepository.save(updatedType);
-  }
 
   // Employee Methods
   async create(createEmployeeDto: CreateEmployeeDto) {
     return await this.dataSource.transaction(async (manager) => {
       try {
-        const { personId, newPerson, employeeTypeId, password, isActive } =
+        const { personId, newPerson, roleId, password, isActive } =
           createEmployeeDto;
 
-        // 1️⃣ Validar el tipo de empleado (por ID o por Code)
+        // 1️⃣ Validar el Rol (debe ser un rol de empleado)
+
         const isUuid =
           /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-            employeeTypeId,
+            roleId,
           );
 
-        const type = await manager.findOne(EmployeeType, {
-          where: isUuid ? { id: employeeTypeId } : { code: employeeTypeId },
+        const role = await manager.findOne(Role, {
+          where: isUuid ? { id: roleId } : { code: roleId },
         });
 
-        if (!type) {
+        if (!role) {
           throw new NotFoundException(
-            `Employee type with ID ${employeeTypeId} not found`,
+            `Role with ID or Code ${roleId} not found`,
+          );
+        }
+
+        if (!role.isEmployee) {
+          throw new HttpException(
+            {
+              success: false,
+              message: `El rol '${role.name}' no está marcado como un rol de empleado`,
+            },
+            HttpStatus.BAD_REQUEST,
           );
         }
 
@@ -139,34 +110,38 @@ export class EmployeeService {
           user = await manager.save(user);
         }
 
-        // 4️⃣ Asignar Rol de Empleado a la PERSONA
-        const existingRole = await manager.findOne(PersonRole, {
-          where: { personId: person.id, roleId: 'EMPLOYEE' },
+        const existingPersonRole = await manager.findOne(PersonRole, {
+          where: { personId: person.id, roleId: role.id },
         });
 
-        if (!existingRole) {
-          const personRole = manager.create(PersonRole, {
-            personId: person.id,
-            roleId: 'EMPLOYEE',
-          });
-          await manager.save(personRole);
+        if (existingPersonRole) {
+          throw new ConflictException(
+            `Esta persona ya está registrada con el rol ${role.name}`,
+          );
         }
 
-        // 4️⃣.5️⃣ Validar combinación única Persona-Tipo
+        const personRole = manager.create(PersonRole, {
+          personId: person.id,
+          roleId: role.id,
+        });
+
+        await manager.save(personRole);
+
+        // 4️⃣.5️⃣ Validar combinación única Persona-Rol
         const existingEmployee = await manager.findOne(Employee, {
-          where: { personId: person.id, employeeTypeId: type.id },
+          where: { personId: person.id, roleId: role.id },
         });
 
         if (existingEmployee) {
           throw new ConflictException(
-            `Esta persona ya está registrada como ${type.name}`,
+            `Esta persona ya está registrada con el rol ${role.name}`,
           );
         }
 
         // 5️⃣ Crear Empleado
         const employee = manager.create(Employee, {
           personId: person.id,
-          employeeTypeId: type.id,
+          roleId: role.id,
           isActive: isActive,
         });
 
@@ -197,7 +172,7 @@ export class EmployeeService {
     return await this.employeeRepository.find({
       relations: {
         person: true,
-        employeeType: true,
+        role: true,
       },
     });
   }
@@ -207,7 +182,7 @@ export class EmployeeService {
       where: { id },
       relations: {
         person: true,
-        employeeType: true,
+        role: true,
       },
     });
     if (!employee) {
@@ -218,8 +193,15 @@ export class EmployeeService {
 
   async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {
     const employee = await this.findOne(id);
-    if (updateEmployeeDto.employeeTypeId) {
-      await this.findOneType(updateEmployeeDto.employeeTypeId);
+    if (updateEmployeeDto.roleId) {
+      const role = await this.roleRepository.findOneBy({
+        id: updateEmployeeDto.roleId,
+      });
+      if (!role) {
+        throw new NotFoundException(
+          `Role with ID ${updateEmployeeDto.roleId} not found`,
+        );
+      }
     }
     const updatedEmployee = this.employeeRepository.merge(
       employee,
@@ -233,12 +215,12 @@ export class EmployeeService {
     return await this.employeeRepository.remove(employee);
   }
 
-  async findByType(typeName: string) {
+  async findByRole(roleId: string) {
     return await this.employeeRepository.find({
-      where: { employeeType: { name: typeName } },
+      where: { roleId },
       relations: {
         person: true,
-        employeeType: true,
+        role: true,
       },
     });
   }

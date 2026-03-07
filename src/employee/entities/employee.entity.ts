@@ -1,3 +1,4 @@
+import { Role } from 'src/auth/entities/role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import {
   Column,
@@ -9,10 +10,9 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
-import { EmployeeType } from './employee-type.entity';
 
 @Entity('employees')
-@Unique(['personId', 'employeeTypeId'])
+@Unique(['personId', 'roleId'])
 export class Employee {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -24,12 +24,12 @@ export class Employee {
   @Column('uuid', { name: 'person_id' })
   personId: string;
 
-  @ManyToOne(() => EmployeeType)
-  @JoinColumn({ name: 'employee_type_id' })
-  employeeType: EmployeeType;
+  @ManyToOne(() => Role)
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
 
-  @Column('uuid', { name: 'employee_type_id' })
-  employeeTypeId: string;
+  @Column('uuid', { name: 'role_id' })
+  roleId: string;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;

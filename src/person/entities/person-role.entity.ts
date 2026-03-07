@@ -26,7 +26,7 @@ export class PersonRole {
   @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  @Column('text', { name: 'role_id' })
+  @Column('uuid', { name: 'role_id' })
   roleId: string;
 
   @CreateDateColumn({

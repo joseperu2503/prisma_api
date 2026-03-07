@@ -72,7 +72,16 @@ export class PersonService {
         continue;
       }
 
-      const role = roles[0];
+      // Prioritize roles marked as isEmployee, then by specific codes
+      const prioritizedRoleCodes = ['ADMIN', 'STUDENT'];
+      const role = roles.sort((a, b) => {
+        if (a.isEmployee && !b.isEmployee) return -1;
+        if (!a.isEmployee && b.isEmployee) return 1;
+
+        const indexA = prioritizedRoleCodes.indexOf(a.code);
+        const indexB = prioritizedRoleCodes.indexOf(b.code);
+        return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
+      })[0];
 
       // nueva página cada 6 tarjetas
       if (i > 0 && i % cardsPerPage === 0) {
@@ -87,19 +96,26 @@ export class PersonService {
       const x = 20 + col * (cardWidth + padding);
       const y = 20 + row * (cardHeight + padding);
 
-      // Determine Role
+      // Determine Role styling
       let headerColor = '#A5B4FC'; // Vibrant Muted Lavender for Visitor
       let badgeColor = '#6366F1';
       let titleColor = '#FFFFFF';
 
-      if (role.id == 'EMPLOYEE') {
-        headerColor = '#3730A3'; // Vibrant Deep Indigo (Authority/Superiority)
-        badgeColor = '#1E3A8A';
-        titleColor = '#FFFFFF';
-      } else if (role.id == 'STUDENT') {
+      if (role.code === 'ADMIN') {
+        headerColor = '#1E1B4B'; // Midnight Blue (Supreme Authority)
+        badgeColor = '#312E81';
+      } else if (role.code === 'STUDENT') {
         headerColor = '#0EA5E9'; // Vibrant Sky Blue (Junior/Energy)
         badgeColor = '#0891B2';
-        titleColor = '#FFFFFF';
+      } else if (role.isEmployee) {
+        // All employee roles get a professional Indigo theme
+        headerColor = '#3730A3';
+        badgeColor = '#1E3A8A';
+
+        // Specific highlight for Teachers
+        if (role.code === 'TEACHER') {
+          headerColor = '#4338CA';
+        }
       }
 
       /** CARD BACKGROUND **/

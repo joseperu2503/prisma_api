@@ -64,21 +64,11 @@ export class CreateEmployeeDto {
 
   @IsString()
   @IsNotEmpty()
-  employeeTypeId: string;
+  roleId: string;
 
   @IsString()
   @IsNotEmpty()
   password: string;
-
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
-}
-
-export class CreateEmployeeTypeDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
 
   @IsBoolean()
   @IsOptional()
