@@ -11,6 +11,7 @@ import { ClassroomSeed } from './services/classroom.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
 import { EmployeeTypeSeed } from './services/employee-type.seed';
 import { GenderSeed } from './services/gender.seed';
+import { PermissionSeed } from './services/permission.seed';
 import { RelationshipTypeSeed } from './services/relationship-type.seed';
 import { RoleSeed } from './services/role.seed';
 import { SeedService } from './services/seed.service';
@@ -26,6 +27,7 @@ import { SeedService } from './services/seed.service';
     ClassroomSeed,
     RelationshipTypeSeed,
     RoleSeed,
+    PermissionSeed,
   ],
   imports: [
     AuthModule,

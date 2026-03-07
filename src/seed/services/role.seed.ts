@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Permission } from 'src/auth/entities/permission.entity';
+import { RolePermission } from 'src/auth/entities/role-permission.entity';
 import { Role } from 'src/auth/entities/role.entity';
 import { Repository } from 'typeorm';
 
@@ -8,6 +10,10 @@ export class RoleSeed {
   constructor(
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Permission)
+    private readonly permissionRepository: Repository<Permission>,
+    @InjectRepository(RolePermission)
+    private readonly rolePermissionRepository: Repository<RolePermission>,
   ) {}
 
   roles = [
@@ -27,16 +33,36 @@ export class RoleSeed {
   private async create(params: { id: string; name: string }) {
     const { id, name } = params;
 
-    const isExist = await this.roleRepository.findOne({
+    let role = await this.roleRepository.findOne({
       where: { id },
     });
 
-    if (isExist) {
-      isExist.name = name;
-      return this.roleRepository.save(isExist);
+    if (!role) {
+      role = this.roleRepository.create(params);
+      role = await this.roleRepository.save(role);
     } else {
-      const newRole = this.roleRepository.create(params);
-      return this.roleRepository.save(newRole);
+      role.name = name;
+      role = await this.roleRepository.save(role);
     }
+
+    // Si es ADMIN, le asignamos todos los permisos por defecto
+    if (id === 'ADMIN') {
+      const allPermissions = await this.permissionRepository.find();
+      for (const permission of allPermissions) {
+        const exist = await this.rolePermissionRepository.findOne({
+          where: { roleId: role.id, permissionId: permission.id },
+        });
+
+        if (!exist) {
+          const rolePermission = this.rolePermissionRepository.create({
+            roleId: role.id,
+            permissionId: permission.id,
+          });
+          await this.rolePermissionRepository.save(rolePermission);
+        }
+      }
+    }
+
+    return role;
   }
 }

@@ -7,6 +7,7 @@ import { ClassroomSeed } from './classroom.seed';
 import { DocumentTypeSeed } from './document-type.seed';
 import { EmployeeTypeSeed } from './employee-type.seed';
 import { GenderSeed } from './gender.seed';
+import { PermissionSeed } from './permission.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
 import { RoleSeed } from './role.seed';
 
@@ -21,6 +22,7 @@ export class SeedService {
     private readonly employeeTypeSeed: EmployeeTypeSeed,
     private readonly relationshipTypeSeed: RelationshipTypeSeed,
     private readonly roleSeed: RoleSeed,
+    private readonly permissionSeed: PermissionSeed,
     private readonly academicYearSeed: AcademicYearSeed,
     private readonly classroomSeed: ClassroomSeed,
   ) {}
@@ -31,6 +33,7 @@ export class SeedService {
     await this.genderSeed.run();
     await this.attendanceTypeSeed.run();
     await this.relationshipTypeSeed.run();
+    await this.permissionSeed.run();
     await this.roleSeed.run();
     await this.employeeTypeSeed.run();
     // await this.academicYearSeed.run();

@@ -5,6 +5,8 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { AuthController } from './controllers/auth.controller';
+import { Permission } from './entities/permission.entity';
+import { RolePermission } from './entities/role-permission.entity';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
 import { AuthService } from './services/auth.service';
@@ -16,7 +18,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, FacebookService, GoogleService],
   imports: [
-    TypeOrmModule.forFeature([User, Role, PersonRole]),
+    TypeOrmModule.forFeature([
+      User,
+      Role,
+      PersonRole,
+      Permission,
+      RolePermission,
+    ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
     JwtModule.registerAsync({
