@@ -15,6 +15,7 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+import { PersonRole } from './person-role.entity';
 
 @Entity('people')
 @Unique('UQ_people_document', ['documentTypeId', 'documentNumber'])
@@ -26,6 +27,9 @@ export class Person {
     nullable: true,
   })
   user: User | null;
+
+  @OneToMany(() => PersonRole, (personRole) => personRole.person)
+  personRoles: PersonRole[];
 
   @OneToMany(() => Employee, (employee) => employee.person)
   employees: Employee[];

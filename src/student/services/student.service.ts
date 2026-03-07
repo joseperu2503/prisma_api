@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserRole } from 'src/auth/entities/user-role.entity';
 import { User } from 'src/auth/entities/user.entity';
+import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
@@ -44,12 +44,12 @@ export class StudentService {
 
         const savedUser = await manager.save(user);
 
-        // 3️⃣ Asignar Rol de Estudiante
-        const userRole = manager.create(UserRole, {
-          userId: savedUser.id,
+        // 3️⃣ Asignar Rol de Estudiante a la PERSONA
+        const personRole = manager.create(PersonRole, {
+          personId: savedPerson.id,
           roleId: 'STUDENT',
         });
-        await manager.save(userRole);
+        await manager.save(personRole);
 
         // 4️⃣ Crear estudiante
         const student = manager.create(Student, {

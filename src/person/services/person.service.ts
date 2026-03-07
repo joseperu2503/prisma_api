@@ -16,14 +16,12 @@ export class PersonService {
     private readonly roleRepository: Repository<Role>,
   ) {}
 
-  async getRoles(documentNumbers: string) {
+  async getRoles(documentNumber: string) {
     const roles = await this.roleRepository.find({
       where: {
-        userRoles: {
-          user: {
-            person: {
-              documentNumber: documentNumbers,
-            },
+        personRoles: {
+          person: {
+            documentNumber: documentNumber,
           },
         },
       },
@@ -35,6 +33,7 @@ export class PersonService {
   async generateQrPdf(documentNumbers: string[]): Promise<Buffer> {
     const people = await this.personRepository.find({
       where: { documentNumber: In(documentNumbers) },
+      relations: ['personRoles', 'personRoles.role'],
     });
 
     if (!people.length) {
@@ -66,7 +65,7 @@ export class PersonService {
     for (let i = 0; i < people.length; i++) {
       const person = people[i];
 
-      const roles = await this.getRoles(person.documentNumber);
+      const roles = person.personRoles.map((pr) => pr.role);
       console.log({ roles });
 
       if (roles.length === 0) {

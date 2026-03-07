@@ -1,3 +1,4 @@
+import { Role } from 'src/auth/entities/role.entity';
 import {
   Column,
   CreateDateColumn,
@@ -7,20 +8,19 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Role } from './role.entity';
-import { User } from './user.entity';
+import { Person } from './person.entity';
 
-@Entity('user_roles')
-export class UserRole {
+@Entity('person_roles')
+export class PersonRole {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
+  @ManyToOne(() => Person)
+  @JoinColumn({ name: 'person_id' })
+  person: Person;
 
-  @Column('uuid', { name: 'user_id' })
-  userId: string;
+  @Column('uuid', { name: 'person_id' })
+  personId: string;
 
   @ManyToOne(() => Role)
   @JoinColumn({ name: 'role_id' })

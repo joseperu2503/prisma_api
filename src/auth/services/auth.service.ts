@@ -62,9 +62,10 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       where: { person: { documentNumber } },
       relations: {
-        person: true,
-        userRoles: {
-          role: true,
+        person: {
+          personRoles: {
+            role: true,
+          },
         },
       },
     });
@@ -141,7 +142,7 @@ export class AuthService {
           paternalLastName: user.person.paternalLastName,
           maternalLastName: user.person.maternalLastName,
         },
-        roles: user.userRoles.map((ur) => ur.roleId),
+        roles: user.person.personRoles.map((pr) => pr.roleId),
       },
       token: this.getJwt({ id: user.id }),
     };

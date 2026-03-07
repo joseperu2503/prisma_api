@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserRole } from 'src/auth/entities/user-role.entity';
 import { User } from 'src/auth/entities/user.entity';
+import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateEmployeeDto, CreateEmployeeTypeDto } from '../dto/employee.dto';
@@ -139,17 +139,17 @@ export class EmployeeService {
           user = await manager.save(user);
         }
 
-        // 4️⃣ Asignar Rol de Empleado
-        const existingRole = await manager.findOne(UserRole, {
-          where: { userId: user.id, roleId: 'EMPLOYEE' },
+        // 4️⃣ Asignar Rol de Empleado a la PERSONA
+        const existingRole = await manager.findOne(PersonRole, {
+          where: { personId: person.id, roleId: 'EMPLOYEE' },
         });
 
         if (!existingRole) {
-          const userRole = manager.create(UserRole, {
-            userId: user.id,
+          const personRole = manager.create(PersonRole, {
+            personId: person.id,
             roleId: 'EMPLOYEE',
           });
-          await manager.save(userRole);
+          await manager.save(personRole);
         }
 
         // 4️⃣.5️⃣ Validar combinación única Persona-Tipo
