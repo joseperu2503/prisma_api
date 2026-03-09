@@ -1,11 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-  ValidateNested,
-} from 'class-validator';
+import { IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { NewPersonDto } from 'src/employee/dto/employee.dto';
 
 export class CreateStudentDto {
@@ -18,7 +12,7 @@ export class CreateStudentDto {
   @Type(() => NewPersonDto)
   newPerson: NewPersonDto | null;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  password: string;
+  password?: string;
 }

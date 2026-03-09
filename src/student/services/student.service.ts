@@ -13,6 +13,7 @@ import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
+import { UpdateStudentDto } from '../dto/update-student.dto';
 import { Student } from '../entities/student.entity';
 
 @Injectable()
@@ -20,6 +21,9 @@ export class StudentService {
   constructor(
     @InjectRepository(Student)
     private readonly studentRepository: Repository<Student>,
+
+    @InjectRepository(Person)
+    private readonly personRepository: Repository<Person>,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -78,7 +82,7 @@ export class StudentService {
       if (!user) {
         user = queryRunner.manager.create(User, {
           personId: person.id,
-          password: bcrypt.hashSync(password, 10),
+          password: bcrypt.hashSync(password ?? person.documentNumber, 10),
         });
         user = await queryRunner.manager.save(user);
       }
@@ -157,10 +161,38 @@ export class StudentService {
     }
   }
 
-  async findAll() {
-    return this.studentRepository.find({
+  async findAllPaginated(page: number, limit: number, search?: string) {
+    const qb = this.studentRepository
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.person', 'p')
+      .orderBy('p.paternalLastName', 'ASC')
+      .addOrderBy('p.names', 'ASC');
+
+    if (search) {
+      qb.where(
+        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    const total = await qb.getCount();
+    const data = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return { data, total, page, limit };
+  }
+
+  async findOne(id: string) {
+    const student = await this.studentRepository.findOne({
+      where: { id },
       relations: { person: true },
     });
+    if (!student) {
+      throw new NotFoundException(`Student with ID ${id} not found`);
+    }
+    return student;
   }
 
   async findById(id: string) {
@@ -168,5 +200,20 @@ export class StudentService {
       where: { id },
       relations: { person: true },
     });
+  }
+
+  async update(id: string, dto: UpdateStudentDto) {
+    const student = await this.findOne(id);
+    Object.assign(student.person, dto);
+    await this.personRepository.save(student.person);
+    return this.studentRepository.findOne({
+      where: { id },
+      relations: { person: true },
+    });
+  }
+
+  async remove(id: string) {
+    const student = await this.findOne(id);
+    return this.studentRepository.remove(student);
   }
 }
