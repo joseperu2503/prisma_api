@@ -11,8 +11,17 @@ export class ClassroomSeed {
   ) {}
 
   classrooms = [
-    { name: 'Primer Grado Primaria' },
-    { name: 'Segundo Grado Primaria' },
+    { name: 'Primer Grado A' },
+    { name: 'Primer Grado B' },
+    { name: 'Segundo Grado A' },
+    { name: 'Segundo Grado B' },
+    { name: 'Tercer Grado' },
+    { name: 'Cuarto Grado' },
+    { name: 'Quinto Grado' },
+    { name: 'Sexto Grado' },
+    { name: 'Primero Secundaria' },
+    { name: 'Segundo Secundaria' },
+    { name: 'Tercero Secundaria' },
   ];
 
   async run() {

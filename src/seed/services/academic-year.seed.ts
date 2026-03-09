@@ -11,11 +11,9 @@ export class AcademicYearSeed {
   ) {}
 
   academicYears = [
-    {
-      name: '2026',
-      startDate: new Date('2026-03-01'),
-      endDate: new Date('2026-12-31'),
-    },
+    { name: '2024', startDate: new Date('2024-03-01'), endDate: new Date('2024-12-20') },
+    { name: '2025', startDate: new Date('2025-03-01'), endDate: new Date('2025-12-19') },
+    { name: '2026', startDate: new Date('2026-03-01'), endDate: new Date('2026-12-18') },
   ];
 
   async run() {

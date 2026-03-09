@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAcademicYearDto } from '../dto/create-academic-year.dto';
@@ -12,7 +16,36 @@ export class AcademicYearService {
     private readonly academicYearRepository: Repository<AcademicYear>,
   ) {}
 
+  private async checkOverlap(
+    startDate: string,
+    endDate: string,
+    excludeId?: string,
+  ) {
+    const qb = this.academicYearRepository
+      .createQueryBuilder('ay')
+      .where('ay.startDate <= :endDate AND ay.endDate >= :startDate', {
+        startDate,
+        endDate,
+      });
+
+    if (excludeId) {
+      qb.andWhere('ay.id != :excludeId', { excludeId });
+    }
+
+    const overlapping = await qb.getOne();
+
+    if (overlapping) {
+      throw new ConflictException(
+        `Las fechas se solapan con el año académico "${overlapping.name}" (${overlapping.startDate} - ${overlapping.endDate})`,
+      );
+    }
+  }
+
   async create(createAcademicYearDto: CreateAcademicYearDto) {
+    await this.checkOverlap(
+      createAcademicYearDto.startDate,
+      createAcademicYearDto.endDate,
+    );
     const academicYear = this.academicYearRepository.create(
       createAcademicYearDto,
     );
@@ -49,6 +82,14 @@ export class AcademicYearService {
 
   async update(id: string, updateAcademicYearDto: UpdateAcademicYearDto) {
     const academicYear = await this.findOne(id);
+
+    const startDate = updateAcademicYearDto.startDate;
+    const endDate = updateAcademicYearDto.endDate;
+
+    if (updateAcademicYearDto.startDate || updateAcademicYearDto.endDate) {
+      await this.checkOverlap(startDate, endDate, id);
+    }
+
     const updatedAcademicYear = this.academicYearRepository.merge(
       academicYear,
       updateAcademicYearDto,

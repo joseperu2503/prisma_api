@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { AuthService } from 'src/auth/services/auth.service';
 import { DataSource } from 'typeorm';
 import { AcademicYearSeed } from './academic-year.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
 import { ClassroomSeed } from './classroom.seed';
 import { DocumentTypeSeed } from './document-type.seed';
+import { EnrollmentSeed } from './enrollment.seed';
 import { GenderSeed } from './gender.seed';
 import { PermissionSeed } from './permission.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
 import { RoleSeed } from './role.seed';
+import { StudentSeed } from './student.seed';
 
 @Injectable()
 export class SeedService {
   constructor(
     private readonly dataSource: DataSource,
-    private readonly authService: AuthService,
     private readonly documentTypeSeed: DocumentTypeSeed,
     private readonly genderSeed: GenderSeed,
     private readonly attendanceTypeSeed: AttendanceTypeSeed,
@@ -23,6 +23,8 @@ export class SeedService {
     private readonly permissionSeed: PermissionSeed,
     private readonly academicYearSeed: AcademicYearSeed,
     private readonly classroomSeed: ClassroomSeed,
+    private readonly studentSeed: StudentSeed,
+    private readonly enrollmentSeed: EnrollmentSeed,
   ) {}
 
   async runSeed() {
@@ -33,8 +35,10 @@ export class SeedService {
     await this.relationshipTypeSeed.run();
     await this.permissionSeed.run();
     await this.roleSeed.run();
-    // await this.academicYearSeed.run();
-    // await this.classroomSeed.run();
+    await this.academicYearSeed.run();
+    await this.classroomSeed.run();
+    await this.studentSeed.run();
+    await this.enrollmentSeed.run();
   }
 
   async dropAllTables(): Promise<void> {
