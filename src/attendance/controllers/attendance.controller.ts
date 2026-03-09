@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Auth } from 'src/auth/decorators/auth.decorator';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceService } from '../services/attendance.service';
 
+@Auth(['ADMIN', 'STUDENT'])
 @Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}

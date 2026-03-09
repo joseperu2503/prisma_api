@@ -57,7 +57,7 @@ export class AuthService {
   }
 
   async login(params: LoginRequestDto) {
-    const { password, documentNumber } = params;
+    const { password, documentNumber, client } = params;
 
     const user = await this.userRepository.findOne({
       where: { person: { documentNumber } },
@@ -70,17 +70,31 @@ export class AuthService {
       },
     });
 
-    //si el usuario con el documentNumber no existe
     if (!user) {
-      throw new UnauthorizedException(`Credentials are not valid`);
+      throw new UnauthorizedException(`Credenciales inválidas`);
     }
 
-    //si la contraseña es incorrecta
     if (!bcrypt.compareSync(password, user.password)) {
-      throw new UnauthorizedException(`Credentials are not valid`);
+      throw new UnauthorizedException(`Credenciales inválidas`);
     }
 
-    return this.buildAuthResponse(user);
+    const roleCodes = user.person.personRoles.map((pr) => pr.role.code);
+
+    const allowedByClient: Record<string, string[]> = {
+      web: ['ADMIN', 'STUDENT'],
+      app: ['ADMIN', 'STUDENT'],
+    };
+
+    const allowed = allowedByClient[client] ?? [];
+    if (!roleCodes.some((r) => allowed.includes(r))) {
+      throw new UnauthorizedException(
+        client === 'web'
+          ? 'Solo los administradores pueden acceder a la plataforma web'
+          : 'Solo estudiantes y administradores pueden acceder a la app',
+      );
+    }
+
+    return this.buildAuthResponse(user, client);
   }
 
   async loginGoogle(params: LoginGoogleRequestDto): Promise<AuthResponseDto> {
@@ -133,7 +147,10 @@ export class AuthService {
     return token;
   }
 
-  private buildAuthResponse(user: User): AuthResponseDto {
+  private buildAuthResponse(
+    user: User,
+    client: 'web' | 'app' = 'web',
+  ): AuthResponseDto {
     return {
       user: {
         id: user.id,
@@ -142,9 +159,9 @@ export class AuthService {
           paternalLastName: user.person.paternalLastName,
           maternalLastName: user.person.maternalLastName,
         },
-        roles: user.person.personRoles.map((pr) => pr.roleId),
+        roles: user.person.personRoles.map((pr) => pr.role?.code ?? pr.roleId),
       },
-      token: this.getJwt({ id: user.id }),
+      token: this.getJwt({ id: user.id, client }),
     };
   }
 }

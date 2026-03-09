@@ -18,10 +18,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  //validaciones personalizadas
-  async validate(payload: JwtPayload): Promise<User> {
-    const { id } = payload;
-    const user = await this.userRepository.findOne({ where: { id } });
+  async validate(payload: JwtPayload) {
+    const { id, client } = payload;
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: { person: { personRoles: { role: true } } },
+    });
 
     if (!user) {
       throw new UnauthorizedException('Invalid token.');
@@ -31,6 +33,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Inactive user.');
     }
 
-    return user;
+    const roles = user.person.personRoles.map((pr) => pr.role?.code ?? '');
+
+    return { ...user, client, roles };
   }
 }

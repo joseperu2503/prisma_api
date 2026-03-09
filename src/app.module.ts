@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicPeriodModule } from './academic-period/academic-period.module';
 import { AcademicYearModule } from './academic-year/academic-year.module';
+import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
@@ -33,6 +34,7 @@ import { StudentModule } from './student/student.module';
     SeedModule,
     AuthModule,
     PersonModule,
+    AdminModule,
     StudentModule,
     GuardianModule,
     EmployeeModule,

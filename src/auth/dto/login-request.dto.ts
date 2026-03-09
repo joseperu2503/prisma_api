@@ -6,6 +6,9 @@ export class LoginRequestDto {
 
   @IsString()
   password: string;
+
+  @IsIn(['web', 'app'])
+  client: 'web' | 'app';
 }
 
 export class LoginGoogleRequestDto {
