@@ -7,8 +7,10 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreateAcademicYearDto } from '../dto/create-academic-year.dto';
+import { QueryAcademicYearDto } from '../dto/query-academic-year.dto';
 import { UpdateAcademicYearDto } from '../dto/update-academic-year.dto';
 import { AcademicYearService } from '../services/academic-year.service';
 
@@ -22,13 +24,20 @@ export class AcademicYearController {
   }
 
   @Get()
-  findAll() {
-    return this.academicYearService.findAll();
+  findAll(@Query() query: QueryAcademicYearDto) {
+    const page = parseInt(query.page ?? '1');
+    const limit = parseInt(query.limit ?? '10');
+    return this.academicYearService.findAllPaginated(page, limit, query.search);
   }
 
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.academicYearService.findOne(id);
+  }
+
+  @Patch(':id/toggle-active')
+  toggleActive(@Param('id', ParseUUIDPipe) id: string) {
+    return this.academicYearService.toggleActive(id);
   }
 
   @Patch(':id')

@@ -19,10 +19,24 @@ export class AcademicYearService {
     return await this.academicYearRepository.save(academicYear);
   }
 
-  async findAll() {
-    return await this.academicYearRepository.find({
-      order: { startDate: 'DESC' },
-    });
+  async findAllPaginated(page: number, limit: number, search?: string) {
+    const qb = this.academicYearRepository
+      .createQueryBuilder('ay')
+      .orderBy('ay.startDate', 'DESC');
+
+    if (search) {
+      qb.where('LOWER(ay.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    const total = await qb.getCount();
+    const data = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return { data, total, page, limit };
   }
 
   async findOne(id: string) {
@@ -45,6 +59,12 @@ export class AcademicYearService {
   async remove(id: string) {
     const academicYear = await this.findOne(id);
     return await this.academicYearRepository.remove(academicYear);
+  }
+
+  async toggleActive(id: string) {
+    const academicYear = await this.findOne(id);
+    academicYear.isActive = !academicYear.isActive;
+    return await this.academicYearRepository.save(academicYear);
   }
 
   async findByName(name: string) {
