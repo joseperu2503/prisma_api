@@ -1,4 +1,4 @@
-import { IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class RegisterAttendanceDto {
   @IsUUID()
@@ -9,4 +9,8 @@ export class RegisterAttendanceDto {
 
   @IsString()
   type: string;
+
+  @IsDateString()
+  @IsOptional()
+  date?: string;
 }

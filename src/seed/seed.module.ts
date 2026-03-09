@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicYearModule } from 'src/academic-year/academic-year.module';
 import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
 import { AttendanceModule } from 'src/attendance/attendance.module';
+import { AttendanceDay } from 'src/attendance/entities/attendance-day.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { ClassroomModule } from 'src/classroom/classroom.module';
 import { Classroom } from 'src/classroom/entities/classroom.entity';
@@ -14,6 +15,7 @@ import { Person } from 'src/person/entities/person.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { StudentModule } from 'src/student/student.module';
 import { AcademicYearSeed } from './services/academic-year.seed';
+import { AttendanceSeed } from './services/attendance.seed';
 import { AttendanceTypeSeed } from './services/attendance-type.seed';
 import { ClassroomSeed } from './services/classroom.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
@@ -38,6 +40,7 @@ import { StudentSeed } from './services/student.seed';
     PermissionSeed,
     StudentSeed,
     EnrollmentSeed,
+    AttendanceSeed,
   ],
   imports: [
     AuthModule,
@@ -48,7 +51,7 @@ import { StudentSeed } from './services/student.seed';
     ClassroomModule,
     StudentModule,
     EnrollmentModule,
-    TypeOrmModule.forFeature([AcademicYear, Classroom, Enrollment, Person, Student]),
+    TypeOrmModule.forFeature([AcademicYear, Classroom, Enrollment, Person, Student, AttendanceDay]),
   ],
   exports: [SeedService],
 })
