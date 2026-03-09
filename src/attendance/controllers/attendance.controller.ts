@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
+import { RoleCode } from 'src/auth/enums/role-code.enum';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceService } from '../services/attendance.service';
 
-@Auth(['ADMIN', 'STUDENT'])
+@Auth([RoleCode.ADMIN, RoleCode.STUDENT])
 @Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
@@ -24,6 +25,10 @@ export class AttendanceController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.attendanceService.getAttendanceByDocument(documentNumber, from, to);
+    return this.attendanceService.getAttendanceByDocument(
+      documentNumber,
+      from,
+      to,
+    );
   }
 }

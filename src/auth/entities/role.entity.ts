@@ -1,5 +1,6 @@
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { RoleCode } from '../enums/role-code.enum';
 import { RolePermission } from './role-permission.entity';
 
 @Entity('roles')
@@ -8,7 +9,7 @@ export class Role {
   id: string;
 
   @Column('text', { unique: true, nullable: true })
-  code: string;
+  code: RoleCode;
 
   @Column('text', { unique: true })
   name: string;

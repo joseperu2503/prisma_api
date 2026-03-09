@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
+import { RoleCode } from 'src/auth/enums/role-code.enum';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { PersonService } from 'src/person/services/person.service';
 import { DataSource, Repository } from 'typeorm';
@@ -49,7 +50,7 @@ export class AdminService {
       }
 
       const adminRole = await queryRunner.manager.findOne(Role, {
-        where: { code: 'ADMIN' },
+        where: { code: RoleCode.ADMIN },
       });
 
       if (!adminRole) {
@@ -138,7 +139,9 @@ export class AdminService {
     return {
       id: user.id,
       isActive: user.isActive,
-      message: user.isActive ? 'Administrador activado' : 'Administrador desactivado',
+      message: user.isActive
+        ? 'Administrador activado'
+        : 'Administrador desactivado',
     };
   }
 }

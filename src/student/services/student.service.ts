@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
+import { RoleCode } from 'src/auth/enums/role-code.enum';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
@@ -68,7 +69,7 @@ export class StudentService {
 
       // 3️⃣ Asignar Rol de Estudiante a la PERSONA
       const studentRole = await queryRunner.manager.findOne(Role, {
-        where: { code: 'STUDENT' },
+        where: { code: RoleCode.STUDENT },
       });
 
       if (!studentRole) {
@@ -211,7 +212,7 @@ export class StudentService {
 
     try {
       const studentRole = await queryRunner.manager.findOne(Role, {
-        where: { code: 'STUDENT' },
+        where: { code: RoleCode.STUDENT },
       });
 
       if (studentRole) {
@@ -227,7 +228,11 @@ export class StudentService {
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new HttpException(
-        { success: false, message: 'Error al eliminar el estudiante', error: error.message },
+        {
+          success: false,
+          message: 'Error al eliminar el estudiante',
+          error: error.message,
+        },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     } finally {

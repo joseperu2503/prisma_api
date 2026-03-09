@@ -15,6 +15,8 @@ import {
 } from '../dto/login-request.dto';
 import { RegisterRequestDto } from '../dto/register-request.dto';
 import { User } from '../entities/user.entity';
+import { ClientType } from '../enums/client-type.enum';
+import { RoleCode } from '../enums/role-code.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { FacebookService } from './facebook.service';
 import { GoogleService } from './google.service';
@@ -80,17 +82,16 @@ export class AuthService {
 
     const roleCodes = user.person.personRoles.map((pr) => pr.role.code);
 
-    const allowedByClient: Record<string, string[]> = {
-      web: ['ADMIN', 'STUDENT'],
-      app: ['ADMIN', 'STUDENT'],
+    const allowedByClient: Record<ClientType, RoleCode[]> = {
+      web: [RoleCode.ADMIN, RoleCode.STUDENT],
+      app: [RoleCode.ADMIN, RoleCode.STUDENT],
     };
 
-    const allowed = allowedByClient[client] ?? [];
+    const allowed = allowedByClient[client];
+
     if (!roleCodes.some((r) => allowed.includes(r))) {
       throw new UnauthorizedException(
-        client === 'web'
-          ? 'Solo los administradores pueden acceder a la plataforma web'
-          : 'Solo estudiantes y administradores pueden acceder a la app',
+        'El usuario no tiene permisos para acceder',
       );
     }
 

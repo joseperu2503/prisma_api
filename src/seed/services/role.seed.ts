@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from 'src/auth/entities/permission.entity';
 import { RolePermission } from 'src/auth/entities/role-permission.entity';
 import { Role } from 'src/auth/entities/role.entity';
+import { RoleCode } from 'src/auth/enums/role-code.enum';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -17,11 +18,11 @@ export class RoleSeed {
   ) {}
 
   roles = [
-    { code: 'ADMIN', name: 'Administrador', isEmployee: false },
-    { code: 'STUDENT', name: 'Estudiante', isEmployee: false },
-    { code: 'TEACHER', name: 'Docente', isEmployee: true },
-    { code: 'GUARDIAN', name: 'Apoderado', isEmployee: false },
-    { code: 'SECRETARY', name: 'Secretaria', isEmployee: true },
+    { code: RoleCode.ADMIN, name: 'Administrador', isEmployee: false },
+    { code: RoleCode.STUDENT, name: 'Estudiante', isEmployee: false },
+    { code: RoleCode.TEACHER, name: 'Docente', isEmployee: true },
+    { code: RoleCode.GUARDIAN, name: 'Apoderado', isEmployee: false },
+    { code: RoleCode.SECRETARY, name: 'Secretaria', isEmployee: true },
   ];
 
   async run() {
@@ -31,7 +32,7 @@ export class RoleSeed {
   }
 
   private async create(params: {
-    code: string;
+    code: RoleCode;
     name: string;
     isEmployee: boolean;
   }) {
