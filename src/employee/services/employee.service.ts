@@ -12,7 +12,7 @@ import { User } from 'src/auth/entities/user.entity';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { PersonService } from 'src/person/services/person.service';
 import { DataSource, Repository } from 'typeorm';
-import { CreateEmployeeDto } from '../dto/employee.dto';
+import { CreateEmployeeDto } from '../dto/create-employee.dto';
 import { UpdateEmployeeDto } from '../dto/update-employee.dto';
 import { Employee } from '../entities/employee.entity';
 
@@ -155,6 +155,28 @@ export class EmployeeService {
 
   async remove(id: string) {
     const employee = await this.findOne(id);
-    return this.employeeRepository.remove(employee);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.delete(PersonRole, {
+        personId: employee.personId,
+        roleId: employee.roleId,
+      });
+
+      await queryRunner.manager.remove(Employee, employee);
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new HttpException(
+        { success: false, message: 'Error al eliminar el colaborador', error: error.message },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

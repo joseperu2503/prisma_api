@@ -9,8 +9,8 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { CreateEmployeeDto } from '../dto/create-employee.dto';
 import { QueryEmployeeDto } from '../dto/query-employee.dto';
-import { CreateEmployeeDto } from '../dto/employee.dto';
 import { UpdateEmployeeDto } from '../dto/update-employee.dto';
 import { EmployeeService } from '../services/employee.service';
 
