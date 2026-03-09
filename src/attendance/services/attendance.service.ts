@@ -36,16 +36,16 @@ export class AttendanceService {
           );
         }
 
-        const today = new Date();
+        const date = params.date ? new Date(params.date) : new Date();
 
         let attendanceDay = await manager.findOne(AttendanceDay, {
-          where: { personId: person.id, date: today },
+          where: { personId: person.id, date },
         });
 
         if (!attendanceDay) {
           attendanceDay = manager.create(AttendanceDay, {
             personId: person.id,
-            date: today,
+            date,
           });
         }
 
@@ -77,7 +77,7 @@ export class AttendanceService {
         const attendanceLog = manager.create(AttendanceLog, {
           attendanceDayId: attendanceDay.id,
           typeId: params.type,
-          markedAt: today,
+          markedAt: date,
         });
 
         await manager.save(attendanceLog);

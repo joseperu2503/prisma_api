@@ -12,6 +12,6 @@ import { AttendanceService } from './services/attendance.service';
   imports: [
     TypeOrmModule.forFeature([AttendanceDay, AttendanceLog, AttendanceType]),
   ],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, AttendanceService],
 })
 export class AttendanceModule {}
