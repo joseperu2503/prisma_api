@@ -50,11 +50,14 @@ export class ImportService {
         await this.academicYearService.findOrCreate(academicYearName);
 
       const student = await this.studentService.create({
-        names: row.getCell(2).text,
-        paternalLastName: row.getCell(3).text,
-        maternalLastName: row.getCell(4).text,
-        documentTypeId: 'dni',
-        documentNumber: row.getCell(1).text,
+        newPerson: {
+          names: row.getCell(2).text,
+          paternalLastName: row.getCell(3).text,
+          maternalLastName: row.getCell(4).text,
+          documentTypeId: 'dni',
+          documentNumber: row.getCell(1).text,
+        },
+        personId: null,
         password: '123456',
       });
 
