@@ -4,15 +4,13 @@ import * as ExcelJS from 'exceljs';
 import { AcademicYearService } from 'src/academic-year/services/academic-year.service';
 import { ClassroomService } from 'src/classroom/services/classroom.service';
 import { EnrollmentService } from 'src/enrollment/services/enrollment.service';
-import { StudentService } from './student.service';
 
 @Injectable()
 export class ImportService {
   constructor(
-    private readonly studentService: StudentService,
     private readonly classroomService: ClassroomService,
     private readonly academicYearService: AcademicYearService,
-    private readonly enrollmentServce: EnrollmentService,
+    private readonly enrollmentService: EnrollmentService,
   ) {}
 
   async processExcel(buffer: any) {
@@ -49,21 +47,19 @@ export class ImportService {
       const academicYear =
         await this.academicYearService.findOrCreate(academicYearName);
 
-      const student = await this.studentService.create({
-        person: {
-          names: row.getCell(2).text,
-          paternalLastName: row.getCell(3).text,
-          maternalLastName: row.getCell(4).text,
-          documentTypeId: 'dni',
-          documentNumber: row.getCell(1).text,
-        },
-        password: '123456',
-      });
-
-      await this.enrollmentServce.create({
+      await this.enrollmentService.create({
         academicYearId: academicYear.id,
         classroomId: classroom.id,
-        studentId: student.id,
+        student: {
+          person: {
+            names: row.getCell(2).text,
+            paternalLastName: row.getCell(3).text,
+            maternalLastName: row.getCell(4).text,
+            documentTypeId: 'dni',
+            documentNumber: row.getCell(1).text,
+          },
+          password: '123456',
+        },
       });
     }
 

@@ -1,9 +1,8 @@
 import {
-  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
-  NotFoundException,
+  NotFoundException
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -31,7 +30,10 @@ export class StudentService {
     private readonly personService: PersonService,
   ) {}
 
-  async create(createStudentDto: CreateStudentDto, runner?: QueryRunner) {
+  async updateOrCreate(
+    createStudentDto: CreateStudentDto,
+    runner?: QueryRunner,
+  ) {
     const queryRunner = runner ?? this.dataSource.createQueryRunner();
     const isExternalTransaction = !!runner;
 
@@ -86,22 +88,23 @@ export class StudentService {
       }
 
       // 4️⃣ Validar unicidad y crear Student
+
+      let savedStudent: Student | null = null;
+
       const existingStudent = await queryRunner.manager.findOne(Student, {
         where: { personId: person.id },
       });
 
       if (existingStudent) {
-        throw new ConflictException(
-          `Esta persona ya está registrada como estudiante`,
-        );
+        savedStudent = existingStudent;
+      } else {
+        const student = queryRunner.manager.create(Student, {
+          personId: person.id,
+          userId: user.id,
+        });
+
+        savedStudent = await queryRunner.manager.save(student);
       }
-
-      const student = queryRunner.manager.create(Student, {
-        personId: person.id,
-        userId: user.id,
-      });
-
-      const savedStudent = await queryRunner.manager.save(student);
 
       if (!isExternalTransaction) {
         await queryRunner.commitTransaction();

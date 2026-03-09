@@ -1,10 +1,12 @@
 import {
-  BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { StudentService } from 'src/student/services/student.service';
+import { DataSource, Repository } from 'typeorm';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
 import { Enrollment } from '../entities/enrollment.entity';
@@ -14,25 +16,58 @@ export class EnrollmentService {
   constructor(
     @InjectRepository(Enrollment)
     private readonly enrollmentRepository: Repository<Enrollment>,
+
+    private readonly studentService: StudentService,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createEnrollmentDto: CreateEnrollmentDto) {
-    // Check if student is already enrolled in this academic year
-    const existingEnrollment = await this.enrollmentRepository.findOne({
-      where: {
-        studentId: createEnrollmentDto.studentId,
-        academicYearId: createEnrollmentDto.academicYearId,
-      },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
 
-    if (existingEnrollment) {
-      throw new BadRequestException(
-        'Student is already enrolled in this academic year',
+    try {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      const { student, ...enrollmentData } = createEnrollmentDto;
+
+      const savedStudent = await this.studentService.updateOrCreate(
+        student,
+        queryRunner,
       );
-    }
 
-    const enrollment = this.enrollmentRepository.create(createEnrollmentDto);
-    return await this.enrollmentRepository.save(enrollment);
+      // Check if student is already enrolled in this academic year
+      const existingEnrollment = await queryRunner.manager.findOne(Enrollment, {
+        where: {
+          studentId: savedStudent.id,
+          academicYearId: createEnrollmentDto.academicYearId,
+        },
+      });
+
+      if (!existingEnrollment) {
+        const enrollment = queryRunner.manager.create(Enrollment, {
+          ...enrollmentData,
+          studentId: savedStudent.id,
+        });
+
+        await queryRunner.manager.save(enrollment);
+      }
+
+      await queryRunner.commitTransaction();
+
+      return true;
+    } catch (error) {
+      throw new HttpException(
+        {
+          success: false,
+          message: 'An error occurred while creating the enrollment',
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async findAll() {

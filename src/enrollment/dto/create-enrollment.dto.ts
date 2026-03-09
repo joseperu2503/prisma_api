@@ -1,9 +1,17 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
+import { CreateStudentDto } from 'src/student/dto/create-student.dto';
 
 export class CreateEnrollmentDto {
-  @IsUUID()
-  @IsNotEmpty()
-  studentId: string;
+  @ValidateNested()
+  @Type(() => CreateStudentDto)
+  student: CreateStudentDto;
 
   @IsUUID()
   @IsNotEmpty()
