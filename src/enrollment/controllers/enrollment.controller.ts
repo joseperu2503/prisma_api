@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
+import { QueryEnrollmentDto } from '../dto/query-enrollment.dto';
 import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
 import { EnrollmentService } from '../services/enrollment.service';
 import { ImportService } from '../services/import.service';
@@ -21,30 +22,19 @@ import { ImportService } from '../services/import.service';
 export class EnrollmentController {
   constructor(
     private readonly enrollmentService: EnrollmentService,
-
     private readonly importService: ImportService,
   ) {}
 
   @Post()
-  create(@Body() createEnrollmentDto: CreateEnrollmentDto) {
-    return this.enrollmentService.create(createEnrollmentDto);
+  create(@Body() dto: CreateEnrollmentDto) {
+    return this.enrollmentService.create(dto);
   }
 
   @Get()
-  findAll(
-    @Query('academicYearId') academicYearId?: string,
-    @Query('classroomId') classroomId?: string,
-  ) {
-    if (classroomId && academicYearId) {
-      return this.enrollmentService.findByClassroom(
-        classroomId,
-        academicYearId,
-      );
-    }
-    if (academicYearId) {
-      return this.enrollmentService.findByYear(academicYearId);
-    }
-    return this.enrollmentService.findAll();
+  findAll(@Query() query: QueryEnrollmentDto) {
+    const page = parseInt(query.page ?? '1', 10);
+    const limit = parseInt(query.limit ?? '10', 10);
+    return this.enrollmentService.findAllPaginated(page, limit, query.search);
   }
 
   @Get(':id')
@@ -52,12 +42,17 @@ export class EnrollmentController {
     return this.enrollmentService.findOne(id);
   }
 
+  @Patch(':id/toggle-active')
+  toggleActive(@Param('id', ParseUUIDPipe) id: string) {
+    return this.enrollmentService.toggleActive(id);
+  }
+
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateEnrollmentDto: UpdateEnrollmentDto,
+    @Body() dto: UpdateEnrollmentDto,
   ) {
-    return this.enrollmentService.update(id, updateEnrollmentDto);
+    return this.enrollmentService.update(id, dto);
   }
 
   @Delete(':id')

@@ -223,6 +223,12 @@ export class PersonService {
     return result;
   }
 
+  async findByDocument(documentTypeId: string, documentNumber: string) {
+    return this.personRepository.findOne({
+      where: { documentTypeId, documentNumber },
+    });
+  }
+
   async updateOrCreatePerson(dto: CreatePersonDto, runner?: QueryRunner) {
     const queryRunner = runner ?? this.dataSource.createQueryRunner();
     const isExternalTransaction = !!runner;

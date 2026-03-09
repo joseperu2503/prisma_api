@@ -6,6 +6,14 @@ import { PersonService } from '../services/person.service';
 export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
+  @Get('by-document')
+  async findByDocument(
+    @Query('documentTypeId') documentTypeId: string,
+    @Query('documentNumber') documentNumber: string,
+  ) {
+    return this.personService.findByDocument(documentTypeId, documentNumber);
+  }
+
   @Get('export/qrs')
   async exportQrs(
     @Query('documentNumbers') documentNumbers: string,

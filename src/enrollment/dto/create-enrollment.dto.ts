@@ -1,25 +1,33 @@
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
-  IsNotEmpty,
   IsOptional,
+  IsString,
   IsUUID,
   ValidateNested,
 } from 'class-validator';
-import { CreateStudentDto } from 'src/student/dto/create-student.dto';
+import { CreatePersonDto } from 'src/person/dto/create-person.dto';
+
+export class StudentForEnrollmentDto {
+  @ValidateNested()
+  @Type(() => CreatePersonDto)
+  person: CreatePersonDto;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
+}
 
 export class CreateEnrollmentDto {
   @ValidateNested()
-  @Type(() => CreateStudentDto)
-  student: CreateStudentDto;
+  @Type(() => StudentForEnrollmentDto)
+  student: StudentForEnrollmentDto;
 
   @IsUUID()
-  @IsNotEmpty()
-  classroomId: string;
+  academicYearId?: string;
 
   @IsUUID()
-  @IsNotEmpty()
-  academicYearId: string;
+  classroomId?: string;
 
   @IsBoolean()
   @IsOptional()

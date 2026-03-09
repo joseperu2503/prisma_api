@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -22,45 +23,48 @@ export class EnrollmentService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createEnrollmentDto: CreateEnrollmentDto) {
+  async create(dto: CreateEnrollmentDto) {
     const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
     try {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-
-      const { student, ...enrollmentData } = createEnrollmentDto;
-
       const savedStudent = await this.studentService.updateOrCreate(
-        student,
+        dto.student,
         queryRunner,
       );
 
-      // Check if student is already enrolled in this academic year
-      const existingEnrollment = await queryRunner.manager.findOne(Enrollment, {
+      const existing = await queryRunner.manager.findOne(Enrollment, {
         where: {
           studentId: savedStudent.id,
-          academicYearId: createEnrollmentDto.academicYearId,
+          academicYearId: dto.academicYearId,
         },
       });
 
-      if (!existingEnrollment) {
-        const enrollment = queryRunner.manager.create(Enrollment, {
-          ...enrollmentData,
-          studentId: savedStudent.id,
-        });
-
-        await queryRunner.manager.save(enrollment);
+      if (existing) {
+        throw new ConflictException(
+          'El estudiante ya está matriculado en este año académico',
+        );
       }
 
+      const enrollment = queryRunner.manager.create(Enrollment, {
+        studentId: savedStudent.id,
+        academicYearId: dto.academicYearId,
+        classroomId: dto.classroomId,
+        isActive: dto.isActive ?? true,
+      });
+
+      await queryRunner.manager.save(enrollment);
       await queryRunner.commitTransaction();
 
-      return true;
+      return { success: true, message: 'Matrícula creada correctamente' };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof HttpException) throw error;
       throw new HttpException(
         {
           success: false,
-          message: 'An error occurred while creating the enrollment',
+          message: 'Error al crear la matrícula',
           error: error.message,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -70,14 +74,30 @@ export class EnrollmentService {
     }
   }
 
-  async findAll() {
-    return await this.enrollmentRepository.find({
-      relations: {
-        student: { person: true },
-        classroom: true,
-        academicYear: true,
-      },
-    });
+  async findAllPaginated(page: number, limit: number, search?: string) {
+    const qb = this.enrollmentRepository
+      .createQueryBuilder('e')
+      .leftJoinAndSelect('e.student', 's')
+      .leftJoinAndSelect('s.person', 'p')
+      .leftJoinAndSelect('e.classroom', 'c')
+      .leftJoinAndSelect('e.academicYear', 'ay')
+      .orderBy('p.paternalLastName', 'ASC')
+      .addOrderBy('p.names', 'ASC');
+
+    if (search) {
+      qb.where(
+        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    const total = await qb.getCount();
+    const data = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return { data, total, page, limit };
   }
 
   async findOne(id: string) {
@@ -95,36 +115,20 @@ export class EnrollmentService {
     return enrollment;
   }
 
-  async update(id: string, updateEnrollmentDto: UpdateEnrollmentDto) {
+  async update(id: string, dto: UpdateEnrollmentDto) {
     const enrollment = await this.findOne(id);
-    const updatedEnrollment = this.enrollmentRepository.merge(
-      enrollment,
-      updateEnrollmentDto,
-    );
-    return await this.enrollmentRepository.save(updatedEnrollment);
+    Object.assign(enrollment, dto);
+    return this.enrollmentRepository.save(enrollment);
   }
 
   async remove(id: string) {
     const enrollment = await this.findOne(id);
-    return await this.enrollmentRepository.remove(enrollment);
+    return this.enrollmentRepository.remove(enrollment);
   }
 
-  async findByYear(academicYearId: string) {
-    return await this.enrollmentRepository.find({
-      where: { academicYearId },
-      relations: {
-        student: { person: true },
-        classroom: true,
-      },
-    });
-  }
-
-  async findByClassroom(classroomId: string, academicYearId: string) {
-    return await this.enrollmentRepository.find({
-      where: { classroomId, academicYearId },
-      relations: {
-        student: { person: true },
-      },
-    });
+  async toggleActive(id: string) {
+    const enrollment = await this.findOne(id);
+    enrollment.isActive = !enrollment.isActive;
+    return this.enrollmentRepository.save(enrollment);
   }
 }
