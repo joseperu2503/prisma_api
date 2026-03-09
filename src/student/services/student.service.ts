@@ -11,6 +11,7 @@ import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
+import { PersonService } from 'src/person/services/person.service';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
 import { UpdateStudentDto } from '../dto/update-student.dto';
@@ -26,6 +27,8 @@ export class StudentService {
     private readonly personRepository: Repository<Person>,
 
     private readonly dataSource: DataSource,
+
+    private readonly personService: PersonService,
   ) {}
 
   async create(createStudentDto: CreateStudentDto, runner?: QueryRunner) {
@@ -38,41 +41,13 @@ export class StudentService {
     }
 
     try {
-      const { personId, newPerson, password } = createStudentDto;
-
-      let person: Person | null = null;
+      const { person: personDto, password } = createStudentDto;
 
       // 1️⃣ Resolver Persona
-      if (personId) {
-        person = await queryRunner.manager.findOne(Person, {
-          where: { id: personId },
-        });
-        if (!person) {
-          throw new NotFoundException(`Person with ID ${personId} not found`);
-        }
-      } else if (newPerson) {
-        const existingPerson = await queryRunner.manager.findOne(Person, {
-          where: {
-            documentTypeId: newPerson.documentTypeId,
-            documentNumber: newPerson.documentNumber,
-          },
-        });
-
-        if (existingPerson) {
-          person = existingPerson;
-        } else {
-          person = queryRunner.manager.create(Person, { ...newPerson });
-          person = await queryRunner.manager.save(person);
-        }
-      } else {
-        throw new HttpException(
-          {
-            success: false,
-            message: 'Debe enviar personId o datos para newPerson',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+      const person = await this.personService.updateOrCreatePerson(
+        personDto,
+        queryRunner,
+      );
 
       // 2️⃣ Resolver/Crear Usuario
       let user = await queryRunner.manager.findOne(User, {

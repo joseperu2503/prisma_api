@@ -1,9 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import PDFDocument from 'pdfkit';
 import * as QRCode from 'qrcode';
 import { Role } from 'src/auth/entities/role.entity';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, QueryRunner, Repository } from 'typeorm';
+import { CreatePersonDto } from '../dto/create-person.dto';
 import { Person } from '../entities/person.entity';
 
 @Injectable()
@@ -14,6 +20,8 @@ export class PersonService {
 
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async getRoles(documentNumber: string) {
@@ -213,5 +221,59 @@ export class PersonService {
     doc.end();
 
     return result;
+  }
+
+  async updateOrCreatePerson(dto: CreatePersonDto, runner?: QueryRunner) {
+    const queryRunner = runner ?? this.dataSource.createQueryRunner();
+    const isExternalTransaction = !!runner;
+
+    if (!isExternalTransaction) {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+    }
+
+    try {
+      const { ...newPerson } = dto;
+
+      let person: Person | null = null;
+
+      const existingPerson = await queryRunner.manager.findOne(Person, {
+        where: {
+          documentTypeId: newPerson.documentTypeId,
+          documentNumber: newPerson.documentNumber,
+        },
+      });
+
+      if (existingPerson) {
+        queryRunner.manager.merge(Person, existingPerson, newPerson);
+        person = await queryRunner.manager.save(existingPerson);
+      } else {
+        person = queryRunner.manager.create(Person, { ...newPerson });
+        person = await queryRunner.manager.save(person);
+      }
+
+      return person;
+    } catch (error) {
+      if (!isExternalTransaction) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        {
+          success: false,
+          message: 'An error occurred while creating the person',
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      if (!isExternalTransaction) {
+        await queryRunner.release();
+      }
+    }
   }
 }

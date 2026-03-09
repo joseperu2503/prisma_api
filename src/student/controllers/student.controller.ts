@@ -25,7 +25,7 @@ export class StudentController {
     private readonly importService: ImportService,
   ) {}
 
-  @Post()
+  @Post('create')
   async create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentService.create(createStudentDto);
   }
