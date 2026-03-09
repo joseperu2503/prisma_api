@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class NewPersonDto {
+export class PersonForEmployeeDto {
   @IsString()
   @IsNotEmpty()
   names: string;
@@ -53,22 +53,13 @@ export class NewPersonDto {
 }
 
 export class CreateEmployeeDto {
-  @IsOptional()
-  @IsUUID()
-  personId?: string;
-
-  @IsOptional()
   @ValidateNested()
-  @Type(() => NewPersonDto)
-  newPerson?: NewPersonDto;
+  @Type(() => PersonForEmployeeDto)
+  person: PersonForEmployeeDto;
 
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   roleId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  password: string;
 
   @IsBoolean()
   @IsOptional()

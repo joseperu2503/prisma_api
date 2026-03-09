@@ -7,7 +7,9 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
+import { QueryEmployeeDto } from '../dto/query-employee.dto';
 import { CreateEmployeeDto } from '../dto/employee.dto';
 import { UpdateEmployeeDto } from '../dto/update-employee.dto';
 import { EmployeeService } from '../services/employee.service';
@@ -16,14 +18,18 @@ import { EmployeeService } from '../services/employee.service';
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
-  @Post('create')
-  create(@Body() createEmployeeDto: CreateEmployeeDto) {
-    return this.employeeService.create(createEmployeeDto);
+  @Post()
+  create(@Body() dto: CreateEmployeeDto) {
+    return this.employeeService.create(dto);
   }
 
   @Get()
-  findAll() {
-    return this.employeeService.findAll();
+  findAll(@Query() query: QueryEmployeeDto) {
+    return this.employeeService.findAllPaginated(
+      query.page ?? 1,
+      query.limit ?? 10,
+      query.search,
+    );
   }
 
   @Get(':id')
@@ -31,21 +37,21 @@ export class EmployeeController {
     return this.employeeService.findOne(id);
   }
 
+  @Patch(':id/toggle-active')
+  toggleActive(@Param('id', ParseUUIDPipe) id: string) {
+    return this.employeeService.toggleActive(id);
+  }
+
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @Body() dto: UpdateEmployeeDto,
   ) {
-    return this.employeeService.update(id, updateEmployeeDto);
+    return this.employeeService.update(id, dto);
   }
 
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.employeeService.remove(id);
-  }
-
-  @Get('role/:role')
-  findByRole(@Param('role') role: string) {
-    return this.employeeService.findByRole(role);
   }
 }
