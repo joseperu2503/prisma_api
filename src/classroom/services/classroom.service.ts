@@ -25,10 +25,24 @@ export class ClassroomService {
     return await this.classroomRepository.save(classroom);
   }
 
-  async findAll() {
-    return await this.classroomRepository.find({
-      order: { name: 'ASC' },
-    });
+  async findAllPaginated(page: number, limit: number, search?: string) {
+    const qb = this.classroomRepository
+      .createQueryBuilder('c')
+      .orderBy('c.name', 'ASC');
+
+    if (search) {
+      qb.where('LOWER(c.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    const total = await qb.getCount();
+    const data = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return { data, total, page, limit };
   }
 
   async findOne(id: string) {
@@ -51,6 +65,12 @@ export class ClassroomService {
   async remove(id: string) {
     const classroom = await this.findOne(id);
     return await this.classroomRepository.remove(classroom);
+  }
+
+  async toggleActive(id: string) {
+    const classroom = await this.findOne(id);
+    classroom.isActive = !classroom.isActive;
+    return await this.classroomRepository.save(classroom);
   }
 
   async assignToYear(assignDto: AssignClassroomToYearDto) {

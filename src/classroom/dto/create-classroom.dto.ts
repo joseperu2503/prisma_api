@@ -1,12 +1,11 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateClassroomDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsInt()
-  @Min(1)
+  @IsBoolean()
   @IsOptional()
-  capacity?: number;
+  isActive?: boolean;
 }
