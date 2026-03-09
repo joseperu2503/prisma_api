@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceService } from '../services/attendance.service';
 
@@ -14,5 +14,14 @@ export class AttendanceController {
   @Get('last-attendances-day')
   lastAttendancesDay() {
     return this.attendanceService.lastAttendancesDay();
+  }
+
+  @Get('by-document/:documentNumber')
+  getByDocument(
+    @Param('documentNumber') documentNumber: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.attendanceService.getAttendanceByDocument(documentNumber, from, to);
   }
 }

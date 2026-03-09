@@ -103,6 +103,29 @@ export class AttendanceService {
     });
   }
 
+  async getAttendanceByDocument(documentNumber: string, from?: string, to?: string) {
+    const person = await this.dataSource
+      .getRepository(Person)
+      .findOneBy({ documentNumber });
+
+    if (!person) {
+      throw new NotFoundException('Persona no encontrada');
+    }
+
+    const qb = this.dataSource
+      .getRepository(AttendanceDay)
+      .createQueryBuilder('ad')
+      .leftJoinAndSelect('ad.logs', 'log')
+      .leftJoinAndSelect('log.type', 'type')
+      .where('ad.personId = :personId', { personId: person.id })
+      .orderBy('ad.date', 'ASC');
+
+    if (from) qb.andWhere('ad.date >= :from', { from });
+    if (to) qb.andWhere('ad.date <= :to', { to });
+
+    return qb.getMany();
+  }
+
   lastAttendancesDay() {
     //quiero retornar los ultimas 20 asistencias registradas, ordenadas por fecha de registro descendente
 
