@@ -4,7 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
+import { DataSource, Repository } from 'typeorm';
 import { CreateAcademicYearDto } from '../dto/create-academic-year.dto';
 import { UpdateAcademicYearDto } from '../dto/update-academic-year.dto';
 import { AcademicYear } from '../entities/academic-year.entity';
@@ -14,6 +15,7 @@ export class AcademicYearService {
   constructor(
     @InjectRepository(AcademicYear)
     private readonly academicYearRepository: Repository<AcademicYear>,
+    private readonly dataSource: DataSource,
   ) {}
 
   private async checkOverlap(
@@ -41,7 +43,25 @@ export class AcademicYearService {
     }
   }
 
+  private async checkNameDuplicate(name: string, excludeId?: string) {
+    const qb = this.academicYearRepository
+      .createQueryBuilder('ay')
+      .where('LOWER(ay.name) = :name', { name: name.toLowerCase() });
+
+    if (excludeId) {
+      qb.andWhere('ay.id != :excludeId', { excludeId });
+    }
+
+    const existing = await qb.getOne();
+    if (existing) {
+      throw new ConflictException(
+        `Ya existe un año académico con el nombre "${existing.name}"`,
+      );
+    }
+  }
+
   async create(createAcademicYearDto: CreateAcademicYearDto) {
+    await this.checkNameDuplicate(createAcademicYearDto.name);
     await this.checkOverlap(
       createAcademicYearDto.startDate,
       createAcademicYearDto.endDate,
@@ -83,6 +103,13 @@ export class AcademicYearService {
   async update(id: string, updateAcademicYearDto: UpdateAcademicYearDto) {
     const academicYear = await this.findOne(id);
 
+    if (
+      updateAcademicYearDto.name &&
+      updateAcademicYearDto.name.toLowerCase() !== academicYear.name.toLowerCase()
+    ) {
+      await this.checkNameDuplicate(updateAcademicYearDto.name, id);
+    }
+
     const startDate = updateAcademicYearDto.startDate;
     const endDate = updateAcademicYearDto.endDate;
 
@@ -99,6 +126,14 @@ export class AcademicYearService {
 
   async remove(id: string) {
     const academicYear = await this.findOne(id);
+    const enrollmentCount = await this.dataSource
+      .getRepository(Enrollment)
+      .countBy({ academicYearId: id });
+    if (enrollmentCount > 0) {
+      throw new ConflictException(
+        `No se puede eliminar el año académico porque tiene ${enrollmentCount} matrícula(s) asociada(s)`,
+      );
+    }
     return await this.academicYearRepository.remove(academicYear);
   }
 
