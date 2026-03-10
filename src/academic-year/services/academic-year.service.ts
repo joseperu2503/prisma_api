@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
+import { GradeYear } from 'src/grade/entities/grade-year.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateAcademicYearDto } from '../dto/create-academic-year.dto';
 import { UpdateAcademicYearDto } from '../dto/update-academic-year.dto';
@@ -15,6 +16,8 @@ export class AcademicYearService {
   constructor(
     @InjectRepository(AcademicYear)
     private readonly academicYearRepository: Repository<AcademicYear>,
+    @InjectRepository(GradeYear)
+    private readonly gradeYearRepository: Repository<GradeYear>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -159,5 +162,25 @@ export class AcademicYearService {
       });
     }
     return academicYear;
+  }
+
+  async getGradesByYear(yearId: string) {
+    await this.findOne(yearId);
+    return this.gradeYearRepository.find({
+      where: { academicYearId: yearId },
+      relations: { grade: { level: true } },
+    });
+  }
+
+  async syncGrades(yearId: string, gradeIds: string[]) {
+    await this.findOne(yearId);
+    await this.gradeYearRepository.delete({ academicYearId: yearId });
+    if (gradeIds.length > 0) {
+      const records = gradeIds.map((gradeId) =>
+        this.gradeYearRepository.create({ gradeId, academicYearId: yearId }),
+      );
+      await this.gradeYearRepository.save(records);
+    }
+    return { message: 'Grados sincronizados correctamente' };
   }
 }

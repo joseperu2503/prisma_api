@@ -34,6 +34,19 @@ export class AcademicYearController {
     return this.academicYearService.findAllPaginated(page, limit, query.search);
   }
 
+  @Get(':id/grades')
+  getGradesByYear(@Param('id', ParseUUIDPipe) id: string) {
+    return this.academicYearService.getGradesByYear(id);
+  }
+
+  @Post(':id/grades')
+  syncGrades(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { gradeIds: string[] },
+  ) {
+    return this.academicYearService.syncGrades(id, body.gradeIds);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.academicYearService.findOne(id);

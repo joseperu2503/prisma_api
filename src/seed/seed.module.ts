@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AcademicProgramModule } from 'src/academic-program/academic-program.module';
+import { AcademicProgram } from 'src/academic-program/entities/academic-program.entity';
 import { AcademicYearModule } from 'src/academic-year/academic-year.module';
 import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
 import { AttendanceModule } from 'src/attendance/attendance.module';
@@ -16,6 +18,7 @@ import { Person } from 'src/person/entities/person.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { StudentModule } from 'src/student/student.module';
 import { AdminModule } from 'src/admin/admin.module';
+import { AcademicProgramSeed } from './services/academic-program.seed';
 import { AcademicYearSeed } from './services/academic-year.seed';
 import { AdminSeed } from './services/admin.seed';
 import { AttendanceSeed } from './services/attendance.seed';
@@ -34,6 +37,7 @@ import { StudentSeed } from './services/student.seed';
 @Module({
   providers: [
     SeedService,
+    AcademicProgramSeed,
     DocumentTypeSeed,
     GenderSeed,
     AttendanceTypeSeed,
@@ -53,13 +57,14 @@ import { StudentSeed } from './services/student.seed';
     CommonModule,
     AttendanceModule,
     EmployeeModule,
+    AcademicProgramModule,
     AcademicYearModule,
     LevelModule,
     GradeModule,
     StudentModule,
     EnrollmentModule,
     AdminModule,
-    TypeOrmModule.forFeature([AcademicYear, Grade, Level, Enrollment, Person, Student]),
+    TypeOrmModule.forFeature([AcademicProgram, AcademicYear, Grade, Level, Enrollment, Person, Student]),
   ],
   exports: [SeedService],
 })
