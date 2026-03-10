@@ -16,6 +16,7 @@ import { PersonModule } from './person/person.module';
 import { SeedCommand } from './seed/commands/seed.command';
 import { SeedModule } from './seed/seed.module';
 import { StudentModule } from './student/student.module';
+import { TeacherModule } from './teacher/teacher.module';
 
 @Module({
   controllers: [AppController],
@@ -36,6 +37,7 @@ import { StudentModule } from './student/student.module';
     PersonModule,
     AdminModule,
     StudentModule,
+    TeacherModule,
     GuardianModule,
     EmployeeModule,
     CommonModule,
