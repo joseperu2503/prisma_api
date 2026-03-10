@@ -86,6 +86,12 @@ export class AttendanceService {
         return {
           success: true,
           message: 'Asistencia registrada correctamente',
+          person: {
+            names: person.names,
+            paternalLastName: person.paternalLastName,
+            maternalLastName: person.maternalLastName,
+            documentNumber: person.documentNumber,
+          },
         };
       } catch (error) {
         if (error instanceof HttpException) {

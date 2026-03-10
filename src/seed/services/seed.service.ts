@@ -44,7 +44,7 @@ export class SeedService {
     await this.studentSeed.run();
     await this.enrollmentSeed.run();
     await this.adminSeed.run();
-    await this.attendanceSeed.run();
+    // await this.attendanceSeed.run();
   }
 
   async dropAllTables(): Promise<void> {
