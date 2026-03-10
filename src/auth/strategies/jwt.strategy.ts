@@ -29,11 +29,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid token.');
     }
 
-    if (!user.isActive) {
+    const activePersonRoles = user.person.personRoles.filter((pr) => pr.isActive);
+
+    if (activePersonRoles.length === 0) {
       throw new UnauthorizedException('Inactive user.');
     }
 
-    const roles = user.person.personRoles.map((pr) => pr.role?.code ?? '');
+    const roles = activePersonRoles.map((pr) => pr.role?.code ?? '');
 
     return { ...user, client, roles };
   }

@@ -9,12 +9,16 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ClientType } from 'src/auth/enums/client-type.enum';
+import { RoleCode } from 'src/auth/enums/role-code.enum';
 import { AssignClassroomToYearDto } from '../dto/assign-classroom-to-year.dto';
 import { CreateClassroomDto } from '../dto/create-classroom.dto';
 import { QueryClassroomDto } from '../dto/query-classroom.dto';
 import { UpdateClassroomDto } from '../dto/update-classroom.dto';
 import { ClassroomService } from '../services/classroom.service';
 
+@Auth([RoleCode.ADMIN], [ClientType.WEB])
 @Controller('classroom')
 export class ClassroomController {
   constructor(private readonly classroomService: ClassroomService) {}

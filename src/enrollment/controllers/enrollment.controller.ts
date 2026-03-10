@@ -12,12 +12,15 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ClientType } from 'src/auth/enums/client-type.enum';
+import { RoleCode } from 'src/auth/enums/role-code.enum';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
 import { QueryEnrollmentDto } from '../dto/query-enrollment.dto';
 import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
 import { EnrollmentService } from '../services/enrollment.service';
 import { ImportService } from '../services/import.service';
-
+@Auth([RoleCode.ADMIN], [ClientType.WEB])
 @Controller('enrollments')
 export class EnrollmentController {
   constructor(

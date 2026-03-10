@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { AttendanceService } from 'src/attendance/services/attendance.service';
+import { User } from 'src/auth/entities/user.entity';
+import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { Repository } from 'typeorm';
 
 const STUDENT_DOCUMENTS = ['72345678', '74567890', '76789012'];
 
@@ -26,9 +30,28 @@ function pickSchoolDays(start: Date, end: Date, count: number): Date[] {
 
 @Injectable()
 export class AttendanceSeed {
-  constructor(private readonly attendanceService: AttendanceService) {}
+  constructor(
+    private readonly attendanceService: AttendanceService,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
   async run() {
+    const user = await this.userRepository.findOneBy({
+      person: {
+        personRoles: {
+          role: {
+            code: RoleCode.ADMIN,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new Error('No se encontró un usuario con rol de administrador');
+    }
+
     for (const documentNumber of STUDENT_DOCUMENTS) {
       for (const year of YEARS) {
         const days = pickSchoolDays(year.start, year.end, DAYS_PER_YEAR);
@@ -36,19 +59,25 @@ export class AttendanceSeed {
         for (const day of days) {
           const dateStr = day.toISOString().split('T')[0];
 
-          await this.attendanceService.registerAttendance({
-            documentTypeId: 'dni',
-            documentNumber,
-            type: 'check_in',
-            date: dateStr,
-          });
+          await this.attendanceService.registerAttendance(
+            {
+              documentTypeId: 'dni',
+              documentNumber,
+              type: 'check_in',
+              date: dateStr,
+            },
+            user.id,
+          );
 
-          await this.attendanceService.registerAttendance({
-            documentTypeId: 'dni',
-            documentNumber,
-            type: 'check_out',
-            date: dateStr,
-          });
+          await this.attendanceService.registerAttendance(
+            {
+              documentTypeId: 'dni',
+              documentNumber,
+              type: 'check_out',
+              date: dateStr,
+            },
+            user.id,
+          );
         }
       }
     }

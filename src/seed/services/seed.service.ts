@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { AcademicYearSeed } from './academic-year.seed';
-import { AttendanceSeed } from './attendance.seed';
+import { AdminSeed } from './admin.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
+import { AttendanceSeed } from './attendance.seed';
 import { ClassroomSeed } from './classroom.seed';
 import { DocumentTypeSeed } from './document-type.seed';
 import { EnrollmentSeed } from './enrollment.seed';
@@ -10,7 +11,6 @@ import { GenderSeed } from './gender.seed';
 import { PermissionSeed } from './permission.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
 import { RoleSeed } from './role.seed';
-import { AdminSeed } from './admin.seed';
 import { StudentSeed } from './student.seed';
 
 @Injectable()
@@ -43,8 +43,8 @@ export class SeedService {
     await this.classroomSeed.run();
     await this.studentSeed.run();
     await this.enrollmentSeed.run();
-    await this.attendanceSeed.run();
     await this.adminSeed.run();
+    await this.attendanceSeed.run();
   }
 
   async dropAllTables(): Promise<void> {

@@ -21,6 +21,10 @@ export class EmployeeService {
   constructor(
     @InjectRepository(Employee)
     private readonly employeeRepository: Repository<Employee>,
+
+    @InjectRepository(PersonRole)
+    private readonly personRoleRepository: Repository<PersonRole>,
+
     private readonly personService: PersonService,
     private readonly dataSource: DataSource,
   ) {}
@@ -31,7 +35,7 @@ export class EmployeeService {
     await queryRunner.startTransaction();
 
     try {
-      const { person: personDto, roleId, isActive } = dto;
+      const { person: personDto, roleId } = dto;
 
       // 1. Validar rol (debe ser isEmployee)
       const role = await queryRunner.manager.findOne(Role, {
@@ -88,7 +92,6 @@ export class EmployeeService {
       const employee = queryRunner.manager.create(Employee, {
         personId: person.id,
         roleId: role.id,
-        isActive: isActive ?? true,
       });
       const saved = await queryRunner.manager.save(employee);
 
@@ -111,6 +114,7 @@ export class EmployeeService {
       .createQueryBuilder('e')
       .leftJoinAndSelect('e.person', 'p')
       .leftJoinAndSelect('e.role', 'r')
+      .leftJoinAndSelect('p.personRoles', 'pr', 'pr.roleId = e.roleId')
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -127,34 +131,69 @@ export class EmployeeService {
       .take(limit)
       .getMany();
 
-    return { data, total, page, limit };
+    const mapped = data.map((e) => ({
+      ...e,
+      isActive: e.person.personRoles[0]?.isActive ?? true,
+    }));
+
+    return { data: mapped, total, page, limit };
   }
 
   async findOne(id: string) {
     const employee = await this.employeeRepository.findOne({
       where: { id },
-      relations: { person: true, role: true },
+      relations: { person: { personRoles: true }, role: true },
     });
     if (!employee) {
       throw new NotFoundException(`Colaborador con ID ${id} no encontrado`);
     }
-    return employee;
+
+    const personRole = employee.person.personRoles.find(
+      (pr) => pr.roleId === employee.roleId,
+    );
+
+    return { ...employee, isActive: personRole?.isActive ?? true };
   }
 
   async update(id: string, dto: UpdateEmployeeDto) {
-    const employee = await this.findOne(id);
+    const employee = await this.employeeRepository.findOne({
+      where: { id },
+      relations: { person: true },
+    });
+    if (!employee) {
+      throw new NotFoundException(`Colaborador con ID ${id} no encontrado`);
+    }
     Object.assign(employee, dto);
     return this.employeeRepository.save(employee);
   }
 
   async toggleActive(id: string) {
-    const employee = await this.findOne(id);
-    employee.isActive = !employee.isActive;
-    return this.employeeRepository.save(employee);
+    const employee = await this.employeeRepository.findOne({
+      where: { id },
+    });
+    if (!employee) {
+      throw new NotFoundException(`Colaborador con ID ${id} no encontrado`);
+    }
+
+    const personRole = await this.personRoleRepository.findOne({
+      where: { personId: employee.personId, roleId: employee.roleId },
+    });
+
+    if (!personRole) {
+      throw new NotFoundException(`Rol de colaborador no encontrado`);
+    }
+
+    personRole.isActive = !personRole.isActive;
+    await this.personRoleRepository.save(personRole);
+
+    return { ...employee, isActive: personRole.isActive };
   }
 
   async remove(id: string) {
-    const employee = await this.findOne(id);
+    const employee = await this.employeeRepository.findOne({ where: { id } });
+    if (!employee) {
+      throw new NotFoundException(`Colaborador con ID ${id} no encontrado`);
+    }
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

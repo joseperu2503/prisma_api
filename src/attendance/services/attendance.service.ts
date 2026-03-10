@@ -8,8 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Person } from 'src/person/entities/person.entity';
 import { DataSource, Repository } from 'typeorm';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
-import { AttendanceDay } from '../entities/attendance-day.entity';
 import { AttendanceLog } from '../entities/attendance-log.entity';
+import { Attendance } from '../entities/attendance.entity';
 
 @Injectable()
 export class AttendanceService {
@@ -20,7 +20,7 @@ export class AttendanceService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async registerAttendance(params: RegisterAttendanceDto) {
+  async registerAttendance(params: RegisterAttendanceDto, authUserId: string) {
     return await this.dataSource.transaction(async (manager) => {
       try {
         const person = await manager.findOne(Person, {
@@ -38,24 +38,24 @@ export class AttendanceService {
 
         const date = params.date ? new Date(params.date) : new Date();
 
-        let attendanceDay = await manager.findOne(AttendanceDay, {
+        let attendance = await manager.findOne(Attendance, {
           where: { personId: person.id, date },
         });
 
-        if (!attendanceDay) {
-          attendanceDay = manager.create(AttendanceDay, {
+        if (!attendance) {
+          attendance = manager.create(Attendance, {
             personId: person.id,
             date,
           });
         }
 
-        await manager.save(attendanceDay);
+        await manager.save(attendance);
 
         //verificar si ya hay algun log del mismo type el mismo dia
 
         const existLog = await manager.findOne(AttendanceLog, {
           where: {
-            attendanceDayId: attendanceDay.id,
+            attendanceId: attendance.id,
             typeId: params.type,
           },
         });
@@ -75,9 +75,10 @@ export class AttendanceService {
         }
 
         const attendanceLog = manager.create(AttendanceLog, {
-          attendanceDayId: attendanceDay.id,
+          attendanceId: attendance.id,
           typeId: params.type,
           markedAt: date,
+          createdById: authUserId,
         });
 
         await manager.save(attendanceLog);
@@ -103,7 +104,11 @@ export class AttendanceService {
     });
   }
 
-  async getAttendanceByDocument(documentNumber: string, from?: string, to?: string) {
+  async getAttendanceByDocument(
+    documentNumber: string,
+    from?: string,
+    to?: string,
+  ) {
     const person = await this.dataSource
       .getRepository(Person)
       .findOneBy({ documentNumber });
@@ -113,7 +118,7 @@ export class AttendanceService {
     }
 
     const qb = this.dataSource
-      .getRepository(AttendanceDay)
+      .getRepository(Attendance)
       .createQueryBuilder('ad')
       .leftJoinAndSelect('ad.logs', 'log')
       .leftJoinAndSelect('log.type', 'type')
@@ -135,14 +140,14 @@ export class AttendanceService {
       },
       take: 20,
       relations: {
-        attendanceDay: {
+        attendance: {
           person: true,
         },
         type: true,
       },
       select: {
         id: true,
-        attendanceDay: {
+        attendance: {
           id: true,
           date: true,
           person: {

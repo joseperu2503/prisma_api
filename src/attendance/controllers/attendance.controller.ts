@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { RoleCode } from 'src/auth/enums/role-code.enum';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceService } from '../services/attendance.service';
@@ -10,8 +11,8 @@ export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Post('register')
-  register(@Body() request: RegisterAttendanceDto) {
-    return this.attendanceService.registerAttendance(request);
+  register(@Body() request: RegisterAttendanceDto, @GetUser() userId: string) {
+    return this.attendanceService.registerAttendance(request, userId);
   }
 
   @Get('last-attendances-day')

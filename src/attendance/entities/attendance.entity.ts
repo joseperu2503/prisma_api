@@ -11,8 +11,8 @@ import {
 } from 'typeorm';
 import { AttendanceLog } from './attendance-log.entity';
 
-@Entity('attendance_days')
-export class AttendanceDay {
+@Entity('attendances')
+export class Attendance {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -26,7 +26,7 @@ export class AttendanceDay {
   @Column({ type: 'date' })
   date: Date;
 
-  @OneToMany(() => AttendanceLog, (log) => log.attendanceDay)
+  @OneToMany(() => AttendanceLog, (log) => log.attendance)
   logs: AttendanceLog[];
 
   @CreateDateColumn({

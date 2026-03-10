@@ -9,11 +9,15 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ClientType } from 'src/auth/enums/client-type.enum';
+import { RoleCode } from 'src/auth/enums/role-code.enum';
 import { CreateAcademicYearDto } from '../dto/create-academic-year.dto';
 import { QueryAcademicYearDto } from '../dto/query-academic-year.dto';
 import { UpdateAcademicYearDto } from '../dto/update-academic-year.dto';
 import { AcademicYearService } from '../services/academic-year.service';
 
+@Auth([RoleCode.ADMIN], [ClientType.WEB])
 @Controller('academic-year')
 export class AcademicYearController {
   constructor(private readonly academicYearService: AcademicYearService) {}

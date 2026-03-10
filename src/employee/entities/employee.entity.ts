@@ -31,9 +31,6 @@ export class Employee {
   @Column('uuid', { name: 'role_id' })
   roleId: string;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive: boolean;
-
   @CreateDateColumn({
     type: 'timestamptz',
     name: 'created_at',

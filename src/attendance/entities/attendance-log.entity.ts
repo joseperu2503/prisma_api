@@ -1,3 +1,4 @@
+import { User } from 'src/auth/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -7,20 +8,20 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AttendanceDay } from './attendance-day.entity';
 import { AttendanceType } from './attendance-type.entity';
+import { Attendance } from './attendance.entity';
 
-@Entity('attendance_day_logs')
+@Entity('attendance_logs')
 export class AttendanceLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => AttendanceDay, (day) => day.logs)
+  @ManyToOne(() => Attendance, (day) => day.logs)
   @JoinColumn({ name: 'attendance_day_id' })
-  attendanceDay: AttendanceDay;
+  attendance: Attendance;
 
   @Column('uuid', { name: 'attendance_day_id' })
-  attendanceDayId: string;
+  attendanceId: string;
 
   @ManyToOne(() => AttendanceType)
   @JoinColumn({ name: 'type_id' })
@@ -50,4 +51,11 @@ export class AttendanceLog {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'created_by_id' })
+  createdBy: User;
+
+  @Column('uuid', { name: 'created_by_id' })
+  createdById: string;
 }

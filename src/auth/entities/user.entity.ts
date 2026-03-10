@@ -17,12 +17,6 @@ export class User {
   @Column('text')
   password: string;
 
-  @Column('bool', {
-    default: true,
-    name: 'is_active',
-  })
-  isActive: boolean;
-
   @OneToOne(() => Person)
   @JoinColumn({ name: 'person_id' })
   person: Person;

@@ -28,6 +28,9 @@ export class StudentService {
     @InjectRepository(Person)
     private readonly personRepository: Repository<Person>,
 
+    @InjectRepository(PersonRole)
+    private readonly personRoleRepository: Repository<PersonRole>,
+
     private readonly dataSource: DataSource,
 
     private readonly personService: PersonService,
@@ -91,7 +94,6 @@ export class StudentService {
       }
 
       // 4️⃣ Validar unicidad y crear Student
-
       let savedStudent: Student | null = null;
 
       const existingStudent = await queryRunner.manager.findOne(Student, {
@@ -146,6 +148,8 @@ export class StudentService {
     const qb = this.studentRepository
       .createQueryBuilder('s')
       .leftJoinAndSelect('s.person', 'p')
+      .leftJoinAndSelect('p.personRoles', 'pr')
+      .leftJoinAndSelect('pr.role', 'r', 'r.code = :code', { code: RoleCode.STUDENT })
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -162,18 +166,28 @@ export class StudentService {
       .take(limit)
       .getMany();
 
-    return { data, total, page, limit };
+    const mapped = data.map((s) => ({
+      ...s,
+      isActive: s.person.personRoles[0]?.isActive ?? true,
+    }));
+
+    return { data: mapped, total, page, limit };
   }
 
   async findOne(id: string) {
     const student = await this.studentRepository.findOne({
       where: { id },
-      relations: { person: true },
+      relations: { person: { personRoles: { role: true } } },
     });
     if (!student) {
       throw new NotFoundException(`Student with ID ${id} not found`);
     }
-    return student;
+
+    const studentPersonRole = student.person.personRoles.find(
+      (pr) => pr.role?.code === RoleCode.STUDENT,
+    );
+
+    return { ...student, isActive: studentPersonRole?.isActive ?? true };
   }
 
   async findById(id: string) {
@@ -184,7 +198,13 @@ export class StudentService {
   }
 
   async update(id: string, dto: UpdateStudentDto) {
-    const student = await this.findOne(id);
+    const student = await this.studentRepository.findOne({
+      where: { id },
+      relations: { person: true },
+    });
+    if (!student) {
+      throw new NotFoundException(`Student with ID ${id} not found`);
+    }
     Object.assign(student.person, dto);
     await this.personRepository.save(student.person);
     return this.studentRepository.findOne({
@@ -193,8 +213,45 @@ export class StudentService {
     });
   }
 
+  async toggleActive(id: string) {
+    const student = await this.studentRepository.findOne({
+      where: { id },
+    });
+    if (!student) {
+      throw new NotFoundException(`Student with ID ${id} not found`);
+    }
+
+    const studentRole = await this.dataSource
+      .getRepository(Role)
+      .findOne({ where: { code: RoleCode.STUDENT } });
+
+    if (!studentRole) {
+      throw new NotFoundException(`Role STUDENT not found`);
+    }
+
+    const personRole = await this.personRoleRepository.findOne({
+      where: { personId: student.personId, roleId: studentRole.id },
+    });
+
+    if (!personRole) {
+      throw new NotFoundException(`Rol de estudiante no encontrado`);
+    }
+
+    personRole.isActive = !personRole.isActive;
+    await this.personRoleRepository.save(personRole);
+
+    return {
+      id: student.id,
+      isActive: personRole.isActive,
+      message: personRole.isActive ? 'Estudiante activado' : 'Estudiante desactivado',
+    };
+  }
+
   async remove(id: string) {
-    const student = await this.findOne(id);
+    const student = await this.studentRepository.findOne({ where: { id } });
+    if (!student) {
+      throw new NotFoundException(`Student with ID ${id} not found`);
+    }
 
     const enrollmentCount = await this.dataSource
       .getRepository(Enrollment)

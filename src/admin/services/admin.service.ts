@@ -20,6 +20,9 @@ export class AdminService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
 
+    @InjectRepository(PersonRole)
+    private readonly personRoleRepository: Repository<PersonRole>,
+
     private readonly dataSource: DataSource,
     private readonly personService: PersonService,
   ) {}
@@ -98,8 +101,8 @@ export class AdminService {
     const qb = this.userRepository
       .createQueryBuilder('u')
       .innerJoinAndSelect('u.person', 'p')
-      .innerJoin('p.personRoles', 'pr')
-      .innerJoin('pr.role', 'r', 'r.code = :code', { code: 'ADMIN' })
+      .innerJoinAndSelect('p.personRoles', 'pr')
+      .innerJoinAndSelect('pr.role', 'r', 'r.code = :code', { code: RoleCode.ADMIN })
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -116,30 +119,56 @@ export class AdminService {
       .take(limit)
       .getMany();
 
-    return { data, total, page, limit };
+    const mapped = data.map((u) => ({
+      ...u,
+      isActive: u.person.personRoles[0]?.isActive ?? true,
+    }));
+
+    return { data: mapped, total, page, limit };
   }
 
   async findOne(id: string) {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: { person: true },
+      relations: { person: { personRoles: { role: true } } },
     });
 
     if (!user) {
       throw new NotFoundException(`Administrador no encontrado`);
     }
 
-    return user;
+    const adminPersonRole = user.person.personRoles.find(
+      (pr) => pr.role?.code === RoleCode.ADMIN,
+    );
+
+    return { ...user, isActive: adminPersonRole?.isActive ?? true };
   }
 
   async toggleActive(id: string) {
-    const user = await this.findOne(id);
-    user.isActive = !user.isActive;
-    await this.userRepository.save(user);
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: { person: { personRoles: { role: true } } },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Administrador no encontrado`);
+    }
+
+    const adminPersonRole = user.person.personRoles.find(
+      (pr) => pr.role?.code === RoleCode.ADMIN,
+    );
+
+    if (!adminPersonRole) {
+      throw new NotFoundException(`Rol de administrador no encontrado`);
+    }
+
+    adminPersonRole.isActive = !adminPersonRole.isActive;
+    await this.personRoleRepository.save(adminPersonRole);
+
     return {
       id: user.id,
-      isActive: user.isActive,
-      message: user.isActive
+      isActive: adminPersonRole.isActive,
+      message: adminPersonRole.isActive
         ? 'Administrador activado'
         : 'Administrador desactivado',
     };

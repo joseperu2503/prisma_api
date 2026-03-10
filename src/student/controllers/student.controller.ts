@@ -47,6 +47,11 @@ export class StudentController {
     return this.studentService.update(id, updateStudentDto);
   }
 
+  @Patch(':id/toggle-active')
+  async toggleActive(@Param('id', ParseUUIDPipe) id: string) {
+    return this.studentService.toggleActive(id);
+  }
+
   @Delete(':id')
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.studentService.remove(id);
