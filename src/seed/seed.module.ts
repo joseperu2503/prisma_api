@@ -13,7 +13,9 @@ import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { StudentModule } from 'src/student/student.module';
+import { AdminModule } from 'src/admin/admin.module';
 import { AcademicYearSeed } from './services/academic-year.seed';
+import { AdminSeed } from './services/admin.seed';
 import { AttendanceSeed } from './services/attendance.seed';
 import { AttendanceTypeSeed } from './services/attendance-type.seed';
 import { ClassroomSeed } from './services/classroom.seed';
@@ -40,6 +42,7 @@ import { StudentSeed } from './services/student.seed';
     StudentSeed,
     EnrollmentSeed,
     AttendanceSeed,
+    AdminSeed,
   ],
   imports: [
     AuthModule,
@@ -50,6 +53,7 @@ import { StudentSeed } from './services/student.seed';
     ClassroomModule,
     StudentModule,
     EnrollmentModule,
+    AdminModule,
     TypeOrmModule.forFeature([AcademicYear, Classroom, Enrollment, Person, Student]),
   ],
   exports: [SeedService],

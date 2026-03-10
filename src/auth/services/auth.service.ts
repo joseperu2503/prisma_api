@@ -83,7 +83,7 @@ export class AuthService {
     const roleCodes = user.person.personRoles.map((pr) => pr.role.code);
 
     const allowedByClient: Record<ClientType, RoleCode[]> = {
-      web: [RoleCode.ADMIN, RoleCode.STUDENT],
+      web: [RoleCode.ADMIN],
       app: [RoleCode.ADMIN, RoleCode.STUDENT],
     };
 

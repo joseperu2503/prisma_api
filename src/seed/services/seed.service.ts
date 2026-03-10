@@ -10,6 +10,7 @@ import { GenderSeed } from './gender.seed';
 import { PermissionSeed } from './permission.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
 import { RoleSeed } from './role.seed';
+import { AdminSeed } from './admin.seed';
 import { StudentSeed } from './student.seed';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class SeedService {
     private readonly studentSeed: StudentSeed,
     private readonly enrollmentSeed: EnrollmentSeed,
     private readonly attendanceSeed: AttendanceSeed,
+    private readonly adminSeed: AdminSeed,
   ) {}
 
   async runSeed() {
@@ -42,6 +44,7 @@ export class SeedService {
     await this.studentSeed.run();
     await this.enrollmentSeed.run();
     await this.attendanceSeed.run();
+    await this.adminSeed.run();
   }
 
   async dropAllTables(): Promise<void> {
