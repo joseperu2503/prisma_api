@@ -122,8 +122,11 @@ export class AttendanceService {
       .createQueryBuilder('ad')
       .leftJoinAndSelect('ad.logs', 'log')
       .leftJoinAndSelect('log.type', 'type')
+      .leftJoinAndSelect('log.createdBy', 'createdBy')
+      .leftJoinAndSelect('createdBy.person', 'createdByPerson')
       .where('ad.personId = :personId', { personId: person.id })
-      .orderBy('ad.date', 'ASC');
+      .orderBy('ad.date', 'ASC')
+      .addOrderBy('log.markedAt', 'ASC');
 
     if (from) qb.andWhere('ad.date >= :from', { from });
     if (to) qb.andWhere('ad.date <= :to', { to });
