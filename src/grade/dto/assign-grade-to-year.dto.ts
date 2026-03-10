@@ -1,9 +1,9 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
-export class AssignClassroomToYearDto {
+export class AssignGradeToYearDto {
   @IsUUID()
   @IsNotEmpty()
-  classroomId: string;
+  gradeId: string;
 
   @IsUUID()
   @IsNotEmpty()

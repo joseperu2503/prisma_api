@@ -19,5 +19,5 @@ export class QueryEnrollmentDto {
 
   @IsOptional()
   @IsUUID()
-  classroomId?: string;
+  gradeId?: string;
 }

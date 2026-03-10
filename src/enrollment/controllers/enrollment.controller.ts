@@ -42,7 +42,7 @@ export class EnrollmentController {
       limit,
       query.search,
       query.academicYearId,
-      query.classroomId,
+      query.gradeId,
     );
   }
 

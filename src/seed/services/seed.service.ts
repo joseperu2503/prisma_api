@@ -4,10 +4,11 @@ import { AcademicYearSeed } from './academic-year.seed';
 import { AdminSeed } from './admin.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
 import { AttendanceSeed } from './attendance.seed';
-import { ClassroomSeed } from './classroom.seed';
 import { DocumentTypeSeed } from './document-type.seed';
 import { EnrollmentSeed } from './enrollment.seed';
 import { GenderSeed } from './gender.seed';
+import { GradeSeed } from './grade.seed';
+import { LevelSeed } from './level.seed';
 import { PermissionSeed } from './permission.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
 import { RoleSeed } from './role.seed';
@@ -24,7 +25,8 @@ export class SeedService {
     private readonly roleSeed: RoleSeed,
     private readonly permissionSeed: PermissionSeed,
     private readonly academicYearSeed: AcademicYearSeed,
-    private readonly classroomSeed: ClassroomSeed,
+    private readonly levelSeed: LevelSeed,
+    private readonly gradeSeed: GradeSeed,
     private readonly studentSeed: StudentSeed,
     private readonly enrollmentSeed: EnrollmentSeed,
     private readonly attendanceSeed: AttendanceSeed,
@@ -40,7 +42,8 @@ export class SeedService {
     await this.permissionSeed.run();
     await this.roleSeed.run();
     await this.academicYearSeed.run();
-    await this.classroomSeed.run();
+    await this.levelSeed.run();
+    await this.gradeSeed.run();
     await this.studentSeed.run();
     await this.enrollmentSeed.run();
     await this.adminSeed.run();

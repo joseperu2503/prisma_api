@@ -2,15 +2,17 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import { AcademicYearService } from 'src/academic-year/services/academic-year.service';
-import { ClassroomService } from 'src/classroom/services/classroom.service';
 import { EnrollmentService } from 'src/enrollment/services/enrollment.service';
+import { GradeService } from 'src/grade/services/grade.service';
+import { LevelService } from 'src/level/services/level.service';
 
 @Injectable()
 export class ImportService {
   constructor(
-    private readonly classroomService: ClassroomService,
+    private readonly gradeService: GradeService,
     private readonly academicYearService: AcademicYearService,
     private readonly enrollmentService: EnrollmentService,
+    private readonly levelService: LevelService,
   ) {}
 
   async processExcel(buffer: any) {
@@ -39,9 +41,15 @@ export class ImportService {
 
       const classroomName = row.getCell(5).text;
       const academicYearName = row.getCell(6).text;
+      const levelName = row.getCell(7).text;
+
+      const level = await this.levelService.findOrCreate(levelName);
 
       // Validar/Crear Aula
-      const classroom = await this.classroomService.findOrCreate(classroomName);
+      const classroom = await this.gradeService.findOrCreate(
+        classroomName,
+        level.id,
+      );
 
       // Validar/Crear Año Académico
       const academicYear =
@@ -49,7 +57,7 @@ export class ImportService {
 
       await this.enrollmentService.create({
         academicYearId: academicYear.id,
-        classroomId: classroom.id,
+        gradeId: classroom.id,
         student: {
           person: {
             names: row.getCell(2).text,

@@ -11,7 +11,7 @@ export class CreateEnrollmentDto {
   academicYearId: string;
 
   @IsUUID()
-  classroomId: string;
+  gradeId: string;
 
   @IsBoolean()
   @IsOptional()

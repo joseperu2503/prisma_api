@@ -8,19 +8,19 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Classroom } from './classroom.entity';
+import { Grade } from './grade.entity';
 
-@Entity('classroom_years')
-export class ClassroomYear {
-  @PrimaryColumn({ name: 'classroom_id', type: 'uuid' })
-  classroomId: string;
+@Entity('grade_years')
+export class GradeYear {
+  @PrimaryColumn({ name: 'grade_id', type: 'uuid' })
+  gradeId: string;
 
   @PrimaryColumn({ name: 'academic_year_id', type: 'uuid' })
   academicYearId: string;
 
-  @ManyToOne(() => Classroom)
-  @JoinColumn({ name: 'classroom_id' })
-  classroom: Classroom;
+  @ManyToOne(() => Grade)
+  @JoinColumn({ name: 'grade_id' })
+  grade: Grade;
 
   @ManyToOne(() => AcademicYear)
   @JoinColumn({ name: 'academic_year_id' })

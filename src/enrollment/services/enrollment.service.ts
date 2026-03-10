@@ -50,7 +50,7 @@ export class EnrollmentService {
       const enrollment = queryRunner.manager.create(Enrollment, {
         studentId: savedStudent.id,
         academicYearId: dto.academicYearId,
-        classroomId: dto.classroomId,
+        gradeId: dto.gradeId,
         isActive: dto.isActive ?? true,
       });
 
@@ -79,13 +79,14 @@ export class EnrollmentService {
     limit: number,
     search?: string,
     academicYearId?: string,
-    classroomId?: string,
+    gradeId?: string,
   ) {
     const qb = this.enrollmentRepository
       .createQueryBuilder('e')
       .leftJoinAndSelect('e.student', 's')
       .leftJoinAndSelect('s.person', 'p')
-      .leftJoinAndSelect('e.classroom', 'c')
+      .leftJoinAndSelect('e.grade', 'g')
+      .leftJoinAndSelect('g.level', 'l')
       .leftJoinAndSelect('e.academicYear', 'ay')
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
@@ -101,8 +102,8 @@ export class EnrollmentService {
       qb.andWhere('e.academicYearId = :academicYearId', { academicYearId });
     }
 
-    if (classroomId) {
-      qb.andWhere('e.classroomId = :classroomId', { classroomId });
+    if (gradeId) {
+      qb.andWhere('e.gradeId = :gradeId', { gradeId });
     }
 
     const total = await qb.getCount();
@@ -119,7 +120,7 @@ export class EnrollmentService {
       where: { id },
       relations: {
         student: { person: true },
-        classroom: true,
+        grade: { level: true },
         academicYear: true,
       },
     });

@@ -1,8 +1,8 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsBoolean, IsOptional } from 'class-validator';
-import { CreateClassroomDto } from './create-classroom.dto';
+import { CreateGradeDto } from './create-grade.dto';
 
-export class UpdateClassroomDto extends PartialType(CreateClassroomDto) {
+export class UpdateGradeDto extends PartialType(CreateGradeDto) {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;

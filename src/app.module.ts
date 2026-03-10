@@ -7,11 +7,12 @@ import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
-import { ClassroomModule } from './classroom/classroom.module';
 import { CommonModule } from './common/common.module';
 import { EmployeeModule } from './employee/employee.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
+import { GradeModule } from './grade/grade.module';
 import { GuardianModule } from './guardian/guardian.module';
+import { LevelModule } from './level/level.module';
 import { PersonModule } from './person/person.module';
 import { SeedCommand } from './seed/commands/seed.command';
 import { SeedModule } from './seed/seed.module';
@@ -42,7 +43,8 @@ import { TeacherModule } from './teacher/teacher.module';
     EmployeeModule,
     CommonModule,
     AttendanceModule,
-    ClassroomModule,
+    LevelModule,
+    GradeModule,
     AcademicYearModule,
     AcademicPeriodModule,
     EnrollmentModule,

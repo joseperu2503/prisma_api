@@ -1,5 +1,5 @@
 import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
-import { Classroom } from 'src/classroom/entities/classroom.entity';
+import { Grade } from 'src/grade/entities/grade.entity';
 import { Student } from 'src/student/entities/student.entity';
 import {
   Column,
@@ -25,12 +25,12 @@ export class Enrollment {
   @Column('uuid', { name: 'student_id' })
   studentId: string;
 
-  @ManyToOne(() => Classroom)
-  @JoinColumn({ name: 'classroom_id' })
-  classroom: Classroom;
+  @ManyToOne(() => Grade)
+  @JoinColumn({ name: 'grade_id' })
+  grade: Grade;
 
-  @Column('uuid', { name: 'classroom_id' })
-  classroomId: string;
+  @Column('uuid', { name: 'grade_id' })
+  gradeId: string;
 
   @ManyToOne(() => AcademicYear)
   @JoinColumn({ name: 'academic_year_id' })
