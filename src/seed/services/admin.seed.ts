@@ -8,32 +8,20 @@ export class AdminSeed {
   admins = [
     {
       person: {
-        names: 'Juan Carlos',
-        paternalLastName: 'García',
-        maternalLastName: 'López',
+        names: 'Jose',
+        paternalLastName: 'Perez',
+        maternalLastName: 'Gil',
         documentTypeId: 'dni',
-        documentNumber: '10234567',
-        email: 'jgarcia@colegio.edu.pe',
+        documentNumber: '74706220',
       },
     },
     {
       person: {
-        names: 'María Elena',
-        paternalLastName: 'Rojas',
-        maternalLastName: 'Vega',
+        names: 'Sharon',
+        paternalLastName: 'Gil',
+        maternalLastName: 'Mori',
         documentTypeId: 'dni',
-        documentNumber: '10345678',
-        email: 'mrojas@colegio.edu.pe',
-      },
-    },
-    {
-      person: {
-        names: 'Roberto',
-        paternalLastName: 'Castillo',
-        maternalLastName: 'Herrera',
-        documentTypeId: 'dni',
-        documentNumber: '10456789',
-        email: 'rcastillo@colegio.edu.pe',
+        documentNumber: '40352379',
       },
     },
   ];
