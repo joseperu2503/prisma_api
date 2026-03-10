@@ -1,7 +1,7 @@
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class RegisterAttendanceDto {
-  @IsUUID()
+  @IsString()
   documentTypeId: string;
 
   @IsString()

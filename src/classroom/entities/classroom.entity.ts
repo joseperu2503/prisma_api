@@ -11,7 +11,7 @@ export class Classroom {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'name', type: 'varchar', length: 100 })
+  @Column({ name: 'name', type: 'varchar', length: 100, unique: true })
   name: string;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

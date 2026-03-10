@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { AcademicYearService } from 'src/academic-year/services/academic-year.service';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { AssignClassroomToYearDto } from '../dto/assign-classroom-to-year.dto';
 import { CreateClassroomDto } from '../dto/create-classroom.dto';
 import { UpdateClassroomDto } from '../dto/update-classroom.dto';
@@ -18,9 +19,18 @@ export class ClassroomService {
     private readonly classroomYearRepository: Repository<ClassroomYear>,
 
     private readonly academicYearService: AcademicYearService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createClassroomDto: CreateClassroomDto) {
+    const existing = await this.classroomRepository.findOneBy({
+      name: createClassroomDto.name,
+    });
+    if (existing) {
+      throw new ConflictException(
+        `Ya existe un aula con el nombre "${createClassroomDto.name}"`,
+      );
+    }
     const classroom = this.classroomRepository.create(createClassroomDto);
     return await this.classroomRepository.save(classroom);
   }
@@ -55,6 +65,16 @@ export class ClassroomService {
 
   async update(id: string, updateClassroomDto: UpdateClassroomDto) {
     const classroom = await this.findOne(id);
+    if (updateClassroomDto.name && updateClassroomDto.name !== classroom.name) {
+      const duplicate = await this.classroomRepository.findOneBy({
+        name: updateClassroomDto.name,
+      });
+      if (duplicate) {
+        throw new ConflictException(
+          `Ya existe un aula con el nombre "${updateClassroomDto.name}"`,
+        );
+      }
+    }
     const updatedClassroom = this.classroomRepository.merge(
       classroom,
       updateClassroomDto,
@@ -64,6 +84,14 @@ export class ClassroomService {
 
   async remove(id: string) {
     const classroom = await this.findOne(id);
+    const enrollmentCount = await this.dataSource
+      .getRepository(Enrollment)
+      .countBy({ classroomId: id });
+    if (enrollmentCount > 0) {
+      throw new ConflictException(
+        `No se puede eliminar el aula porque tiene ${enrollmentCount} matrícula(s) asociada(s)`,
+      );
+    }
     return await this.classroomRepository.remove(classroom);
   }
 
