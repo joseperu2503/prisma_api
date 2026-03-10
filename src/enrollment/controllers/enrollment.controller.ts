@@ -37,7 +37,13 @@ export class EnrollmentController {
   findAll(@Query() query: QueryEnrollmentDto) {
     const page = parseInt(query.page ?? '1', 10);
     const limit = parseInt(query.limit ?? '10', 10);
-    return this.enrollmentService.findAllPaginated(page, limit, query.search);
+    return this.enrollmentService.findAllPaginated(
+      page,
+      limit,
+      query.search,
+      query.academicYearId,
+      query.classroomId,
+    );
   }
 
   @Get(':id')

@@ -74,7 +74,13 @@ export class EnrollmentService {
     }
   }
 
-  async findAllPaginated(page: number, limit: number, search?: string) {
+  async findAllPaginated(
+    page: number,
+    limit: number,
+    search?: string,
+    academicYearId?: string,
+    classroomId?: string,
+  ) {
     const qb = this.enrollmentRepository
       .createQueryBuilder('e')
       .leftJoinAndSelect('e.student', 's')
@@ -85,10 +91,18 @@ export class EnrollmentService {
       .addOrderBy('p.names', 'ASC');
 
     if (search) {
-      qb.where(
+      qb.andWhere(
         'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
         { search: `%${search.toLowerCase()}%` },
       );
+    }
+
+    if (academicYearId) {
+      qb.andWhere('e.academicYearId = :academicYearId', { academicYearId });
+    }
+
+    if (classroomId) {
+      qb.andWhere('e.classroomId = :classroomId', { classroomId });
     }
 
     const total = await qb.getCount();

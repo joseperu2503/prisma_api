@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class QueryEnrollmentDto {
   @IsOptional()
@@ -12,4 +12,12 @@ export class QueryEnrollmentDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsUUID()
+  academicYearId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  classroomId?: string;
 }
