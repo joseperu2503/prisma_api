@@ -2,6 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import { AcademicYearService } from 'src/academic-year/services/academic-year.service';
+import { ClassService } from 'src/class/services/class.service';
 import { EnrollmentService } from 'src/enrollment/services/enrollment.service';
 import { GradeService } from 'src/grade/services/grade.service';
 import { LevelService } from 'src/level/services/level.service';
@@ -13,6 +14,7 @@ export class ImportService {
     private readonly academicYearService: AcademicYearService,
     private readonly enrollmentService: EnrollmentService,
     private readonly levelService: LevelService,
+    private readonly classService: ClassService,
   ) {}
 
   async processExcel(buffer: any) {
@@ -39,17 +41,18 @@ export class ImportService {
       // Skip empty rows
       if (!row.getCell(1).value) continue;
 
-      const classroomName = row.getCell(5).text;
+      const gradeName = row.getCell(5).text;
       const academicYearName = row.getCell(6).text;
       const levelName = row.getCell(7).text;
+      const className = row.getCell(8).text;
 
       const level = await this.levelService.findOrCreate(levelName);
 
       // Validar/Crear Aula
-      const classroom = await this.gradeService.findOrCreate(
-        classroomName,
-        level.id,
-      );
+      const grade = await this.gradeService.findOrCreate(gradeName, level.id);
+
+      // Validar/Crear Clase
+      const class_ = await this.classService.findOrCreate(className);
 
       // Validar/Crear Año Académico
       const academicYear =
@@ -57,7 +60,8 @@ export class ImportService {
 
       await this.enrollmentService.create({
         academicYearId: academicYear.id,
-        gradeId: classroom.id,
+        gradeId: grade.id,
+        classId: class_.id,
         student: {
           person: {
             names: row.getCell(2).text,

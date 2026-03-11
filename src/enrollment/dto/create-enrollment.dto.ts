@@ -13,6 +13,9 @@ export class CreateEnrollmentDto {
   @IsUUID()
   gradeId: string;
 
+  @IsUUID()
+  classId: string;
+
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;

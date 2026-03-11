@@ -51,6 +51,7 @@ export class EnrollmentService {
         studentId: savedStudent.id,
         academicYearId: dto.academicYearId,
         gradeId: dto.gradeId,
+        classId: dto.classId,
         isActive: dto.isActive ?? true,
       });
 
@@ -88,6 +89,7 @@ export class EnrollmentService {
       .leftJoinAndSelect('e.grade', 'g')
       .leftJoinAndSelect('g.level', 'l')
       .leftJoinAndSelect('e.academicYear', 'ay')
+      .leftJoinAndSelect('e.class', 'c')
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -122,6 +124,7 @@ export class EnrollmentService {
         student: { person: true },
         grade: { level: true },
         academicYear: true,
+        class: true,
       },
     });
     if (!enrollment) {

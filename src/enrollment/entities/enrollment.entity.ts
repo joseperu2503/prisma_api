@@ -1,4 +1,5 @@
 import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
+import { Class } from 'src/class/entities/class.entity';
 import { Grade } from 'src/grade/entities/grade.entity';
 import { Student } from 'src/student/entities/student.entity';
 import {
@@ -38,6 +39,13 @@ export class Enrollment {
 
   @Column('uuid', { name: 'academic_year_id' })
   academicYearId: string;
+
+  @ManyToOne(() => Class)
+  @JoinColumn({ name: 'class_id' })
+  class: Class;
+
+  @Column('uuid', { name: 'class_id' })
+  classId: string;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
