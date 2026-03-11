@@ -74,7 +74,6 @@ export class PersonService {
       const person = people[i];
 
       const roles = person.personRoles.map((pr) => pr.role);
-      console.log({ roles });
 
       if (roles.length === 0) {
         continue;
