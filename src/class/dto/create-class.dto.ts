@@ -1,6 +1,6 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class CreateAcademicProgramDto {
+export class CreateClassDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(2)

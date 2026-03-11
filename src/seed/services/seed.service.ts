@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { AcademicProgramSeed } from './academic-program.seed';
 import { AcademicYearSeed } from './academic-year.seed';
 import { AdminSeed } from './admin.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
-import { AttendanceSeed } from './attendance.seed';
+import { ClassSeed } from './class.seed';
 import { DocumentTypeSeed } from './document-type.seed';
 import { EnrollmentSeed } from './enrollment.seed';
 import { GenderSeed } from './gender.seed';
@@ -30,9 +29,8 @@ export class SeedService {
     private readonly gradeSeed: GradeSeed,
     private readonly studentSeed: StudentSeed,
     private readonly enrollmentSeed: EnrollmentSeed,
-    private readonly attendanceSeed: AttendanceSeed,
     private readonly adminSeed: AdminSeed,
-    private readonly academicProgramSeed: AcademicProgramSeed,
+    private readonly classSeed: ClassSeed,
   ) {}
 
   async runSeed() {
@@ -46,7 +44,7 @@ export class SeedService {
     await this.academicYearSeed.run();
     await this.levelSeed.run();
     await this.gradeSeed.run();
-    await this.academicProgramSeed.run();
+    await this.classSeed.run();
     await this.studentSeed.run();
     await this.enrollmentSeed.run();
     await this.adminSeed.run();

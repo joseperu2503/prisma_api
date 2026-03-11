@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicPeriodModule } from './academic-period/academic-period.module';
-import { AcademicProgramModule } from './academic-program/academic-program.module';
 import { AcademicYearModule } from './academic-year/academic-year.module';
 import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
+import { ClassModule } from './class/class.module';
 import { CommonModule } from './common/common.module';
 import { EmployeeModule } from './employee/employee.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
@@ -48,7 +48,7 @@ import { TeacherModule } from './teacher/teacher.module';
     GradeModule,
     AcademicYearModule,
     AcademicPeriodModule,
-    AcademicProgramModule,
+    ClassModule,
     EnrollmentModule,
   ],
   providers: [SeedCommand],

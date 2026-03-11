@@ -1,28 +1,28 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AcademicProgramModule } from 'src/academic-program/academic-program.module';
-import { AcademicProgram } from 'src/academic-program/entities/academic-program.entity';
 import { AcademicYearModule } from 'src/academic-year/academic-year.module';
 import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
+import { AdminModule } from 'src/admin/admin.module';
 import { AttendanceModule } from 'src/attendance/attendance.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { ClassModule } from 'src/class/class.module';
+import { Class } from 'src/class/entities/class.entity';
 import { CommonModule } from 'src/common/common.module';
 import { EmployeeModule } from 'src/employee/employee.module';
 import { EnrollmentModule } from 'src/enrollment/enrollment.module';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
-import { GradeModule } from 'src/grade/grade.module';
 import { Grade } from 'src/grade/entities/grade.entity';
+import { GradeModule } from 'src/grade/grade.module';
 import { Level } from 'src/level/entities/level.entity';
 import { LevelModule } from 'src/level/level.module';
 import { Person } from 'src/person/entities/person.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { StudentModule } from 'src/student/student.module';
-import { AdminModule } from 'src/admin/admin.module';
-import { AcademicProgramSeed } from './services/academic-program.seed';
 import { AcademicYearSeed } from './services/academic-year.seed';
 import { AdminSeed } from './services/admin.seed';
-import { AttendanceSeed } from './services/attendance.seed';
 import { AttendanceTypeSeed } from './services/attendance-type.seed';
+import { AttendanceSeed } from './services/attendance.seed';
+import { ClassSeed } from './services/class.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
 import { EnrollmentSeed } from './services/enrollment.seed';
 import { GenderSeed } from './services/gender.seed';
@@ -37,7 +37,7 @@ import { StudentSeed } from './services/student.seed';
 @Module({
   providers: [
     SeedService,
-    AcademicProgramSeed,
+    ClassSeed,
     DocumentTypeSeed,
     GenderSeed,
     AttendanceTypeSeed,
@@ -57,14 +57,22 @@ import { StudentSeed } from './services/student.seed';
     CommonModule,
     AttendanceModule,
     EmployeeModule,
-    AcademicProgramModule,
+    ClassModule,
     AcademicYearModule,
     LevelModule,
     GradeModule,
     StudentModule,
     EnrollmentModule,
     AdminModule,
-    TypeOrmModule.forFeature([AcademicProgram, AcademicYear, Grade, Level, Enrollment, Person, Student]),
+    TypeOrmModule.forFeature([
+      AcademicYear,
+      Class,
+      Grade,
+      Level,
+      Enrollment,
+      Person,
+      Student,
+    ]),
   ],
   exports: [SeedService],
 })

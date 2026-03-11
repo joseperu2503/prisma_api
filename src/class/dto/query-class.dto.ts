@@ -1,6 +1,6 @@
 import { IsOptional, IsString } from 'class-validator';
 
-export class QueryAcademicProgramDto {
+export class QueryClassDto {
   @IsOptional()
   @IsString()
   page?: string;

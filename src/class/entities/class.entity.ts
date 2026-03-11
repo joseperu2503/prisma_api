@@ -6,8 +6,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('academic_programs')
-export class AcademicProgram {
+@Entity('classes')
+export class Class {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
