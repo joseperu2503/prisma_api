@@ -81,6 +81,7 @@ export class EnrollmentService {
     search?: string,
     academicYearId?: string,
     gradeId?: string,
+    classId?: string,
   ) {
     const qb = this.enrollmentRepository
       .createQueryBuilder('e')
@@ -106,6 +107,10 @@ export class EnrollmentService {
 
     if (gradeId) {
       qb.andWhere('e.gradeId = :gradeId', { gradeId });
+    }
+
+    if (classId) {
+      qb.andWhere('e.classId = :classId', { classId });
     }
 
     const total = await qb.getCount();

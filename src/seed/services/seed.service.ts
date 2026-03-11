@@ -41,12 +41,12 @@ export class SeedService {
     await this.relationshipTypeSeed.run();
     await this.permissionSeed.run();
     await this.roleSeed.run();
-    await this.academicYearSeed.run();
-    await this.levelSeed.run();
-    await this.gradeSeed.run();
-    await this.classSeed.run();
-    await this.studentSeed.run();
-    await this.enrollmentSeed.run();
+    // await this.academicYearSeed.run();
+    // await this.levelSeed.run();
+    // await this.gradeSeed.run();
+    // await this.classSeed.run();
+    // await this.studentSeed.run();
+    // await this.enrollmentSeed.run();
     await this.adminSeed.run();
     // await this.attendanceSeed.run();
   }

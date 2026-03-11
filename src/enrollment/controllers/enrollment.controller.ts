@@ -43,6 +43,7 @@ export class EnrollmentController {
       query.search,
       query.academicYearId,
       query.gradeId,
+      query.classId,
     );
   }
 

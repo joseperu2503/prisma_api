@@ -41,10 +41,15 @@ export class ImportService {
       // Skip empty rows
       if (!row.getCell(1).value) continue;
 
-      const gradeName = row.getCell(5).text;
-      const academicYearName = row.getCell(6).text;
-      const levelName = row.getCell(7).text;
-      const className = row.getCell(8).text;
+      const documentNumber = row.getCell(1).text.trim();
+      const paternalLastName = row.getCell(2).text.trim();
+      const maternalLastName = row.getCell(3).text.trim();
+      const names = row.getCell(4).text.trim();
+
+      const gradeName = row.getCell(5).text.trim();
+      const className = row.getCell(6).text.trim();
+      const academicYearName = row.getCell(7).text.trim();
+      const levelName = row.getCell(8).text.trim();
 
       const level = await this.levelService.findOrCreate(levelName);
 
@@ -64,11 +69,11 @@ export class ImportService {
         classId: class_.id,
         student: {
           person: {
-            names: row.getCell(2).text,
-            paternalLastName: row.getCell(3).text,
-            maternalLastName: row.getCell(4).text,
+            names: names,
+            paternalLastName: paternalLastName,
+            maternalLastName: maternalLastName,
             documentTypeId: 'dni',
-            documentNumber: row.getCell(1).text,
+            documentNumber: documentNumber,
           },
           password: '123456',
         },
