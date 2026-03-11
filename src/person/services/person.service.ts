@@ -113,8 +113,8 @@ export class PersonService {
         headerColor = '#1E1B4B'; // Midnight Blue (Supreme Authority)
         badgeColor = '#312E81';
       } else if (role.code === 'STUDENT') {
-        headerColor = '#0EA5E9'; // Vibrant Sky Blue (Junior/Energy)
-        badgeColor = '#0891B2';
+        headerColor = '#002DE3'; // Vibrant Sky Blue (Junior/Energy)
+        badgeColor = '#002DE3';
       } else if (role.isEmployee) {
         // All employee roles get a professional Indigo theme
         headerColor = '#3730A3';

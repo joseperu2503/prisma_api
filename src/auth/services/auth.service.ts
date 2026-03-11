@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -13,7 +9,6 @@ import {
   LoginGoogleRequestDto,
   LoginRequestDto,
 } from '../dto/login-request.dto';
-import { RegisterRequestDto } from '../dto/register-request.dto';
 import { User } from '../entities/user.entity';
 import { ClientType } from '../enums/client-type.enum';
 import { RoleCode } from '../enums/role-code.enum';
@@ -31,32 +26,6 @@ export class AuthService {
     private readonly facebookService: FacebookService,
     private readonly googleService: GoogleService,
   ) {}
-
-  async register(params: RegisterRequestDto): Promise<AuthResponseDto> {
-    return this.dataSource.transaction(async (manager) => {
-      const { password, ...userData } = params;
-
-      const exist = await manager.findOne(User, {
-        where: {
-          person: {
-            id: userData.personId,
-          },
-        },
-      });
-
-      if (exist) {
-        throw new BadRequestException('El usuario ya existe');
-      }
-
-      const user = manager.create(User, {
-        personId: userData.personId,
-        password: bcrypt.hashSync(password, 10),
-      });
-      await manager.save(user);
-
-      return this.buildAuthResponse(user);
-    });
-  }
 
   async login(params: LoginRequestDto) {
     const { password, documentNumber, client } = params;
@@ -150,8 +119,10 @@ export class AuthService {
 
   private buildAuthResponse(
     user: User,
-    client: 'web' | 'app' = 'web',
+    client: ClientType = ClientType.WEB,
   ): AuthResponseDto {
+    const roleCodes = user.person.personRoles.map((pr) => pr.role.code);
+
     return {
       user: {
         id: user.id,
@@ -160,9 +131,17 @@ export class AuthService {
           paternalLastName: user.person.paternalLastName,
           maternalLastName: user.person.maternalLastName,
         },
-        roles: user.person.personRoles.map((pr) => pr.role?.code ?? pr.roleId),
+        roles: roleCodes,
       },
-      token: this.getJwt({ id: user.id, client }),
+      token: this.getJwt({
+        userId: user.id,
+        client,
+        roles: roleCodes,
+        personId: user.person.id,
+        names: user.person.names,
+        paternalLastName: user.person.paternalLastName,
+        maternalLastName: user.person.maternalLastName,
+      }),
     };
   }
 }

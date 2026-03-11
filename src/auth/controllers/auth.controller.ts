@@ -5,17 +5,11 @@ import {
   LoginGoogleRequestDto,
   LoginRequestDto,
 } from '../dto/login-request.dto';
-import { RegisterRequestDto } from '../dto/register-request.dto';
 import { AuthService } from '../services/auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Post('register')
-  register(@Body() registerUserDto: RegisterRequestDto) {
-    return this.authService.register(registerUserDto);
-  }
 
   @Post('login')
   @HttpCode(200)
