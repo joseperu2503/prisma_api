@@ -18,6 +18,7 @@ import { PersonModule } from './person/person.module';
 import { SeedCommand } from './seed/commands/seed.command';
 import { SeedModule } from './seed/seed.module';
 import { StudentModule } from './student/student.module';
+import { SubjectModule } from './subject/subject.module';
 import { TeacherModule } from './teacher/teacher.module';
 
 @Module({
@@ -49,6 +50,7 @@ import { TeacherModule } from './teacher/teacher.module';
     AcademicYearModule,
     AcademicPeriodModule,
     ClassModule,
+    SubjectModule,
     EnrollmentModule,
   ],
   providers: [SeedCommand],
