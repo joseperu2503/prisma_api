@@ -22,7 +22,6 @@ export class RoleSeed {
     { code: RoleCode.STUDENT, name: 'Estudiante', isEmployee: false },
     { code: RoleCode.TEACHER, name: 'Docente', isEmployee: true },
     { code: RoleCode.GUARDIAN, name: 'Apoderado', isEmployee: false },
-    { code: RoleCode.SECRETARY, name: 'Secretaria', isEmployee: true },
   ];
 
   async run() {
