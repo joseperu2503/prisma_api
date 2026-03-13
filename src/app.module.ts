@@ -1,9 +1,16 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicPeriodModule } from './academic-period/academic-period.module';
 import { AcademicYearModule } from './academic-year/academic-year.module';
 import { AdminModule } from './admin/admin.module';
+import { AppVersionModule } from './app-version/app-version.module';
+import { PlatformVersionMiddleware } from './app-version/middleware/platform-version.middleware';
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
@@ -15,8 +22,6 @@ import { GradeModule } from './grade/grade.module';
 import { GuardianModule } from './guardian/guardian.module';
 import { LevelModule } from './level/level.module';
 import { PersonModule } from './person/person.module';
-import { PlatformVersionMiddleware } from './platform-version/middleware/platform-version.middleware';
-import { PlatformVersionModule } from './platform-version/platform-version.module';
 import { SeedCommand } from './seed/commands/seed.command';
 import { SeedModule } from './seed/seed.module';
 import { StudentModule } from './student/student.module';
@@ -54,7 +59,7 @@ import { TeacherModule } from './teacher/teacher.module';
     ClassModule,
     SubjectModule,
     EnrollmentModule,
-    PlatformVersionModule,
+    AppVersionModule,
   ],
   providers: [SeedCommand],
 })

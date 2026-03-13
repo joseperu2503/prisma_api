@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { AcademicYearSeed } from './academic-year.seed';
 import { AdminSeed } from './admin.seed';
+import { AppPlatformSeed } from './app-platform.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
 import { ClassSeed } from './class.seed';
 import { DocumentTypeSeed } from './document-type.seed';
@@ -10,7 +11,6 @@ import { GenderSeed } from './gender.seed';
 import { GradeSeed } from './grade.seed';
 import { LevelSeed } from './level.seed';
 import { PermissionSeed } from './permission.seed';
-import { PlatformTypeSeed } from './platform-type.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
 import { RoleSeed } from './role.seed';
 import { StudentSeed } from './student.seed';
@@ -32,7 +32,7 @@ export class SeedService {
     private readonly enrollmentSeed: EnrollmentSeed,
     private readonly adminSeed: AdminSeed,
     private readonly classSeed: ClassSeed,
-    private readonly platformTypeSeed: PlatformTypeSeed,
+    private readonly appPlatformSeed: AppPlatformSeed,
   ) {}
 
   async runSeed() {
@@ -43,7 +43,7 @@ export class SeedService {
     await this.relationshipTypeSeed.run();
     await this.permissionSeed.run();
     await this.roleSeed.run();
-    await this.platformTypeSeed.run();
+    await this.appPlatformSeed.run();
     await this.adminSeed.run();
     // await this.academicYearSeed.run();
     // await this.levelSeed.run();

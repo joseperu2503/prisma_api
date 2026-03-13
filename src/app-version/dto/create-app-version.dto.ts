@@ -1,8 +1,8 @@
-import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
-export class CreatePlatformVersionDto {
+export class CreateAppVersionDto {
   @IsString()
-  platformTypeId: string;
+  appPlatformId: string;
 
   @IsString()
   version: string;

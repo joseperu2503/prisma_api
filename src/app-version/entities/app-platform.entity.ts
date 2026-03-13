@@ -1,8 +1,8 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
-import { PlatformVersion } from './platform-version.entity';
+import { AppVersion } from './app-version.entity';
 
-@Entity('platform_types')
-export class PlatformType {
+@Entity('app_platforms')
+export class AppPlatform {
   @PrimaryColumn()
   id: string; // 'android' | 'ios' | 'web'
 
@@ -12,6 +12,6 @@ export class PlatformType {
   @Column({ nullable: true, type: 'text', name: 'store_url' })
   storeUrl: string | null;
 
-  @OneToMany(() => PlatformVersion, (pv) => pv.platformType)
-  versions: PlatformVersion[];
+  @OneToMany(() => AppVersion, (pv) => pv.appPlatform)
+  versions: AppVersion[];
 }

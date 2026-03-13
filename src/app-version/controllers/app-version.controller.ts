@@ -8,12 +8,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CreatePlatformVersionDto } from '../dto/create-platform-version.dto';
-import { UpdatePlatformVersionDto } from '../dto/update-platform-version.dto';
-import { PlatformVersionService } from '../services/platform-version.service';
+import { CreateAppVersionDto } from '../dto/create-app-version.dto';
+import { UpdateAppVersionDto } from '../dto/update-app-version.dto';
+import { PlatformVersionService } from '../services/app-version.service';
 
-@Controller('platform-versions')
-export class PlatformVersionController {
+@Controller('app-versions')
+export class AppVersionController {
   constructor(private readonly service: PlatformVersionService) {}
 
   @Get('validate')
@@ -27,14 +27,17 @@ export class PlatformVersionController {
   }
 
   @Patch('types/:id')
-  updateType(@Param('id') id: string, @Body() dto: { storeUrl?: string | null }) {
+  updateType(
+    @Param('id') id: string,
+    @Body() dto: { storeUrl?: string | null },
+  ) {
     return this.service.updateType(id, dto);
   }
 
   @Get()
-  findAll(@Query('platformTypeId') platformTypeId?: string) {
-    if (platformTypeId) {
-      return this.service.findByPlatform(platformTypeId);
+  findAll(@Query('appPlatformId') appPlatformId?: string) {
+    if (appPlatformId) {
+      return this.service.findByPlatform(appPlatformId);
     }
     return this.service.findAll();
   }
@@ -45,12 +48,12 @@ export class PlatformVersionController {
   }
 
   @Post()
-  create(@Body() dto: CreatePlatformVersionDto) {
+  create(@Body() dto: CreateAppVersionDto) {
     return this.service.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdatePlatformVersionDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateAppVersionDto) {
     return this.service.update(id, dto);
   }
 

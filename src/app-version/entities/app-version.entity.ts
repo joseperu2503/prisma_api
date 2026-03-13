@@ -8,20 +8,20 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
-import { PlatformType } from './platform-type.entity';
+import { AppPlatform } from './app-platform.entity';
 
-@Entity('platform_versions')
-@Unique(['platformTypeId', 'version', 'build'])
-export class PlatformVersion {
+@Entity('app_versions')
+@Unique(['appPlatformId', 'version', 'build'])
+export class AppVersion {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'platform_type_id' })
-  platformTypeId: string;
+  @Column({ name: 'app_platform_id' })
+  appPlatformId: string;
 
-  @ManyToOne(() => PlatformType, (pt) => pt.versions, { eager: true })
-  @JoinColumn({ name: 'platform_type_id' })
-  platformType: PlatformType;
+  @ManyToOne(() => AppPlatform, (ap) => ap.versions)
+  @JoinColumn({ name: 'app_platform_id' })
+  appPlatform: AppPlatform;
 
   @Column()
   version: string;
