@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import {
   LoginFacebookRequestDto,
@@ -22,7 +22,6 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-    private readonly dataSource: DataSource,
     private readonly facebookService: FacebookService,
     private readonly googleService: GoogleService,
   ) {}

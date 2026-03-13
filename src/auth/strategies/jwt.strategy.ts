@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ErrorCode } from 'src/common/enums/error-code.enum';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
@@ -26,7 +27,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid token.');
+      throw new UnauthorizedException({
+        message: 'Usuario no encontrado',
+        code: ErrorCode.AUTH_USER_NOT_FOUND,
+        statusCode: 401,
+      });
     }
 
     const activePersonRoles = user.person.personRoles.filter(
@@ -34,7 +39,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     );
 
     if (activePersonRoles.length === 0) {
-      throw new UnauthorizedException('Inactive user.');
+      throw new UnauthorizedException({
+        message: 'Inactive user.',
+        code: ErrorCode.AUTH_USER_INACTIVE,
+        statusCode: 401,
+      });
     }
 
     const roles = activePersonRoles.map((pr) => pr.role?.code ?? '');
