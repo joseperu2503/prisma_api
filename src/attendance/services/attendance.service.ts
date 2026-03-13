@@ -38,6 +38,8 @@ export class AttendanceService {
 
         const date = params.date ? new Date(params.date) : new Date();
 
+        // console.log({ date });
+
         let attendance = await manager.findOne(Attendance, {
           where: { personId: person.id, date },
         });
