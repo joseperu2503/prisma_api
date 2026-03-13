@@ -26,6 +26,11 @@ export class PlatformVersionController {
     return this.service.findAllTypes();
   }
 
+  @Patch('types/:id')
+  updateType(@Param('id') id: string, @Body() dto: { storeUrl?: string | null }) {
+    return this.service.updateType(id, dto);
+  }
+
   @Get()
   findAll(@Query('platformTypeId') platformTypeId?: string) {
     if (platformTypeId) {

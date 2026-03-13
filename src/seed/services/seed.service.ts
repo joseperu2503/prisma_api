@@ -36,21 +36,21 @@ export class SeedService {
   ) {}
 
   async runSeed() {
-    // await this.dropAllTables();
-    // await this.documentTypeSeed.run();
-    // await this.genderSeed.run();
-    // await this.attendanceTypeSeed.run();
-    // await this.relationshipTypeSeed.run();
-    // await this.permissionSeed.run();
-    // await this.roleSeed.run();
+    await this.dropAllTables();
+    await this.documentTypeSeed.run();
+    await this.genderSeed.run();
+    await this.attendanceTypeSeed.run();
+    await this.relationshipTypeSeed.run();
+    await this.permissionSeed.run();
+    await this.roleSeed.run();
     await this.platformTypeSeed.run();
+    await this.adminSeed.run();
     // await this.academicYearSeed.run();
     // await this.levelSeed.run();
     // await this.gradeSeed.run();
     // await this.classSeed.run();
     // await this.studentSeed.run();
     // await this.enrollmentSeed.run();
-    // await this.adminSeed.run();
     // await this.attendanceSeed.run();
   }
 

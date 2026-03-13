@@ -32,7 +32,7 @@ export class PlatformVersion {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   notes: string;
 
   @CreateDateColumn({

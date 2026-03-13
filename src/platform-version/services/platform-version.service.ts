@@ -20,6 +20,15 @@ export class PlatformVersionService {
     return this.typeRepo.find();
   }
 
+  async updateType(id: string, dto: { storeUrl?: string | null }): Promise<PlatformType> {
+    const type = await this.typeRepo.findOne({ where: { id } });
+    if (!type) {
+      throw new NotFoundException(`PlatformType '${id}' not found`);
+    }
+    Object.assign(type, dto);
+    return this.typeRepo.save(type);
+  }
+
   findAll(): Promise<PlatformVersion[]> {
     return this.versionRepo.find({
       order: { createdAt: 'DESC' },
