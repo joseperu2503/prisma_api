@@ -1,10 +1,11 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { AppPlatformId } from '../enums/app-platform-id.enum';
 import { AppVersion } from './app-version.entity';
 
 @Entity('app_platforms')
 export class AppPlatform {
   @PrimaryColumn()
-  id: string; // 'android' | 'ios' | 'web'
+  id: AppPlatformId; // 'android' | 'ios' | 'web'
 
   @Column()
   name: string;

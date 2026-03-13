@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CreateAppVersionDto } from '../dto/create-app-version.dto';
 import { UpdateAppVersionDto } from '../dto/update-app-version.dto';
 import { AppPlatform } from '../entities/app-platform.entity';
 import { AppVersion } from '../entities/app-version.entity';
+import { AppPlatformId } from '../enums/app-platform-id.enum';
 
 @Injectable()
 export class PlatformVersionService {
@@ -17,11 +18,13 @@ export class PlatformVersionService {
   ) {}
 
   findAllTypes(): Promise<AppPlatform[]> {
-    return this.typeRepo.find();
+    return this.typeRepo.find({
+      where: { id: In([AppPlatformId.ANDROID, AppPlatformId.IOS]) },
+    });
   }
 
   async updateType(
-    id: string,
+    id: AppPlatformId,
     dto: { storeUrl?: string | null },
   ): Promise<AppPlatform> {
     const type = await this.typeRepo.findOne({ where: { id } });

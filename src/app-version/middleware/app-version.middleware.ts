@@ -10,8 +10,7 @@ import { AppPlatform } from 'src/app-version/entities/app-platform.entity';
 import { AppVersion } from 'src/app-version/entities/app-version.entity';
 import { ErrorCode } from 'src/common/enums/error-code.enum';
 import { Repository } from 'typeorm';
-
-const MOBILE_PLATFORMS = ['android', 'ios'];
+import { AppPlatformId, MOBILE_PLATFORMS } from '../enums/app-platform-id.enum';
 
 @Injectable()
 export class AppVersionMiddleware implements NestMiddleware {
@@ -24,7 +23,7 @@ export class AppVersionMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    const platform = req.headers['platform'] as string | undefined;
+    const platform = req.headers['platform'] as AppPlatformId | undefined;
 
     // No platform header → skip validation
     if (!platform) {
@@ -34,8 +33,8 @@ export class AppVersionMiddleware implements NestMiddleware {
     const version = req.headers['version'] as string | undefined;
     const build = req.headers['build'] as string | undefined;
 
-    const isMobile = MOBILE_PLATFORMS.includes(platform.toLowerCase());
-    const isWeb = platform.toLowerCase() === 'web';
+    const isMobile = MOBILE_PLATFORMS.includes(platform);
+    const isWeb = platform === AppPlatformId.WEB;
 
     if (!isMobile && !isWeb) {
       throw new ForbiddenException(`Plataforma desconocida: '${platform}'`);
@@ -58,7 +57,7 @@ export class AppVersionMiddleware implements NestMiddleware {
     const query = this.versionRepo
       .createQueryBuilder('av')
       .where('av.appPlatformId = :platform', {
-        platform: platform.toLowerCase(),
+        platform: platform,
       })
       .andWhere('av.version = :version', { version })
       .leftJoinAndSelect('av.appPlatform', 'appPlatform');
@@ -72,7 +71,7 @@ export class AppVersionMiddleware implements NestMiddleware {
     if (!platformVersion) {
       // Fetch storeUrl even when version is not found
       const appPlatform = await this.typeRepo.findOne({
-        where: { id: platform.toLowerCase() },
+        where: { id: platform },
       });
 
       throw new ForbiddenException({

@@ -4,12 +4,14 @@ import {
   Delete,
   Get,
   Param,
+  ParseEnumPipe,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { CreateAppVersionDto } from '../dto/create-app-version.dto';
 import { UpdateAppVersionDto } from '../dto/update-app-version.dto';
+import { AppPlatformId } from '../enums/app-platform-id.enum';
 import { PlatformVersionService } from '../services/app-version.service';
 
 @Controller('app-versions')
@@ -28,7 +30,7 @@ export class AppVersionController {
 
   @Patch('types/:id')
   updateType(
-    @Param('id') id: string,
+    @Param('id', new ParseEnumPipe(AppPlatformId)) id: AppPlatformId,
     @Body() dto: { storeUrl?: string | null },
   ) {
     return this.service.updateType(id, dto);

@@ -1,8 +1,9 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { AppPlatformId } from '../enums/app-platform-id.enum';
 
 export class CreateAppVersionDto {
-  @IsString()
-  appPlatformId: string;
+  @IsEnum(AppPlatformId)
+  appPlatformId: AppPlatformId;
 
   @IsString()
   version: string;
