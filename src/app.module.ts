@@ -10,7 +10,7 @@ import { AcademicPeriodModule } from './academic-period/academic-period.module';
 import { AcademicYearModule } from './academic-year/academic-year.module';
 import { AdminModule } from './admin/admin.module';
 import { AppVersionModule } from './app-version/app-version.module';
-import { PlatformVersionMiddleware } from './app-version/middleware/platform-version.middleware';
+import { AppVersionMiddleware } from './app-version/middleware/app-version.middleware';
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
@@ -66,7 +66,7 @@ import { TeacherModule } from './teacher/teacher.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(PlatformVersionMiddleware)
+      .apply(AppVersionMiddleware)
       .exclude(
         '/api/seed(.*)',
         // Platform-version management routes — excluded (no header check needed)

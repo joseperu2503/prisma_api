@@ -14,7 +14,7 @@ import { Repository } from 'typeorm';
 const MOBILE_PLATFORMS = ['android', 'ios'];
 
 @Injectable()
-export class PlatformVersionMiddleware implements NestMiddleware {
+export class AppVersionMiddleware implements NestMiddleware {
   constructor(
     @InjectRepository(AppVersion)
     private readonly versionRepo: Repository<AppVersion>,
