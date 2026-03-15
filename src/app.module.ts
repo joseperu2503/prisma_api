@@ -40,7 +40,7 @@ import { TeacherModule } from './teacher/teacher.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: process.env.NODE_ENV === 'dev',
     }),
     SeedModule,
     AuthModule,
