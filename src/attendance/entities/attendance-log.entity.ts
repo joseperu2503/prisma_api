@@ -1,3 +1,4 @@
+import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
 import {
   Column,
@@ -29,6 +30,13 @@ export class AttendanceLog {
 
   @Column('uuid', { name: 'type_id' })
   typeId: string;
+
+  @ManyToOne(() => Role)
+  @JoinColumn({ name: 'role_id' })
+  role: string;
+
+  @Column('string', { name: 'role_id' })
+  roleId: string;
 
   @Column({
     type: 'timestamptz',

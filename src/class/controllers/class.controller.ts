@@ -11,13 +11,13 @@ import {
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateClassDto } from '../dto/create-class.dto';
 import { QueryClassDto } from '../dto/query-class.dto';
 import { UpdateClassDto } from '../dto/update-class.dto';
 import { ClassService } from '../services/class.service';
 
-@Auth([RoleCode.ADMIN], [ClientType.WEB])
+@Auth([RoleId.ADMIN], [ClientType.WEB])
 @Controller('classes')
 export class ClassController {
   constructor(private readonly service: ClassService) {}

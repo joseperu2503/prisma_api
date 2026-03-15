@@ -7,7 +7,7 @@ export class CreateEmployeeDto {
   @Type(() => CreatePersonDto)
   person: CreatePersonDto;
 
-  @IsUUID()
   @IsNotEmpty()
-  roleId: string;
+  @IsUUID()
+  employeeTypeId: string;
 }

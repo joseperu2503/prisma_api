@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AttendanceService } from 'src/attendance/services/attendance.service';
 import { User } from 'src/auth/entities/user.entity';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { Repository } from 'typeorm';
 
 const STUDENT_DOCUMENTS = ['72345678', '74567890', '76789012'];
@@ -42,7 +42,7 @@ export class AttendanceSeed {
       person: {
         personRoles: {
           role: {
-            code: RoleCode.ADMIN,
+            id: RoleId.ADMIN,
           },
         },
       },

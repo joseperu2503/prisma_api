@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceService } from '../services/attendance.service';
 
-@Auth([RoleCode.ADMIN, RoleCode.STUDENT])
+@Auth([RoleId.ADMIN, RoleId.STUDENT])
 @Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}

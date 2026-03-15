@@ -46,7 +46,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       });
     }
 
-    const roles = activePersonRoles.map((pr) => pr.role?.code ?? '');
+    const roles = activePersonRoles.map((pr) => pr.role?.id);
 
     return { ...user, client, roles };
   }

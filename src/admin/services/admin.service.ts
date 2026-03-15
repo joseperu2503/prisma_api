@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { PersonService } from 'src/person/services/person.service';
 import { DataSource, Repository } from 'typeorm';
@@ -53,7 +53,7 @@ export class AdminService {
       }
 
       const adminRole = await queryRunner.manager.findOne(Role, {
-        where: { code: RoleCode.ADMIN },
+        where: { id: RoleId.ADMIN },
       });
 
       if (!adminRole) {
@@ -102,7 +102,9 @@ export class AdminService {
       .createQueryBuilder('u')
       .innerJoinAndSelect('u.person', 'p')
       .innerJoinAndSelect('p.personRoles', 'pr')
-      .innerJoinAndSelect('pr.role', 'r', 'r.code = :code', { code: RoleCode.ADMIN })
+      .innerJoinAndSelect('pr.role', 'r', 'r.id = :id', {
+        id: RoleId.ADMIN,
+      })
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -138,7 +140,7 @@ export class AdminService {
     }
 
     const adminPersonRole = user.person.personRoles.find(
-      (pr) => pr.role?.code === RoleCode.ADMIN,
+      (pr) => pr.role?.id === RoleId.ADMIN,
     );
 
     return { ...user, isActive: adminPersonRole?.isActive ?? true };
@@ -155,7 +157,7 @@ export class AdminService {
     }
 
     const adminPersonRole = user.person.personRoles.find(
-      (pr) => pr.role?.code === RoleCode.ADMIN,
+      (pr) => pr.role?.id === RoleId.ADMIN,
     );
 
     if (!adminPersonRole) {

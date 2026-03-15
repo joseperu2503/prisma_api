@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PersonModule } from 'src/person/person.module';
 import { AttendanceController } from './controllers/attendance.controller';
 import { AttendanceLog } from './entities/attendance-log.entity';
 import { AttendanceType } from './entities/attendance-type.entity';
@@ -11,6 +12,7 @@ import { AttendanceService } from './services/attendance.service';
   providers: [AttendanceService],
   imports: [
     TypeOrmModule.forFeature([Attendance, AttendanceLog, AttendanceType]),
+    PersonModule,
   ],
   exports: [TypeOrmModule, AttendanceService],
 })

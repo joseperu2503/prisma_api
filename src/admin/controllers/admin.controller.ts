@@ -10,12 +10,12 @@ import {
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateAdminDto } from '../dto/create-admin.dto';
 import { QueryAdminDto } from '../dto/query-admin.dto';
 import { AdminService } from '../services/admin.service';
 
-@Auth([RoleCode.ADMIN, RoleCode.STUDENT], [ClientType.WEB])
+@Auth([RoleId.ADMIN, RoleId.STUDENT], [ClientType.WEB])
 @Controller('admins')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}

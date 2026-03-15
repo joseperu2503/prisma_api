@@ -1,11 +1,11 @@
 import { ClientType } from '../enums/client-type.enum';
-import { RoleCode } from '../enums/role-code.enum';
+import { RoleId } from '../enums/role-id.enum';
 
 export interface JwtPayload {
   userId: string;
   personId: string;
   client: ClientType;
-  roles: RoleCode[];
+  roles: RoleId[];
   names: string;
   paternalLastName: string;
   maternalLastName: string;

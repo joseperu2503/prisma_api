@@ -11,7 +11,7 @@ import {
 } from '../dto/login-request.dto';
 import { User } from '../entities/user.entity';
 import { ClientType } from '../enums/client-type.enum';
-import { RoleCode } from '../enums/role-code.enum';
+import { RoleId } from '../enums/role-id.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { FacebookService } from './facebook.service';
 import { GoogleService } from './google.service';
@@ -48,11 +48,11 @@ export class AuthService {
       throw new UnauthorizedException(`Credenciales inválidas`);
     }
 
-    const roleCodes = user.person.personRoles.map((pr) => pr.role.code);
+    const roleCodes = user.person.personRoles.map((pr) => pr.role.id);
 
-    const allowedByClient: Record<ClientType, RoleCode[]> = {
-      web: [RoleCode.ADMIN],
-      app: [RoleCode.ADMIN, RoleCode.STUDENT],
+    const allowedByClient: Record<ClientType, RoleId[]> = {
+      web: [RoleId.ADMIN],
+      app: [RoleId.ADMIN, RoleId.STUDENT],
     };
 
     const allowed = allowedByClient[client];
@@ -120,7 +120,7 @@ export class AuthService {
     user: User,
     client: ClientType = ClientType.WEB,
   ): AuthResponseDto {
-    const roleCodes = user.person.personRoles.map((pr) => pr.role.code);
+    const roleCodes = user.person.personRoles.map((pr) => pr.role.id);
 
     return {
       user: {

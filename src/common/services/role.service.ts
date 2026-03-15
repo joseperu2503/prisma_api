@@ -10,10 +10,7 @@ export class RoleService {
     private readonly roleRepository: Repository<Role>,
   ) {}
 
-  findAll(isEmployee?: boolean) {
-    if (isEmployee !== undefined) {
-      return this.roleRepository.find({ where: { isEmployee } });
-    }
+  findAll() {
     return this.roleRepository.find();
   }
 }

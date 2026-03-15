@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
@@ -70,7 +70,7 @@ export class TeacherService {
 
       // 3️⃣ Asignar Rol de Docente a la PERSONA
       const teacherRole = await queryRunner.manager.findOne(Role, {
-        where: { code: RoleCode.TEACHER },
+        where: { id: RoleId.TEACHER },
       });
 
       if (!teacherRole) {
@@ -147,7 +147,9 @@ export class TeacherService {
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.person', 'p')
       .leftJoinAndSelect('p.personRoles', 'pr')
-      .leftJoinAndSelect('pr.role', 'r', 'r.code = :code', { code: RoleCode.TEACHER })
+      .leftJoinAndSelect('pr.role', 'r', 'r.id = :id', {
+        id: RoleId.TEACHER,
+      })
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -182,7 +184,7 @@ export class TeacherService {
     }
 
     const teacherPersonRole = teacher.person.personRoles.find(
-      (pr) => pr.role?.code === RoleCode.TEACHER,
+      (pr) => pr.role?.id === RoleId.TEACHER,
     );
 
     return { ...teacher, isActive: teacherPersonRole?.isActive ?? true };
@@ -214,7 +216,7 @@ export class TeacherService {
 
     const teacherRole = await this.dataSource
       .getRepository(Role)
-      .findOne({ where: { code: RoleCode.TEACHER } });
+      .findOne({ where: { id: RoleId.TEACHER } });
 
     if (!teacherRole) {
       throw new NotFoundException(`Role TEACHER not found`);
@@ -250,7 +252,7 @@ export class TeacherService {
 
     try {
       const teacherRole = await queryRunner.manager.findOne(Role, {
-        where: { code: RoleCode.TEACHER },
+        where: { id: RoleId.TEACHER },
       });
 
       if (teacherRole) {

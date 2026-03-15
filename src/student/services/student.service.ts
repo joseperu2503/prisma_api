@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
@@ -72,7 +72,7 @@ export class StudentService {
 
       // 3️⃣ Asignar Rol de Estudiante a la PERSONA
       const studentRole = await queryRunner.manager.findOne(Role, {
-        where: { code: RoleCode.STUDENT },
+        where: { id: RoleId.STUDENT },
       });
 
       if (!studentRole) {
@@ -149,7 +149,9 @@ export class StudentService {
       .createQueryBuilder('s')
       .leftJoinAndSelect('s.person', 'p')
       .leftJoinAndSelect('p.personRoles', 'pr')
-      .leftJoinAndSelect('pr.role', 'r', 'r.code = :code', { code: RoleCode.STUDENT })
+      .leftJoinAndSelect('pr.role', 'r', 'r.id = :id', {
+        id: RoleId.STUDENT,
+      })
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -184,7 +186,7 @@ export class StudentService {
     }
 
     const studentPersonRole = student.person.personRoles.find(
-      (pr) => pr.role?.code === RoleCode.STUDENT,
+      (pr) => pr.role?.id === RoleId.STUDENT,
     );
 
     return { ...student, isActive: studentPersonRole?.isActive ?? true };
@@ -223,7 +225,7 @@ export class StudentService {
 
     const studentRole = await this.dataSource
       .getRepository(Role)
-      .findOne({ where: { code: RoleCode.STUDENT } });
+      .findOne({ where: { id: RoleId.STUDENT } });
 
     if (!studentRole) {
       throw new NotFoundException(`Role STUDENT not found`);
@@ -243,7 +245,9 @@ export class StudentService {
     return {
       id: student.id,
       isActive: personRole.isActive,
-      message: personRole.isActive ? 'Estudiante activado' : 'Estudiante desactivado',
+      message: personRole.isActive
+        ? 'Estudiante activado'
+        : 'Estudiante desactivado',
     };
   }
 
@@ -269,7 +273,7 @@ export class StudentService {
 
     try {
       const studentRole = await queryRunner.manager.findOne(Role, {
-        where: { code: RoleCode.STUDENT },
+        where: { id: RoleId.STUDENT },
       });
 
       if (studentRole) {

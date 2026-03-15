@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from 'src/auth/entities/permission.entity';
 import { RolePermission } from 'src/auth/entities/role-permission.entity';
 import { Role } from 'src/auth/entities/role.entity';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -18,10 +18,11 @@ export class RoleSeed {
   ) {}
 
   roles = [
-    { code: RoleCode.ADMIN, name: 'Administrador', isEmployee: false },
-    { code: RoleCode.STUDENT, name: 'Estudiante', isEmployee: false },
-    { code: RoleCode.TEACHER, name: 'Docente', isEmployee: true },
-    { code: RoleCode.GUARDIAN, name: 'Apoderado', isEmployee: false },
+    { id: RoleId.ADMIN, name: 'Administrador' },
+    { id: RoleId.STUDENT, name: 'Estudiante' },
+    { id: RoleId.TEACHER, name: 'Docente' },
+    { id: RoleId.GUARDIAN, name: 'Apoderado' },
+    { id: RoleId.EMPLOYEE, name: 'Colaborador' },
   ];
 
   async run() {
@@ -30,32 +31,26 @@ export class RoleSeed {
     }
   }
 
-  private async create(params: {
-    code: RoleCode;
-    name: string;
-    isEmployee: boolean;
-  }) {
-    const { code, name, isEmployee } = params;
+  private async create(params: { id: RoleId; name: string }) {
+    const { id, name } = params;
 
     let role = await this.roleRepository.findOne({
-      where: { code },
+      where: { id },
     });
 
     if (!role) {
       role = this.roleRepository.create({
-        code,
+        id,
         name,
-        isEmployee,
       });
       role = await this.roleRepository.save(role);
     } else {
       role.name = name;
-      role.isEmployee = isEmployee;
       role = await this.roleRepository.save(role);
     }
 
     // Si es ADMIN, le asignamos todos los permisos por defecto
-    if (code === 'ADMIN') {
+    if (id === RoleId.ADMIN) {
       const allPermissions = await this.permissionRepository.find();
       for (const permission of allPermissions) {
         const exist = await this.rolePermissionRepository.findOne({

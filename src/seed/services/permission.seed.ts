@@ -11,31 +11,31 @@ export class PermissionSeed {
   ) {}
 
   permissions = [
-    {
-      id: 'CREATE_USER',
-      name: 'Crear Usuario',
-      description: 'Permite crear nuevos usuarios',
-    },
-    {
-      id: 'UPDATE_USER',
-      name: 'Actualizar Usuario',
-      description: 'Permite actualizar usuarios existentes',
-    },
-    {
-      id: 'DELETE_USER',
-      name: 'Eliminar Usuario',
-      description: 'Permite eliminar usuarios',
-    },
-    {
-      id: 'VIEW_USER',
-      name: 'Ver Usuarios',
-      description: 'Permite ver la lista de usuarios',
-    },
-    {
-      id: 'GENERATE_QR',
-      name: 'Generar QR',
-      description: 'Permite generar credenciales QR',
-    },
+    // {
+    //   id: 'CREATE_USER',
+    //   name: 'Crear Usuario',
+    //   description: 'Permite crear nuevos usuarios',
+    // },
+    // {
+    //   id: 'UPDATE_USER',
+    //   name: 'Actualizar Usuario',
+    //   description: 'Permite actualizar usuarios existentes',
+    // },
+    // {
+    //   id: 'DELETE_USER',
+    //   name: 'Eliminar Usuario',
+    //   description: 'Permite eliminar usuarios',
+    // },
+    // {
+    //   id: 'VIEW_USER',
+    //   name: 'Ver Usuarios',
+    //   description: 'Permite ver la lista de usuarios',
+    // },
+    // {
+    //   id: 'GENERATE_QR',
+    //   name: 'Generar QR',
+    //   description: 'Permite generar credenciales QR',
+    // },
   ];
 
   async run() {

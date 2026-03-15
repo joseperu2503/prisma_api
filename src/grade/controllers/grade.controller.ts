@@ -11,14 +11,14 @@ import {
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
-import { RoleCode } from 'src/auth/enums/role-code.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { AssignGradeToYearDto } from '../dto/assign-grade-to-year.dto';
 import { CreateGradeDto } from '../dto/create-grade.dto';
 import { QueryGradeDto } from '../dto/query-grade.dto';
 import { UpdateGradeDto } from '../dto/update-grade.dto';
 import { GradeService } from '../services/grade.service';
 
-@Auth([RoleCode.ADMIN], [ClientType.WEB])
+@Auth([RoleId.ADMIN], [ClientType.WEB])
 @Controller('grades')
 export class GradeController {
   constructor(private readonly gradeService: GradeService) {}

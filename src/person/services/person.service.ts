@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import PDFDocument from 'pdfkit';
 import * as QRCode from 'qrcode';
 import { Role } from 'src/auth/entities/role.entity';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { DataSource, In, QueryRunner, Repository } from 'typeorm';
 import { CreatePersonDto } from '../dto/create-person.dto';
 import { Person } from '../entities/person.entity';
@@ -79,16 +80,7 @@ export class PersonService {
         continue;
       }
 
-      // Prioritize roles marked as isEmployee, then by specific codes
-      const prioritizedRoleCodes = ['ADMIN', 'STUDENT'];
-      const role = roles.sort((a, b) => {
-        if (a.isEmployee && !b.isEmployee) return -1;
-        if (!a.isEmployee && b.isEmployee) return 1;
-
-        const indexA = prioritizedRoleCodes.indexOf(a.code);
-        const indexB = prioritizedRoleCodes.indexOf(b.code);
-        return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
-      })[0];
+      const role = roles[0];
 
       // nueva página cada 6 tarjetas
       if (i > 0 && i % cardsPerPage === 0) {
@@ -108,21 +100,16 @@ export class PersonService {
       let badgeColor = '#6366F1';
       let titleColor = '#FFFFFF';
 
-      if (role.code === 'ADMIN') {
+      if (role.id === RoleId.ADMIN) {
         headerColor = '#1E1B4B'; // Midnight Blue (Supreme Authority)
         badgeColor = '#312E81';
-      } else if (role.code === 'STUDENT') {
+      } else if (role.id === RoleId.STUDENT) {
         headerColor = '#375FFF'; // Vibrant Sky Blue (Junior/Energy)
         badgeColor = '#375FFF';
-      } else if (role.isEmployee) {
+      } else if (role.id === RoleId.EMPLOYEE) {
         // All employee roles get a professional Indigo theme
         headerColor = '#3730A3';
         badgeColor = '#1E3A8A';
-
-        // Specific highlight for Teachers
-        if (role.code === 'TEACHER') {
-          headerColor = '#4338CA';
-        }
       }
 
       /** CARD BACKGROUND **/

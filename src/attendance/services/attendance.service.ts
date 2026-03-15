@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Person } from 'src/person/entities/person.entity';
+import { PersonService } from 'src/person/services/person.service';
 import { DataSource, Repository } from 'typeorm';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
@@ -18,6 +19,8 @@ export class AttendanceService {
     private readonly attendanceLogRepository: Repository<AttendanceLog>,
 
     private readonly dataSource: DataSource,
+
+    private readonly personService: PersonService,
   ) {}
 
   async registerAttendance(params: RegisterAttendanceDto, authUserId: string) {
@@ -35,6 +38,17 @@ export class AttendanceService {
             'Persona no encontrada con el documento proporcionado',
           );
         }
+
+        //buscar roles de la persona
+        const roles = await this.personService.getRoles(params.documentNumber);
+
+        if (roles.length === 0) {
+          throw new NotFoundException(
+            'No se encontraron roles para la persona con el documento proporcionado',
+          );
+        }
+
+        const role = roles[0];
 
         const date = params.date ? new Date(params.date) : new Date();
 
@@ -59,6 +73,7 @@ export class AttendanceService {
           where: {
             attendanceId: attendance.id,
             typeId: params.type,
+            roleId: role.id,
           },
         });
 
