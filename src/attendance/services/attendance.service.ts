@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
 import { DataSource, Repository } from 'typeorm';
@@ -49,6 +50,12 @@ export class AttendanceService {
         }
 
         const role = roles[0];
+
+        if (role.id !== RoleId.STUDENT) {
+          throw new NotFoundException(
+            'Por el momento solo se admiten asistencias para estudiantes',
+          );
+        }
 
         console.log({ role });
 
