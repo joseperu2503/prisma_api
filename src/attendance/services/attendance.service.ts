@@ -50,6 +50,8 @@ export class AttendanceService {
 
         const role = roles[0];
 
+        console.log({ role });
+
         const date = params.date ? new Date(params.date) : new Date();
 
         // console.log({ date });
@@ -96,6 +98,7 @@ export class AttendanceService {
           typeId: params.type,
           markedAt: date,
           createdById: authUserId,
+          roleId: role.id,
         });
 
         await manager.save(attendanceLog);

@@ -33,7 +33,7 @@ export class AttendanceLog {
 
   @ManyToOne(() => Role)
   @JoinColumn({ name: 'role_id' })
-  role: string;
+  role: Role;
 
   @Column('string', { name: 'role_id' })
   roleId: string;
