@@ -7,14 +7,13 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { AssignGradeToYearDto } from '../dto/assign-grade-to-year.dto';
 import { CreateGradeDto } from '../dto/create-grade.dto';
-import { QueryGradeDto } from '../dto/query-grade.dto';
+import { ListGradesDto } from '../dto/list-grades.dto';
 import { UpdateGradeDto } from '../dto/update-grade.dto';
 import { GradeService } from '../services/grade.service';
 
@@ -28,11 +27,9 @@ export class GradeController {
     return this.gradeService.create(createGradeDto);
   }
 
-  @Get()
-  findAll(@Query() query: QueryGradeDto) {
-    const page = parseInt(query.page ?? '1');
-    const limit = parseInt(query.limit ?? '10');
-    return this.gradeService.findAllPaginated(page, limit, query.search);
+  @Post('list')
+  findAll(@Body() body: ListGradesDto) {
+    return this.gradeService.findAll(body);
   }
 
   @Post('assign')

@@ -1,10 +1,15 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AcademicYearService } from 'src/academic-year/services/academic-year.service';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { DataSource, Repository } from 'typeorm';
 import { AssignGradeToYearDto } from '../dto/assign-grade-to-year.dto';
 import { CreateGradeDto } from '../dto/create-grade.dto';
+import { ListGradesDto } from '../dto/list-grades.dto';
 import { UpdateGradeDto } from '../dto/update-grade.dto';
 import { GradeYear } from '../entities/grade-year.entity';
 import { Grade } from '../entities/grade.entity';
@@ -35,10 +40,18 @@ export class GradeService {
     return await this.gradeRepository.save(grade);
   }
 
-  async findAllPaginated(page: number, limit: number, search?: string) {
+  async findAll(params: ListGradesDto) {
+    const pagination = params.pagination;
+    const search = params.search;
+
+    const page = pagination?.page;
+    const limit = pagination?.limit;
+
     const qb = this.gradeRepository
       .createQueryBuilder('g')
-      .leftJoinAndSelect('g.level', 'l')
+      .select(['g.id', 'g.name', 'g.isActive'])
+      .leftJoin('g.level', 'l')
+      .addSelect(['l.id', 'l.name'])
       .orderBy('l.name', 'ASC')
       .addOrderBy('g.name', 'ASC');
 
@@ -48,13 +61,21 @@ export class GradeService {
       });
     }
 
-    const total = await qb.getCount();
-    const data = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
+    let data: Grade[];
+    let total: number;
 
-    return { data, total, page, limit };
+    if (page && limit) {
+      total = await qb.getCount();
+      data = await qb
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
+    } else {
+      data = await qb.getMany();
+      total = data.length;
+    }
+
+    return { data, total, pagination: { page, limit } };
   }
 
   async findOne(id: string) {
