@@ -9,6 +9,7 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+import { AttendanceStatus } from './attendance-status.entity';
 import { AttendanceType } from './attendance-type.entity';
 import { Attendance } from './attendance.entity';
 
@@ -31,6 +32,13 @@ export class AttendanceLog {
 
   @Column('uuid', { name: 'type_id' })
   typeId: string;
+
+  @ManyToOne(() => AttendanceStatus)
+  @JoinColumn({ name: 'status_id' })
+  status: AttendanceStatus;
+
+  @Column('varchar', { name: 'status_id', length: 50 })
+  statusId: string;
 
   @Column({
     type: 'timestamptz',

@@ -23,6 +23,7 @@ import { StudentModule } from 'src/student/student.module';
 import { AcademicYearSeed } from './services/academic-year.seed';
 import { AdminSeed } from './services/admin.seed';
 import { AppPlatformSeed } from './services/app-platform.seed';
+import { AttendanceStatusSeed } from './services/attendance-status.seed';
 import { AttendanceTypeSeed } from './services/attendance-type.seed';
 import { AttendanceSeed } from './services/attendance.seed';
 import { ClassSeed } from './services/class.seed';
@@ -44,6 +45,7 @@ import { StudentSeed } from './services/student.seed';
     DocumentTypeSeed,
     GenderSeed,
     AttendanceTypeSeed,
+    AttendanceStatusSeed,
     AcademicYearSeed,
     LevelSeed,
     GradeSeed,

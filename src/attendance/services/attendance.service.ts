@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoleId } from 'src/auth/enums/role-id.enum';
+import { DateUtils } from 'src/common/utils/date.utils';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
 import {
-  Between,
   DataSource,
   LessThanOrEqual,
   MoreThanOrEqual,
@@ -20,6 +20,8 @@ import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
 import { AttendanceSchedule } from '../entities/attendance-schedule.entity';
 import { Attendance } from '../entities/attendance.entity';
+import { AttendanceStatusId } from '../enums/attenance-status-id.enum';
+import { AttendanceTypeId } from '../enums/attenance-type-id.enum';
 
 @Injectable()
 export class AttendanceService {
@@ -115,10 +117,10 @@ export class AttendanceService {
               },
             },
           });
+        }
 
-          if (!attendanceSchedule) {
-            throw new NotFoundException('No se encontró horario.');
-          }
+        if (!attendanceSchedule) {
+          throw new NotFoundException('No se encontró horario.');
         }
 
         let attendance = await manager.findOne(Attendance, {
@@ -141,17 +143,8 @@ export class AttendanceService {
 
         await manager.save(attendance);
 
-        //verificar si ya hay algun log del mismo type el mismo dia
-
-        const start = new Date(date);
-        start.setHours(0, 0, 0, 0);
-
-        const end = new Date(date);
-        end.setHours(23, 59, 59, 999);
-
         const existLog = await manager.findOne(AttendanceLog, {
           where: {
-            markedAt: Between(start, end),
             attendanceId: attendance.id,
             typeId: params.type,
           },
@@ -159,21 +152,52 @@ export class AttendanceService {
 
         if (existLog) {
           const message =
-            params.type === 'check_in'
+            params.type === AttendanceTypeId.ENTRY
               ? 'Entrada ya registrada'
               : 'Salida ya registrada';
           throw new HttpException(
             {
               success: false,
               message,
+              person: {
+                names: person.names,
+                paternalLastName: person.paternalLastName,
+                maternalLastName: person.maternalLastName,
+                documentNumber: person.documentNumber,
+              },
             },
             HttpStatus.BAD_REQUEST,
           );
         }
 
+        // Calculate attendance status based on current time and schedule
+        const currentTime = DateUtils.getCurrentTime(); // HH:MM:SS format
+        const currentTimeHM = currentTime.substring(0, 5); // HH:MM format
+        let statusId: AttendanceStatusId;
+
+        if (params.type === AttendanceTypeId.ENTRY) {
+          // Check if current time is within allowed check-in window
+          if (
+            currentTimeHM >= attendanceSchedule.entryStart &&
+            currentTimeHM <= attendanceSchedule.entryEnd
+          ) {
+            statusId = AttendanceStatusId.ON_TIME;
+          } else {
+            statusId = AttendanceStatusId.LATE;
+          }
+        } else {
+          // Check-out: on time if at or after scheduled check-out time
+          if (currentTimeHM >= attendanceSchedule.exit) {
+            statusId = AttendanceStatusId.ON_TIME;
+          } else {
+            statusId = AttendanceStatusId.LATE;
+          }
+        }
+
         const attendanceLog = manager.create(AttendanceLog, {
           attendanceId: attendance.id,
           typeId: params.type,
+          statusId,
           markedAt: date,
           createdById: authUserId,
         });
@@ -183,6 +207,7 @@ export class AttendanceService {
         return {
           success: true,
           message: 'Asistencia registrada correctamente',
+          statusId,
           person: {
             names: person.names,
             paternalLastName: person.paternalLastName,

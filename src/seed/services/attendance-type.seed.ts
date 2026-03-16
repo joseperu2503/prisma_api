@@ -12,11 +12,11 @@ export class AttendanceTypeSeed {
 
   attendanceTypes = [
     {
-      id: 'check_in',
+      id: 'entry',
       name: 'Entrada',
     },
     {
-      id: 'check_out',
+      id: 'exit',
       name: 'Salida',
     },
   ];

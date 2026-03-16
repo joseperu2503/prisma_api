@@ -9,6 +9,7 @@ import { AttendanceScheduleController } from './controllers/attendance-schedule.
 import { AttendanceLog } from './entities/attendance-log.entity';
 import { AttendanceScheduleGroup } from './entities/attendance-schedule-group.entity';
 import { AttendanceSchedule } from './entities/attendance-schedule.entity';
+import { AttendanceStatus } from './entities/attendance-status.entity';
 import { AttendanceType } from './entities/attendance-type.entity';
 import { Attendance } from './entities/attendance.entity';
 import { AttendanceService } from './services/attendance.service';
@@ -22,6 +23,7 @@ import { AttendanceScheduleService } from './services/attendance-schedule.servic
       Attendance,
       AttendanceLog,
       AttendanceType,
+      AttendanceStatus,
       AttendanceSchedule,
       AttendanceScheduleGroup,
       ClassAcademicYear,

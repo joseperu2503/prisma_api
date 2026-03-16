@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { AcademicYearSeed } from './academic-year.seed';
 import { AdminSeed } from './admin.seed';
 import { AppPlatformSeed } from './app-platform.seed';
+import { AttendanceStatusSeed } from './attendance-status.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
 import { ClassSeed } from './class.seed';
 import { DocumentTypeSeed } from './document-type.seed';
@@ -22,6 +23,7 @@ export class SeedService {
     private readonly documentTypeSeed: DocumentTypeSeed,
     private readonly genderSeed: GenderSeed,
     private readonly attendanceTypeSeed: AttendanceTypeSeed,
+    private readonly attendanceStatusSeed: AttendanceStatusSeed,
     private readonly relationshipTypeSeed: RelationshipTypeSeed,
     private readonly roleSeed: RoleSeed,
     private readonly permissionSeed: PermissionSeed,
@@ -40,6 +42,7 @@ export class SeedService {
     await this.documentTypeSeed.run();
     await this.genderSeed.run();
     await this.attendanceTypeSeed.run();
+    await this.attendanceStatusSeed.run();
     await this.relationshipTypeSeed.run();
     await this.permissionSeed.run();
     await this.roleSeed.run();

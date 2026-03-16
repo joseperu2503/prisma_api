@@ -65,7 +65,7 @@ export class AttendanceScheduleService {
       },
       order: {
         dayOfWeek: 'ASC',
-        checkInStart: 'ASC',
+        entryStart: 'ASC',
       },
     });
   }
@@ -137,10 +137,10 @@ export class AttendanceScheduleService {
       });
 
       const hasOverlap = existingSchedules.some((existing) => {
-        const newStart = dto.checkInStart;
-        const newEnd = dto.checkOut;
-        const existingStart = existing.checkInStart;
-        const existingEnd = existing.checkOut;
+        const newStart = dto.entryStart;
+        const newEnd = dto.exit;
+        const existingStart = existing.entryStart;
+        const existingEnd = existing.exit;
 
         return newStart < existingEnd && newEnd > existingStart;
       });
@@ -154,9 +154,9 @@ export class AttendanceScheduleService {
       // Create new schedule
       const schedule = manager.create(AttendanceSchedule, {
         dayOfWeek: dto.dayOfWeek,
-        checkInStart: dto.checkInStart,
-        checkInEnd: dto.checkInEnd,
-        checkOut: dto.checkOut,
+        entryStart: dto.entryStart,
+        entryEnd: dto.entryEnd,
+        exit: dto.exit,
         isActive: true,
         attendanceScheduleGroupId: classAcademicYear.attendanceScheduleGroup.id,
       });
@@ -195,39 +195,39 @@ export class AttendanceScheduleService {
       const scheduleConfig = [
         {
           dayOfWeek: 0,
-          checkInStart: '07:30',
-          checkInEnd: '07:50',
-          checkOut: '14:00',
+          entryStart: '07:30',
+          entryEnd: '07:50',
+          exit: '14:00',
         }, // Lunes
         {
           dayOfWeek: 1,
-          checkInStart: '07:30',
-          checkInEnd: '07:50',
-          checkOut: '14:00',
+          entryStart: '07:30',
+          entryEnd: '07:50',
+          exit: '14:00',
         }, // Martes
         {
           dayOfWeek: 2,
-          checkInStart: '07:30',
-          checkInEnd: '07:50',
-          checkOut: '14:00',
+          entryStart: '07:30',
+          entryEnd: '07:50',
+          exit: '14:00',
         }, // Miércoles
         {
           dayOfWeek: 3,
-          checkInStart: '07:30',
-          checkInEnd: '07:50',
-          checkOut: '14:00',
+          entryStart: '07:30',
+          entryEnd: '07:50',
+          exit: '14:00',
         }, // Jueves
         {
           dayOfWeek: 4,
-          checkInStart: '07:30',
-          checkInEnd: '07:50',
-          checkOut: '14:00',
+          entryStart: '07:30',
+          entryEnd: '07:50',
+          exit: '14:00',
         }, // Viernes
         {
           dayOfWeek: 6,
-          checkInStart: '21:00',
-          checkInEnd: '21:30',
-          checkOut: '22:00',
+          entryStart: '21:00',
+          entryEnd: '21:30',
+          exit: '22:00',
           
         }, // Viernes
       ];
@@ -286,9 +286,9 @@ export class AttendanceScheduleService {
               if (!existingSchedule) {
                 const schedule = manager.create(AttendanceSchedule, {
                   dayOfWeek: config.dayOfWeek,
-                  checkInStart: config.checkInStart,
-                  checkInEnd: config.checkInEnd,
-                  checkOut: config.checkOut,
+                  entryStart: config.entryStart,
+                  entryEnd: config.entryEnd,
+                  exit: config.exit,
                   isActive: true,
                   attendanceScheduleGroupId: group.id,
                 });

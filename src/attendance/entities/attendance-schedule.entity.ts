@@ -18,16 +18,16 @@ export class AttendanceSchedule {
   dayOfWeek: number;
 
   /** Hora en que abre la ventana de entrada (HH:MM:SS) */
-  @Column({ name: 'check_in_start', type: 'time' })
-  checkInStart: string;
+  @Column({ name: 'entry_start', type: 'time' })
+  entryStart: string;
 
   /** Hora en que cierra la ventana de entrada / hora límite de entrada (HH:MM:SS) */
-  @Column({ name: 'check_in_end', type: 'time' })
-  checkInEnd: string;
+  @Column({ name: 'entry_end', type: 'time' })
+  entryEnd: string;
 
   /** Hora de salida / inicio de ventana de salida (HH:MM:SS) */
-  @Column({ name: 'check_out_time', type: 'time' })
-  checkOut: string;
+  @Column({ name: 'exit_time', type: 'time' })
+  exit: string;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;

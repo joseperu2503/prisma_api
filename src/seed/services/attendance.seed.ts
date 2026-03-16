@@ -63,7 +63,7 @@ export class AttendanceSeed {
             {
               documentTypeId: 'dni',
               documentNumber,
-              type: 'check_in',
+              type: 'entry',
               date: dateStr,
             },
             user.id,
@@ -73,7 +73,7 @@ export class AttendanceSeed {
             {
               documentTypeId: 'dni',
               documentNumber,
-              type: 'check_out',
+              type: 'exit',
               date: dateStr,
             },
             user.id,
