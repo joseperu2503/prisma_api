@@ -223,13 +223,13 @@ export class AttendanceScheduleService {
           entryEnd: '07:50',
           exit: '14:00',
         }, // Viernes
-        {
-          dayOfWeek: 6,
-          entryStart: '21:00',
-          entryEnd: '21:30',
-          exit: '22:00',
+        // {
+        //   dayOfWeek: 6,
+        //   entryStart: '21:00',
+        //   entryEnd: '21:30',
+        //   exit: '22:00',
           
-        }, // Viernes
+        // }, // Domingo
       ];
 
       let createdCount = 0;
