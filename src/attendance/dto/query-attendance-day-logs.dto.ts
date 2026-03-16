@@ -7,6 +7,10 @@ export class QueryAttendanceDayLogsDto {
   classId?: string;
 
   @IsUUID()
+  @IsOptional()
+  studentId?: string;
+
+  @IsUUID()
   academicYearId: string;
 
   @IsString()

@@ -311,13 +311,14 @@ export class AttendanceService {
   }
 
   async getAttendanceHistory(dto: QueryAttendanceHistoryDto) {
-    const { classId, academicYearId, month, year, page, limit } = dto;
+    const { classId, studentId, academicYearId, month, year, page, limit } = dto;
 
     const enrollmentRepo = this.dataSource.getRepository(Enrollment);
     const attendanceRepo = this.dataSource.getRepository(Attendance);
 
     const whereClause: any = { academicYearId, isActive: true };
     if (classId) whereClause.classId = classId;
+    if (studentId) whereClause.studentId = studentId;
 
     const [enrollments, total] = await enrollmentRepo.findAndCount({
       where: whereClause,
@@ -379,11 +380,12 @@ export class AttendanceService {
   }
 
   async getAttendanceDayLogs(dto: QueryAttendanceDayLogsDto) {
-    const { classId, academicYearId, date, page, limit } = dto;
+    const { classId, studentId, academicYearId, date, page, limit } = dto;
 
     const enrollmentRepo = this.dataSource.getRepository(Enrollment);
     const whereClause: any = { academicYearId, isActive: true };
     if (classId) whereClause.classId = classId;
+    if (studentId) whereClause.studentId = studentId;
 
     const enrollments = await enrollmentRepo.find({
       where: whereClause,

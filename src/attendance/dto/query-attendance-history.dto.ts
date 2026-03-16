@@ -7,6 +7,10 @@ export class QueryAttendanceHistoryDto {
   classId?: string;
 
   @IsUUID()
+  @IsOptional()
+  studentId?: string;
+
+  @IsUUID()
   academicYearId: string;
 
   @IsInt()
