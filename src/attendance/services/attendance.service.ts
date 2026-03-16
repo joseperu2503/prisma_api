@@ -19,6 +19,7 @@ import {
   MoreThanOrEqual,
   Repository,
 } from 'typeorm';
+import { QueryAttendanceDayLogsDto } from '../dto/query-attendance-day-logs.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
@@ -372,6 +373,62 @@ export class AttendanceService {
         maternalLastName: e.student.person.maternalLastName,
       },
       attendance: attendanceMap.get(e.student.personId) ?? {},
+    }));
+
+    return { data, total, page, limit };
+  }
+
+  async getAttendanceDayLogs(dto: QueryAttendanceDayLogsDto) {
+    const { classId, academicYearId, date, page, limit } = dto;
+
+    const enrollmentRepo = this.dataSource.getRepository(Enrollment);
+    const whereClause: any = { academicYearId, isActive: true };
+    if (classId) whereClause.classId = classId;
+
+    const enrollments = await enrollmentRepo.find({
+      where: whereClause,
+      relations: { student: true },
+    });
+
+    const personIds = enrollments.map((e) => e.student.personId);
+    if (personIds.length === 0) return { data: [], total: 0, page, limit };
+
+    const [logs, total] = await this.dataSource
+      .getRepository(AttendanceLog)
+      .createQueryBuilder('log')
+      .innerJoinAndSelect('log.attendance', 'att')
+      .innerJoinAndSelect('att.person', 'person')
+      .leftJoinAndSelect('log.type', 'type')
+      .leftJoinAndSelect('log.status', 'status')
+      .leftJoinAndSelect('log.createdBy', 'createdBy')
+      .leftJoinAndSelect('createdBy.person', 'createdByPerson')
+      .where('att.personId IN (:...personIds)', { personIds })
+      .andWhere('att.date = :date', { date })
+      .orderBy('log.markedAt', 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    const data = logs.map((log) => ({
+      id: log.id,
+      person: {
+        names: log.attendance.person.names,
+        paternalLastName: log.attendance.person.paternalLastName,
+        maternalLastName: log.attendance.person.maternalLastName,
+      },
+      typeId: log.typeId,
+      typeName: log.type?.name,
+      statusId: log.statusId,
+      statusName: log.status?.name,
+      markedAt: log.markedAt,
+      date: log.attendance.date,
+      registeredBy: log.createdBy?.person
+        ? {
+            names: log.createdBy.person.names,
+            paternalLastName: log.createdBy.person.paternalLastName,
+            maternalLastName: log.createdBy.person.maternalLastName,
+          }
+        : null,
     }));
 
     return { data, total, page, limit };

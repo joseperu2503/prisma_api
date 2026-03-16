@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
+import { QueryAttendanceDayLogsDto } from '../dto/query-attendance-day-logs.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceService } from '../services/attendance.service';
@@ -19,6 +20,11 @@ export class AttendanceController {
   @Post('history')
   getHistory(@Body() dto: QueryAttendanceHistoryDto) {
     return this.attendanceService.getAttendanceHistory(dto);
+  }
+
+  @Post('day-logs')
+  getDayLogs(@Body() dto: QueryAttendanceDayLogsDto) {
+    return this.attendanceService.getAttendanceDayLogs(dto);
   }
 
   @Get('last-attendances-day')
