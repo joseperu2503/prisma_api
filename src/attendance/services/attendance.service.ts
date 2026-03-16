@@ -84,6 +84,8 @@ export class AttendanceService {
         //   dayOfWeek,
         // });
 
+        const currentTime = DateUtils.getCurrentTime(); // HH:MM:SS
+
         let attendanceSchedule: AttendanceSchedule | null = null;
 
         if (role.id === RoleId.STUDENT) {
@@ -102,7 +104,7 @@ export class AttendanceService {
 
           if (!enrollment) {
             throw new NotFoundException(
-              'El estudiante no tiene una matricula vigente para la fecha actual',
+              'El estudiante no tiene una matricula vigente',
             );
           }
 
@@ -110,6 +112,8 @@ export class AttendanceService {
             where: {
               isActive: true,
               dayOfWeek,
+              // entryStart: LessThanOrEqual(currentTime),
+              // exit: MoreThanOrEqual(currentTime),
               attendanceScheduleGroup: {
                 classAcademicYear: {
                   classId: enrollment.classId,
@@ -121,7 +125,7 @@ export class AttendanceService {
         }
 
         if (!attendanceSchedule) {
-          throw new NotFoundException('No se encontró horario.');
+          throw new NotFoundException('No hay horario activo.');
         }
 
         let attendance = await manager.findOne(Attendance, {
@@ -174,7 +178,6 @@ export class AttendanceService {
         }
 
         // Calculate attendance status based on current time and schedule
-        const currentTime = DateUtils.getCurrentTime(); // HH:MM:SS format
         const currentTimeHM = currentTime.substring(0, 5); // HH:MM format
         let statusId: AttendanceStatusId;
 

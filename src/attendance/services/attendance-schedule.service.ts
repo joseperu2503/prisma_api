@@ -18,12 +18,6 @@ export class AttendanceScheduleService {
     @InjectRepository(AttendanceSchedule)
     private readonly scheduleRepository: Repository<AttendanceSchedule>,
 
-    @InjectRepository(AttendanceScheduleGroup)
-    private readonly groupRepository: Repository<AttendanceScheduleGroup>,
-
-    @InjectRepository(ClassAcademicYear)
-    private readonly classAcademicYearRepository: Repository<ClassAcademicYear>,
-
     @InjectRepository(Class)
     private readonly classRepository: Repository<Class>,
 
@@ -46,6 +40,7 @@ export class AttendanceScheduleService {
     if (!classExists) {
       throw new NotFoundException(`Class with id ${classId} not found`);
     }
+
     if (!yearExists) {
       throw new NotFoundException(
         `Academic year with id ${academicYearId} not found`,
@@ -147,7 +142,7 @@ export class AttendanceScheduleService {
 
       if (hasOverlap) {
         throw new BadRequestException(
-          'Schedule overlaps with existing schedule for the same day',
+          'El horario se superpone con otro horario',
         );
       }
 
@@ -228,7 +223,7 @@ export class AttendanceScheduleService {
         //   entryStart: '21:00',
         //   entryEnd: '21:30',
         //   exit: '22:00',
-          
+
         // }, // Domingo
       ];
 
