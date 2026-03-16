@@ -19,6 +19,7 @@ import {
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
 import { AttendanceSchedule } from '../entities/attendance-schedule.entity';
+import { AttendanceStatus } from '../entities/attendance-status.entity';
 import { Attendance } from '../entities/attendance.entity';
 import { AttendanceStatusId } from '../enums/attenance-status-id.enum';
 import { AttendanceTypeId } from '../enums/attenance-type-id.enum';
@@ -150,6 +151,13 @@ export class AttendanceService {
           },
         });
 
+        const personData = {
+          names: person.names,
+          paternalLastName: person.paternalLastName,
+          maternalLastName: person.maternalLastName,
+          documentNumber: person.documentNumber,
+        };
+
         if (existLog) {
           const message =
             params.type === AttendanceTypeId.ENTRY
@@ -159,12 +167,7 @@ export class AttendanceService {
             {
               success: false,
               message,
-              person: {
-                names: person.names,
-                paternalLastName: person.paternalLastName,
-                maternalLastName: person.maternalLastName,
-                documentNumber: person.documentNumber,
-              },
+              data: { person: personData },
             },
             HttpStatus.BAD_REQUEST,
           );
@@ -176,7 +179,6 @@ export class AttendanceService {
         let statusId: AttendanceStatusId;
 
         if (params.type === AttendanceTypeId.ENTRY) {
-          // Check if current time is within allowed check-in window
           if (
             currentTimeHM >= attendanceSchedule.entryStart &&
             currentTimeHM <= attendanceSchedule.entryEnd
@@ -186,13 +188,16 @@ export class AttendanceService {
             statusId = AttendanceStatusId.LATE;
           }
         } else {
-          // Check-out: on time if at or after scheduled check-out time
           if (currentTimeHM >= attendanceSchedule.exit) {
             statusId = AttendanceStatusId.ON_TIME;
           } else {
-            statusId = AttendanceStatusId.LATE;
+            statusId = AttendanceStatusId.EARLY_EXIT;
           }
         }
+
+        const attendanceStatus = await manager.findOne(AttendanceStatus, {
+          where: { id: statusId },
+        });
 
         const attendanceLog = manager.create(AttendanceLog, {
           attendanceId: attendance.id,
@@ -207,12 +212,12 @@ export class AttendanceService {
         return {
           success: true,
           message: 'Asistencia registrada correctamente',
-          statusId,
-          person: {
-            names: person.names,
-            paternalLastName: person.paternalLastName,
-            maternalLastName: person.maternalLastName,
-            documentNumber: person.documentNumber,
+          data: {
+            status: {
+              id: statusId,
+              name: attendanceStatus?.name ?? statusId,
+            },
+            person: personData,
           },
         };
       } catch (error) {
