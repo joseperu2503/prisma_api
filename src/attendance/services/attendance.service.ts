@@ -315,8 +315,11 @@ export class AttendanceService {
     const enrollmentRepo = this.dataSource.getRepository(Enrollment);
     const attendanceRepo = this.dataSource.getRepository(Attendance);
 
+    const whereClause: any = { academicYearId, isActive: true };
+    if (classId) whereClause.classId = classId;
+
     const [enrollments, total] = await enrollmentRepo.findAndCount({
-      where: { classId, academicYearId, isActive: true },
+      where: whereClause,
       relations: { student: { person: true } },
       order: {
         student: {

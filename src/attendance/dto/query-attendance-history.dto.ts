@@ -1,9 +1,10 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsUUID, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
 
 export class QueryAttendanceHistoryDto {
   @IsUUID()
-  classId: string;
+  @IsOptional()
+  classId?: string;
 
   @IsUUID()
   academicYearId: string;
