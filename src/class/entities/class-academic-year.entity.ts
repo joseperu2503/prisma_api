@@ -2,13 +2,14 @@ import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
 import { AttendanceScheduleGroup } from 'src/attendance/entities/attendance-schedule-group.entity';
 import { Class } from 'src/class/entities/class.entity';
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    JoinColumn,
-    ManyToOne,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('class_academic_years')
@@ -30,7 +31,7 @@ export class ClassAcademicYear {
   @Column('uuid', { name: 'academic_year_id' })
   academicYearId: string;
 
-  @ManyToOne(() => AttendanceScheduleGroup)
+  @OneToOne(() => AttendanceScheduleGroup)
   @JoinColumn({ name: 'attendance_schedule_group_id' })
   attendanceScheduleGroup: AttendanceScheduleGroup;
 

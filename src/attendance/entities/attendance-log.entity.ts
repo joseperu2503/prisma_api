@@ -1,4 +1,3 @@
-import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
 import {
   Column,
@@ -7,13 +6,14 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
-import { AttendanceSchedule } from './attendance-schedule.entity';
 import { AttendanceType } from './attendance-type.entity';
 import { Attendance } from './attendance.entity';
 
 @Entity('attendance_logs')
+@Unique(['attendanceId', 'typeId'])
 export class AttendanceLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -31,20 +31,6 @@ export class AttendanceLog {
 
   @Column('uuid', { name: 'type_id' })
   typeId: string;
-
-  @ManyToOne(() => Role)
-  @JoinColumn({ name: 'role_id' })
-  role: Role;
-
-  @Column('string', { name: 'role_id' })
-  roleId: string;
-
-  @ManyToOne(() => AttendanceSchedule)
-  @JoinColumn({ name: 'attendance_schedule_id' })
-  attendanceSchedule: AttendanceSchedule;
-
-  @Column('uuid', { name: 'attendance_schedule_id' })
-  attendanceScheduleId: string;
 
   @Column({
     type: 'timestamptz',

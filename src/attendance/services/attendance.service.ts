@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { Class } from 'src/class/entities/class.entity';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
 import {
+  Between,
   DataSource,
   LessThanOrEqual,
   MoreThanOrEqual,
@@ -67,6 +67,20 @@ export class AttendanceService {
 
         const date = params.date ? new Date(params.date) : new Date();
 
+        // Get day of week (0 = Sunday, 1 = Monday, etc.)
+        // Convert to 0 = Monday, 6 = Sunday for database
+        const dayOfWeek = (date.getDay() + 6) % 7;
+
+        // console.log({
+        //   date: date,
+        //   dateString: new Date().toLocaleDateString(),
+        //   getCurrentDate: DateUtils.getCurrentDate(),
+        //   getCurrentTime: DateUtils.getCurrentTime(),
+        //   getCurrentDateTime: DateUtils.getCurrentDateTime(),
+        //   getDayOfWeek: DateUtils.getDayOfWeek(),
+        //   dayOfWeek,
+        // });
+
         let attendanceSchedule: AttendanceSchedule | null = null;
 
         if (role.id === RoleId.STUDENT) {
@@ -81,11 +95,6 @@ export class AttendanceService {
                 endDate: MoreThanOrEqual(date),
               },
             },
-            order: {
-              academicYearId: 'DESC',
-              classId: 'DESC',
-              gradeId: 'DESC',
-            },
           });
 
           if (!enrollment) {
@@ -94,16 +103,10 @@ export class AttendanceService {
             );
           }
 
-          //buscar la hora de ingreso de la clase actual
-          const class_ = await manager.findOne(Class, {
-            where: {
-              id: enrollment.classId,
-            },
-          });
-
           attendanceSchedule = await manager.findOne(AttendanceSchedule, {
             where: {
               isActive: true,
+              dayOfWeek,
               attendanceScheduleGroup: {
                 classAcademicYear: {
                   classId: enrollment.classId,
@@ -116,20 +119,23 @@ export class AttendanceService {
           if (!attendanceSchedule) {
             throw new NotFoundException('No se encontró horario.');
           }
-
-          console.log({ role });
         }
 
-        // console.log({ date });
-
         let attendance = await manager.findOne(Attendance, {
-          where: { personId: person.id, date },
+          where: {
+            personId: person.id,
+            date: date,
+            attendanceScheduleId: attendanceSchedule?.id,
+            roleId: role.id,
+          },
         });
 
         if (!attendance) {
           attendance = manager.create(Attendance, {
             personId: person.id,
-            date,
+            date: date,
+            attendanceScheduleId: attendanceSchedule?.id,
+            roleId: role.id,
           });
         }
 
@@ -137,12 +143,17 @@ export class AttendanceService {
 
         //verificar si ya hay algun log del mismo type el mismo dia
 
+        const start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+
         const existLog = await manager.findOne(AttendanceLog, {
           where: {
+            markedAt: Between(start, end),
             attendanceId: attendance.id,
             typeId: params.type,
-            roleId: role.id,
-            attendanceScheduleId: attendanceSchedule?.id,
           },
         });
 
@@ -165,7 +176,6 @@ export class AttendanceService {
           typeId: params.type,
           markedAt: date,
           createdById: authUserId,
-          roleId: role.id,
         });
 
         await manager.save(attendanceLog);

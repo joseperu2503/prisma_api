@@ -1,11 +1,11 @@
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
 import {
-    CreateDateColumn,
-    Entity,
-    ManyToOne,
-    OneToMany,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { AttendanceSchedule } from './attendance-schedule.entity';
 
@@ -20,7 +20,7 @@ export class AttendanceScheduleGroup {
   )
   attendanceSchedules: AttendanceSchedule[];
 
-  @ManyToOne(
+  @OneToOne(
     () => ClassAcademicYear,
     (classAcademicYear) => classAcademicYear.attendanceScheduleGroup,
   )
