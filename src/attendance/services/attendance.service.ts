@@ -10,12 +10,16 @@ import { DateUtils } from 'src/common/utils/date.utils';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
+import { Student } from 'src/student/entities/student.entity';
 import {
+  Between,
   DataSource,
+  In,
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
 } from 'typeorm';
+import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
 import { AttendanceSchedule } from '../entities/attendance-schedule.entity';
@@ -303,5 +307,70 @@ export class AttendanceService {
         },
       },
     });
+  }
+
+  async getAttendanceHistory(dto: QueryAttendanceHistoryDto) {
+    const { classId, academicYearId, month, year, page, limit } = dto;
+
+    const enrollmentRepo = this.dataSource.getRepository(Enrollment);
+    const attendanceRepo = this.dataSource.getRepository(Attendance);
+
+    const [enrollments, total] = await enrollmentRepo.findAndCount({
+      where: { classId, academicYearId, isActive: true },
+      relations: { student: { person: true } },
+      order: {
+        student: {
+          person: { paternalLastName: 'ASC', maternalLastName: 'ASC' },
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const personIds = enrollments.map((e) => e.student.personId);
+
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0); // last day of month
+
+    const attendances =
+      personIds.length > 0
+        ? await attendanceRepo.find({
+            where: {
+              personId: In(personIds),
+              date: Between(startDate, endDate),
+            },
+            relations: { logs: true },
+          })
+        : [];
+
+    // Filter attendances by month/year in memory (date range with TypeORM Between)
+    const filteredAttendances = attendances.filter((a) => {
+      const d = new Date(a.date);
+      return d.getFullYear() === year && d.getMonth() + 1 === month;
+    });
+
+    // Map: personId -> { day -> statusId }
+    const attendanceMap = new Map<string, Record<number, string>>();
+    for (const a of filteredAttendances) {
+      const day = new Date(a.date).getDate();
+      const entryLog = a.logs.find((l) => l.typeId === AttendanceTypeId.ENTRY);
+      if (!entryLog) continue;
+      if (!attendanceMap.has(a.personId)) {
+        attendanceMap.set(a.personId, {});
+      }
+      attendanceMap.get(a.personId)![day] = entryLog.statusId;
+    }
+
+    const data = enrollments.map((e) => ({
+      studentId: e.studentId,
+      person: {
+        names: e.student.person.names,
+        paternalLastName: e.student.person.paternalLastName,
+        maternalLastName: e.student.person.maternalLastName,
+      },
+      attendance: attendanceMap.get(e.student.personId) ?? {},
+    }));
+
+    return { data, total, page, limit };
   }
 }
