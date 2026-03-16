@@ -6,11 +6,19 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoleId } from 'src/auth/enums/role-id.enum';
+import { Class } from 'src/class/entities/class.entity';
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
-import { DataSource, Repository } from 'typeorm';
+import {
+  DataSource,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
+import { AttendanceSchedule } from '../entities/attendance-schedule.entity';
 import { Attendance } from '../entities/attendance.entity';
 
 @Injectable()
@@ -57,9 +65,60 @@ export class AttendanceService {
           );
         }
 
-        console.log({ role });
-
         const date = params.date ? new Date(params.date) : new Date();
+
+        let attendanceSchedule: AttendanceSchedule | null = null;
+
+        if (role.id === RoleId.STUDENT) {
+          //buscar la matricula actual del estudiante segun la fecha actual conincida con alguna matricula con fecha de incicio y fin
+          const enrollment = await manager.findOne(Enrollment, {
+            where: {
+              student: {
+                personId: person.id,
+              },
+              academicYear: {
+                startDate: LessThanOrEqual(date),
+                endDate: MoreThanOrEqual(date),
+              },
+            },
+            order: {
+              academicYearId: 'DESC',
+              classId: 'DESC',
+              gradeId: 'DESC',
+            },
+          });
+
+          if (!enrollment) {
+            throw new NotFoundException(
+              'El estudiante no tiene una matricula vigente para la fecha actual',
+            );
+          }
+
+          //buscar la hora de ingreso de la clase actual
+          const class_ = await manager.findOne(Class, {
+            where: {
+              id: enrollment.classId,
+            },
+          });
+
+          attendanceSchedule = await manager.findOne(AttendanceSchedule, {
+            where: {
+              isActive: true,
+              attendanceScheduleGroup: {
+                classAcademicYear: {
+                  classId: enrollment.classId,
+                  academicYearId: enrollment.academicYearId,
+                },
+              },
+            },
+          });
+
+          if (!attendanceSchedule) {
+            throw new NotFoundException('No se encontró horario.');
+          }
+
+          console.log({ role });
+        }
 
         // console.log({ date });
 
@@ -83,6 +142,7 @@ export class AttendanceService {
             attendanceId: attendance.id,
             typeId: params.type,
             roleId: role.id,
+            attendanceScheduleId: attendanceSchedule?.id,
           },
         });
 

@@ -32,7 +32,10 @@ export class AttendanceSchedule {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
-  @ManyToOne(() => AttendanceScheduleGroup)
+  @ManyToOne(
+    () => AttendanceScheduleGroup,
+    (group) => group.attendanceSchedules,
+  )
   @JoinColumn({ name: 'attendance_schedule_group_id' })
   attendanceScheduleGroup: AttendanceScheduleGroup;
 

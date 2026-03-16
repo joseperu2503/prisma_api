@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
 import { PersonModule } from 'src/person/person.module';
 import { AttendanceController } from './controllers/attendance.controller';
 import { AttendanceLog } from './entities/attendance-log.entity';
@@ -19,6 +20,7 @@ import { AttendanceService } from './services/attendance.service';
       AttendanceType,
       AttendanceSchedule,
       AttendanceScheduleGroup,
+      ClassAcademicYear,
     ]),
     PersonModule,
   ],

@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { AttendanceSchedule } from './attendance-schedule.entity';
 import { AttendanceType } from './attendance-type.entity';
 import { Attendance } from './attendance.entity';
 
@@ -37,6 +38,13 @@ export class AttendanceLog {
 
   @Column('string', { name: 'role_id' })
   roleId: string;
+
+  @ManyToOne(() => AttendanceSchedule)
+  @JoinColumn({ name: 'attendance_schedule_id' })
+  attendanceSchedule: AttendanceSchedule;
+
+  @Column('uuid', { name: 'attendance_schedule_id' })
+  attendanceScheduleId: string;
 
   @Column({
     type: 'timestamptz',
