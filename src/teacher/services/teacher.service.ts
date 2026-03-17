@@ -14,6 +14,7 @@ import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CreateTeacherDto } from '../dto/create-teacher.dto';
+import { ListTeacherDto } from '../dto/list-teacher.dto';
 import { UpdateTeacherDto } from '../dto/update-teacher.dto';
 import { Teacher } from '../entities/teacher.entity';
 
@@ -140,6 +141,47 @@ export class TeacherService {
         await queryRunner.release();
       }
     }
+  }
+
+  async findAll(params: ListTeacherDto) {
+    const { pagination, search } = params;
+    const page = pagination?.page;
+    const limit = pagination?.limit;
+
+    const qb = this.teacherRepository
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.person', 'p')
+      .leftJoinAndSelect('p.personRoles', 'pr')
+      .leftJoinAndSelect('pr.role', 'r', 'r.id = :id', {
+        id: RoleId.TEACHER,
+      })
+      .orderBy('p.paternalLastName', 'ASC')
+      .addOrderBy('p.names', 'ASC');
+
+    if (search) {
+      qb.where(
+        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    let data: Teacher[];
+    let total: number;
+
+    if (page && limit) {
+      total = await qb.getCount();
+      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+    } else {
+      data = await qb.getMany();
+      total = data.length;
+    }
+
+    const mapped = data.map((t) => ({
+      ...t,
+      isActive: t.person.personRoles[0]?.isActive ?? true,
+    }));
+
+    return { data: mapped, total, pagination: { page, limit } };
   }
 
   async findAllPaginated(page: number, limit: number, search?: string) {

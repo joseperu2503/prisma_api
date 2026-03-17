@@ -16,10 +16,12 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
+import { ListEnrollmentDto } from '../dto/list-enrollment.dto';
 import { QueryEnrollmentDto } from '../dto/query-enrollment.dto';
 import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
 import { EnrollmentService } from '../services/enrollment.service';
 import { ImportService } from '../services/import.service';
+
 @Auth([RoleId.ADMIN], [ClientType.WEB])
 @Controller('enrollments')
 export class EnrollmentController {
@@ -33,8 +35,13 @@ export class EnrollmentController {
     return this.enrollmentService.create(dto);
   }
 
+  @Post('list')
+  findAll(@Body() body: ListEnrollmentDto) {
+    return this.enrollmentService.findAll(body);
+  }
+
   @Get()
-  findAll(@Query() query: QueryEnrollmentDto) {
+  findAllByQuery(@Query() query: QueryEnrollmentDto) {
     const page = parseInt(query.page ?? '1', 10);
     const limit = parseInt(query.limit ?? '10', 10);
     return this.enrollmentService.findAllPaginated(

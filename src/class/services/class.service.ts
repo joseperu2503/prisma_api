@@ -1,7 +1,12 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateClassDto } from '../dto/create-class.dto';
+import { ListClassDto } from '../dto/list-class.dto';
 import { UpdateClassDto } from '../dto/update-class.dto';
 import { Class } from '../entities/class.entity';
 
@@ -15,10 +20,43 @@ export class ClassService {
   async create(dto: CreateClassDto) {
     const existing = await this.repo.findOneBy({ name: dto.name });
     if (existing) {
-      throw new ConflictException(`Ya existe una clase con el nombre "${dto.name}"`);
+      throw new ConflictException(
+        `Ya existe una clase con el nombre "${dto.name}"`,
+      );
     }
     const record = this.repo.create({ isActive: true, ...dto });
     return this.repo.save(record);
+  }
+
+  async findAll(params: ListClassDto) {
+    const { pagination, search } = params;
+    const page = pagination?.page;
+    const limit = pagination?.limit;
+
+    const qb = this.repo.createQueryBuilder('c').orderBy('c.name', 'ASC');
+
+    if (search) {
+      qb.where('LOWER(c.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    let data: Class[];
+    let total: number;
+
+    if (page && limit) {
+      total = await qb.getCount();
+      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+    } else {
+      data = await qb.getMany();
+      total = data.length;
+    }
+
+    return { data, total, pagination: { page, limit } };
+  }
+
+  async findAllUnpaginated() {
+    return this.repo.find({ order: { name: 'ASC' } });
   }
 
   async findAllPaginated(page: number, limit: number, search?: string) {
@@ -36,11 +74,7 @@ export class ClassService {
       .take(limit)
       .getMany();
 
-    return { data, total, page, limit };
-  }
-
-  async findAll() {
-    return this.repo.find({ order: { name: 'ASC' } });
+    return { data, total, pagination: { page, limit } };
   }
 
   async findOne(id: string) {
@@ -56,7 +90,9 @@ export class ClassService {
     if (dto.name && dto.name.toLowerCase() !== record.name.toLowerCase()) {
       const existing = await this.repo.findOneBy({ name: dto.name });
       if (existing) {
-        throw new ConflictException(`Ya existe una clase con el nombre "${dto.name}"`);
+        throw new ConflictException(
+          `Ya existe una clase con el nombre "${dto.name}"`,
+        );
       }
     }
     Object.assign(record, dto);

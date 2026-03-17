@@ -13,6 +13,7 @@ import { PersonRole } from 'src/person/entities/person-role.entity';
 import { PersonService } from 'src/person/services/person.service';
 import { DataSource, Repository } from 'typeorm';
 import { CreateAdminDto } from '../dto/create-admin.dto';
+import { ListAdminDto } from '../dto/list-admin.dto';
 
 @Injectable()
 export class AdminService {
@@ -95,6 +96,47 @@ export class AdminService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async findAll(params: ListAdminDto) {
+    const { pagination, search } = params;
+    const page = pagination?.page;
+    const limit = pagination?.limit;
+
+    const qb = this.userRepository
+      .createQueryBuilder('u')
+      .innerJoinAndSelect('u.person', 'p')
+      .innerJoinAndSelect('p.personRoles', 'pr')
+      .innerJoinAndSelect('pr.role', 'r', 'r.id = :id', {
+        id: RoleId.ADMIN,
+      })
+      .orderBy('p.paternalLastName', 'ASC')
+      .addOrderBy('p.names', 'ASC');
+
+    if (search) {
+      qb.where(
+        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    let data: any[];
+    let total: number;
+
+    if (page && limit) {
+      total = await qb.getCount();
+      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+    } else {
+      data = await qb.getMany();
+      total = data.length;
+    }
+
+    const mapped = data.map((u) => ({
+      ...u,
+      isActive: u.person.personRoles[0]?.isActive ?? true,
+    }));
+
+    return { data: mapped, total, pagination: { page, limit } };
   }
 
   async findAllPaginated(page: number, limit: number, search?: string) {

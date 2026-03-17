@@ -13,6 +13,7 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateSubjectDto } from '../dto/create-subject.dto';
+import { ListSubjectDto } from '../dto/list-subject.dto';
 import { QuerySubjectDto } from '../dto/query-subject.dto';
 import { UpdateSubjectDto } from '../dto/update-subject.dto';
 import { SubjectService } from '../services/subject.service';
@@ -27,12 +28,17 @@ export class SubjectController {
     return this.service.create(dto);
   }
 
+  @Post('list')
+  findAll(@Body() body: ListSubjectDto) {
+    return this.service.findAll(body);
+  }
+
   @Get()
-  findAll(@Query() query: QuerySubjectDto) {
+  findAllUnpaginated(@Query() query: QuerySubjectDto) {
     const page = parseInt(query.page ?? '1');
     const limit = parseInt(query.limit ?? '10');
     if (query.page === undefined && query.limit === undefined) {
-      return this.service.findAll();
+      return this.service.findAllUnpaginated();
     }
     return this.service.findAllPaginated(page, limit, query.search);
   }

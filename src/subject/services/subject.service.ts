@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSubjectDto } from '../dto/create-subject.dto';
+import { ListSubjectDto } from '../dto/list-subject.dto';
 import { UpdateSubjectDto } from '../dto/update-subject.dto';
 import { Subject } from '../entities/subject.entity';
 
@@ -21,6 +22,37 @@ export class SubjectService {
     return this.repo.save(record);
   }
 
+  async findAll(params: ListSubjectDto) {
+    const { pagination, search } = params;
+    const page = pagination?.page;
+    const limit = pagination?.limit;
+
+    const qb = this.repo.createQueryBuilder('s').orderBy('s.name', 'ASC');
+
+    if (search) {
+      qb.where('LOWER(s.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    let data: Subject[];
+    let total: number;
+
+    if (page && limit) {
+      total = await qb.getCount();
+      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+    } else {
+      data = await qb.getMany();
+      total = data.length;
+    }
+
+    return { data, total, pagination: { page, limit } };
+  }
+
+  async findAllUnpaginated() {
+    return this.repo.find({ order: { name: 'ASC' } });
+  }
+
   async findAllPaginated(page: number, limit: number, search?: string) {
     const qb = this.repo.createQueryBuilder('s').orderBy('s.name', 'ASC');
 
@@ -37,10 +69,6 @@ export class SubjectService {
       .getMany();
 
     return { data, total, page, limit };
-  }
-
-  async findAll() {
-    return this.repo.find({ order: { name: 'ASC' } });
   }
 
   async findOne(id: string) {

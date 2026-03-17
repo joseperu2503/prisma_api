@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { StudentService } from 'src/student/services/student.service';
 import { DataSource, Repository } from 'typeorm';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
+import { ListEnrollmentDto } from '../dto/list-enrollment.dto';
 import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
 import { Enrollment } from '../entities/enrollment.entity';
 
@@ -73,6 +74,55 @@ export class EnrollmentService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async findAll(params: ListEnrollmentDto) {
+    const { pagination, search, academicYearId, gradeId, classId } = params;
+    const page = pagination?.page;
+    const limit = pagination?.limit;
+
+    const qb = this.enrollmentRepository
+      .createQueryBuilder('e')
+      .leftJoinAndSelect('e.student', 's')
+      .leftJoinAndSelect('s.person', 'p')
+      .leftJoinAndSelect('e.grade', 'g')
+      .leftJoinAndSelect('g.level', 'l')
+      .leftJoinAndSelect('e.academicYear', 'ay')
+      .leftJoinAndSelect('e.class', 'c')
+      .orderBy('p.paternalLastName', 'ASC')
+      .addOrderBy('p.names', 'ASC');
+
+    if (search) {
+      qb.andWhere(
+        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    if (academicYearId) {
+      qb.andWhere('e.academicYearId = :academicYearId', { academicYearId });
+    }
+
+    if (gradeId) {
+      qb.andWhere('e.gradeId = :gradeId', { gradeId });
+    }
+
+    if (classId) {
+      qb.andWhere('e.classId = :classId', { classId });
+    }
+
+    let data: Enrollment[];
+    let total: number;
+
+    if (page && limit) {
+      total = await qb.getCount();
+      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+    } else {
+      data = await qb.getMany();
+      total = data.length;
+    }
+
+    return { data, total, pagination: { page, limit } };
   }
 
   async findAllPaginated(

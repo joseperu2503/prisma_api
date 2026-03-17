@@ -7,18 +7,17 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateAcademicYearDto } from '../dto/create-academic-year.dto';
-import { QueryAcademicYearDto } from '../dto/query-academic-year.dto';
+import { ListAcademicYearsDto } from '../dto/list-academic-years.dto';
 import { UpdateAcademicYearDto } from '../dto/update-academic-year.dto';
 import { AcademicYearService } from '../services/academic-year.service';
 
 @Auth([RoleId.ADMIN], [ClientType.WEB])
-@Controller('academic-year')
+@Controller('academic-years')
 export class AcademicYearController {
   constructor(private readonly academicYearService: AcademicYearService) {}
 
@@ -27,24 +26,9 @@ export class AcademicYearController {
     return this.academicYearService.create(createAcademicYearDto);
   }
 
-  @Get()
-  findAll(@Query() query: QueryAcademicYearDto) {
-    const page = parseInt(query.page ?? '1');
-    const limit = parseInt(query.limit ?? '10');
-    return this.academicYearService.findAllPaginated(page, limit, query.search);
-  }
-
-  @Get(':id/grades')
-  getGradesByYear(@Param('id', ParseUUIDPipe) id: string) {
-    return this.academicYearService.getGradesByYear(id);
-  }
-
-  @Post(':id/grades')
-  syncGrades(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { gradeIds: string[] },
-  ) {
-    return this.academicYearService.syncGrades(id, body.gradeIds);
+  @Post('list')
+  findAll(@Body() body: ListAcademicYearsDto) {
+    return this.academicYearService.findAll(body);
   }
 
   @Get(':id')

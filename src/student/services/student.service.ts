@@ -16,6 +16,7 @@ import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
+import { ListStudentDto } from '../dto/list-student.dto';
 import { UpdateStudentDto } from '../dto/update-student.dto';
 import { Student } from '../entities/student.entity';
 
@@ -142,6 +143,47 @@ export class StudentService {
         await queryRunner.release();
       }
     }
+  }
+
+  async findAll(params: ListStudentDto) {
+    const { pagination, search } = params;
+    const page = pagination?.page;
+    const limit = pagination?.limit;
+
+    const qb = this.studentRepository
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.person', 'p')
+      .leftJoinAndSelect('p.personRoles', 'pr')
+      .leftJoinAndSelect('pr.role', 'r', 'r.id = :id', {
+        id: RoleId.STUDENT,
+      })
+      .orderBy('p.paternalLastName', 'ASC')
+      .addOrderBy('p.names', 'ASC');
+
+    if (search) {
+      qb.where(
+        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    let data: Student[];
+    let total: number;
+
+    if (page && limit) {
+      total = await qb.getCount();
+      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+    } else {
+      data = await qb.getMany();
+      total = data.length;
+    }
+
+    const mapped = data.map((s) => ({
+      ...s,
+      isActive: s.person.personRoles[0]?.isActive ?? true,
+    }));
+
+    return { data: mapped, total, pagination: { page, limit } };
   }
 
   async findAllPaginated(page: number, limit: number, search?: string) {

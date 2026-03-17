@@ -5,9 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
-import { GradeYear } from 'src/grade/entities/grade-year.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateAcademicYearDto } from '../dto/create-academic-year.dto';
+import { ListAcademicYearsDto } from '../dto/list-academic-years.dto';
 import { UpdateAcademicYearDto } from '../dto/update-academic-year.dto';
 import { AcademicYear } from '../entities/academic-year.entity';
 
@@ -16,8 +16,7 @@ export class AcademicYearService {
   constructor(
     @InjectRepository(AcademicYear)
     private readonly academicYearRepository: Repository<AcademicYear>,
-    @InjectRepository(GradeYear)
-    private readonly gradeYearRepository: Repository<GradeYear>,
+
     private readonly dataSource: DataSource,
   ) {}
 
@@ -75,9 +74,16 @@ export class AcademicYearService {
     return await this.academicYearRepository.save(academicYear);
   }
 
-  async findAllPaginated(page: number, limit: number, search?: string) {
+  async findAll(params: ListAcademicYearsDto) {
+    const pagination = params.pagination;
+    const search = params.search;
+
+    const page = pagination?.page;
+    const limit = pagination?.limit;
+
     const qb = this.academicYearRepository
       .createQueryBuilder('ay')
+      .select(['ay.id', 'ay.name', 'ay.startDate', 'ay.endDate', 'ay.isActive'])
       .orderBy('ay.startDate', 'DESC');
 
     if (search) {
@@ -86,19 +92,27 @@ export class AcademicYearService {
       });
     }
 
-    const total = await qb.getCount();
-    const data = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
+    let data: AcademicYear[];
+    let total: number;
 
-    return { data, total, page, limit };
+    if (page && limit) {
+      total = await qb.getCount();
+      data = await qb
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
+    } else {
+      data = await qb.getMany();
+      total = data.length;
+    }
+
+    return { data, total, pagination: { page, limit } };
   }
 
   async findOne(id: string) {
     const academicYear = await this.academicYearRepository.findOneBy({ id });
     if (!academicYear) {
-      throw new NotFoundException(`Academic year with ID ${id} not found`);
+      throw new NotFoundException(`Año académico no encontrado`);
     }
     return academicYear;
   }
@@ -108,7 +122,8 @@ export class AcademicYearService {
 
     if (
       updateAcademicYearDto.name &&
-      updateAcademicYearDto.name.toLowerCase() !== academicYear.name.toLowerCase()
+      updateAcademicYearDto.name.toLowerCase() !==
+        academicYear.name.toLowerCase()
     ) {
       await this.checkNameDuplicate(updateAcademicYearDto.name, id);
     }
@@ -132,11 +147,13 @@ export class AcademicYearService {
     const enrollmentCount = await this.dataSource
       .getRepository(Enrollment)
       .countBy({ academicYearId: id });
+
     if (enrollmentCount > 0) {
       throw new ConflictException(
         `No se puede eliminar el año académico porque tiene ${enrollmentCount} matrícula(s) asociada(s)`,
       );
     }
+
     return await this.academicYearRepository.remove(academicYear);
   }
 
@@ -162,25 +179,5 @@ export class AcademicYearService {
       });
     }
     return academicYear;
-  }
-
-  async getGradesByYear(yearId: string) {
-    await this.findOne(yearId);
-    return this.gradeYearRepository.find({
-      where: { academicYearId: yearId },
-      relations: { grade: { level: true } },
-    });
-  }
-
-  async syncGrades(yearId: string, gradeIds: string[]) {
-    await this.findOne(yearId);
-    await this.gradeYearRepository.delete({ academicYearId: yearId });
-    if (gradeIds.length > 0) {
-      const records = gradeIds.map((gradeId) =>
-        this.gradeYearRepository.create({ gradeId, academicYearId: yearId }),
-      );
-      await this.gradeYearRepository.save(records);
-    }
-    return { message: 'Grados sincronizados correctamente' };
   }
 }
