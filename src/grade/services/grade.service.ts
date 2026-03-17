@@ -75,7 +75,11 @@ export class GradeService {
       total = data.length;
     }
 
-    return { data, total, pagination: { page, limit } };
+    return {
+      data,
+      total,
+      pagination: page && limit ? { page, limit } : undefined,
+    };
   }
 
   async findOne(id: string) {

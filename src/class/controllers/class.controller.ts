@@ -6,15 +6,13 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
-  Post,
-  Query,
+  Post
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateClassDto } from '../dto/create-class.dto';
 import { ListClassDto } from '../dto/list-class.dto';
-import { QueryClassDto } from '../dto/query-class.dto';
 import { UpdateClassDto } from '../dto/update-class.dto';
 import { ClassService } from '../services/class.service';
 
@@ -31,16 +29,6 @@ export class ClassController {
   @Post('list')
   findAll(@Body() body: ListClassDto) {
     return this.service.findAll(body);
-  }
-
-  @Get()
-  findAllUnpaginated(@Query() query: QueryClassDto) {
-    const page = parseInt(query.page ?? '1');
-    const limit = parseInt(query.limit ?? '10');
-    if (query.page === undefined && query.limit === undefined) {
-      return this.service.findAllUnpaginated();
-    }
-    return this.service.findAllPaginated(page, limit, query.search);
   }
 
   @Get(':id')

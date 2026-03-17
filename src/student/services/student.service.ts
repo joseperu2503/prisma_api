@@ -199,7 +199,11 @@ export class StudentService {
       ),
     }));
 
-    return { data: mapped, total, pagination: { page, limit } };
+    return {
+      data: mapped,
+      total,
+      pagination: page && limit ? { page, limit } : undefined,
+    };
   }
 
   async findOne(id: string) {

@@ -46,35 +46,24 @@ export class ClassService {
 
     if (page && limit) {
       total = await qb.getCount();
-      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+      data = await qb
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
     } else {
       data = await qb.getMany();
       total = data.length;
     }
 
-    return { data, total, pagination: { page, limit } };
+    return {
+      data,
+      total,
+      pagination: page && limit ? { page, limit } : undefined,
+    };
   }
 
   async findAllUnpaginated() {
     return this.repo.find({ order: { name: 'ASC' } });
-  }
-
-  async findAllPaginated(page: number, limit: number, search?: string) {
-    const qb = this.repo.createQueryBuilder('c').orderBy('c.name', 'ASC');
-
-    if (search) {
-      qb.where('LOWER(c.name) LIKE :search', {
-        search: `%${search.toLowerCase()}%`,
-      });
-    }
-
-    const total = await qb.getCount();
-    const data = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    return { data, total, pagination: { page, limit } };
   }
 
   async findOne(id: string) {

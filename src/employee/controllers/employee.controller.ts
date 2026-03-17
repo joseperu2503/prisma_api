@@ -6,14 +6,12 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
-  Post,
-  Query,
+  Post
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateEmployeeDto } from '../dto/create-employee.dto';
-import { QueryEmployeeDto } from '../dto/query-employee.dto';
 import { UpdateEmployeeDto } from '../dto/update-employee.dto';
 import { EmployeeService } from '../services/employee.service';
 @Auth([RoleId.ADMIN], [ClientType.WEB])
@@ -24,15 +22,6 @@ export class EmployeeController {
   @Post()
   create(@Body() dto: CreateEmployeeDto) {
     return this.employeeService.create(dto);
-  }
-
-  @Get()
-  findAll(@Query() query: QueryEmployeeDto) {
-    return this.employeeService.findAllPaginated(
-      query.page ?? 1,
-      query.limit ?? 10,
-      query.search,
-    );
   }
 
   @Get(':id')

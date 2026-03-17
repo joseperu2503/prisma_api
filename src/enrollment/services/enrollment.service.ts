@@ -116,60 +116,20 @@ export class EnrollmentService {
 
     if (page && limit) {
       total = await qb.getCount();
-      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+      data = await qb
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
     } else {
       data = await qb.getMany();
       total = data.length;
     }
 
-    return { data, total, pagination: { page, limit } };
-  }
-
-  async findAllPaginated(
-    page: number,
-    limit: number,
-    search?: string,
-    academicYearId?: string,
-    gradeId?: string,
-    classId?: string,
-  ) {
-    const qb = this.enrollmentRepository
-      .createQueryBuilder('e')
-      .leftJoinAndSelect('e.student', 's')
-      .leftJoinAndSelect('s.person', 'p')
-      .leftJoinAndSelect('e.grade', 'g')
-      .leftJoinAndSelect('g.level', 'l')
-      .leftJoinAndSelect('e.academicYear', 'ay')
-      .leftJoinAndSelect('e.class', 'c')
-      .orderBy('p.paternalLastName', 'ASC')
-      .addOrderBy('p.names', 'ASC');
-
-    if (search) {
-      qb.andWhere(
-        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
-        { search: `%${search.toLowerCase()}%` },
-      );
-    }
-
-    if (academicYearId) {
-      qb.andWhere('e.academicYearId = :academicYearId', { academicYearId });
-    }
-
-    if (gradeId) {
-      qb.andWhere('e.gradeId = :gradeId', { gradeId });
-    }
-
-    if (classId) {
-      qb.andWhere('e.classId = :classId', { classId });
-    }
-
-    const total = await qb.getCount();
-    const data = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    return { data, total, page, limit };
+    return {
+      data,
+      total,
+      pagination: page && limit ? { page, limit } : undefined,
+    };
   }
 
   async findOne(id: string) {

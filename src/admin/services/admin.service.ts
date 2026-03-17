@@ -125,7 +125,10 @@ export class AdminService {
 
     if (page && limit) {
       total = await qb.getCount();
-      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+      data = await qb
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
     } else {
       data = await qb.getMany();
       total = data.length;
@@ -136,39 +139,11 @@ export class AdminService {
       isActive: u.person.personRoles[0]?.isActive ?? true,
     }));
 
-    return { data: mapped, total, pagination: { page, limit } };
-  }
-
-  async findAllPaginated(page: number, limit: number, search?: string) {
-    const qb = this.userRepository
-      .createQueryBuilder('u')
-      .innerJoinAndSelect('u.person', 'p')
-      .innerJoinAndSelect('p.personRoles', 'pr')
-      .innerJoinAndSelect('pr.role', 'r', 'r.id = :id', {
-        id: RoleId.ADMIN,
-      })
-      .orderBy('p.paternalLastName', 'ASC')
-      .addOrderBy('p.names', 'ASC');
-
-    if (search) {
-      qb.where(
-        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
-        { search: `%${search.toLowerCase()}%` },
-      );
-    }
-
-    const total = await qb.getCount();
-    const data = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    const mapped = data.map((u) => ({
-      ...u,
-      isActive: u.person.personRoles[0]?.isActive ?? true,
-    }));
-
-    return { data: mapped, total, page, limit };
+    return {
+      data: mapped,
+      total,
+      pagination: page && limit ? { page, limit } : undefined,
+    };
   }
 
   async findOne(id: string) {

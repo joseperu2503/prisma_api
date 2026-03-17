@@ -7,9 +7,8 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Query,
   UploadedFile,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
@@ -17,7 +16,6 @@ import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
 import { ListEnrollmentDto } from '../dto/list-enrollment.dto';
-import { QueryEnrollmentDto } from '../dto/query-enrollment.dto';
 import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
 import { EnrollmentService } from '../services/enrollment.service';
 import { ImportService } from '../services/import.service';
@@ -38,20 +36,6 @@ export class EnrollmentController {
   @Post('list')
   findAll(@Body() body: ListEnrollmentDto) {
     return this.enrollmentService.findAll(body);
-  }
-
-  @Get()
-  findAllByQuery(@Query() query: QueryEnrollmentDto) {
-    const page = parseInt(query.page ?? '1', 10);
-    const limit = parseInt(query.limit ?? '10', 10);
-    return this.enrollmentService.findAllPaginated(
-      page,
-      limit,
-      query.search,
-      query.academicYearId,
-      query.gradeId,
-      query.classId,
-    );
   }
 
   @Get(':id')

@@ -120,36 +120,6 @@ export class EmployeeService {
     }
   }
 
-  async findAllPaginated(page: number, limit: number, search?: string) {
-    const qb = this.employeeRepository
-      .createQueryBuilder('e')
-      .leftJoinAndSelect('e.person', 'p')
-      .leftJoinAndSelect('e.role', 'r')
-      .leftJoinAndSelect('p.personRoles', 'pr', 'pr.roleId = e.roleId')
-      .orderBy('p.paternalLastName', 'ASC')
-      .addOrderBy('p.names', 'ASC');
-
-    if (search) {
-      qb.where(
-        'LOWER(p.names) LIKE :s OR LOWER(p.paternalLastName) LIKE :s OR LOWER(p.maternalLastName) LIKE :s OR p.documentNumber LIKE :s',
-        { s: `%${search.toLowerCase()}%` },
-      );
-    }
-
-    const total = await qb.getCount();
-    const data = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    const mapped = data.map((e) => ({
-      ...e,
-      isActive: e.person.personRoles[0]?.isActive ?? true,
-    }));
-
-    return { data: mapped, total, page, limit };
-  }
-
   async findOne(id: string) {
     const employee = await this.employeeRepository.findOne({
       where: { id },

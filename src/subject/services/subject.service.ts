@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSubjectDto } from '../dto/create-subject.dto';
@@ -16,7 +20,9 @@ export class SubjectService {
   async create(dto: CreateSubjectDto) {
     const existing = await this.repo.findOneBy({ name: dto.name });
     if (existing) {
-      throw new ConflictException(`Ya existe un curso con el nombre "${dto.name}"`);
+      throw new ConflictException(
+        `Ya existe un curso con el nombre "${dto.name}"`,
+      );
     }
     const record = this.repo.create({ isActive: true, ...dto });
     return this.repo.save(record);
@@ -40,35 +46,24 @@ export class SubjectService {
 
     if (page && limit) {
       total = await qb.getCount();
-      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+      data = await qb
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
     } else {
       data = await qb.getMany();
       total = data.length;
     }
 
-    return { data, total, pagination: { page, limit } };
+    return {
+      data,
+      total,
+      pagination: page && limit ? { page, limit } : undefined,
+    };
   }
 
   async findAllUnpaginated() {
     return this.repo.find({ order: { name: 'ASC' } });
-  }
-
-  async findAllPaginated(page: number, limit: number, search?: string) {
-    const qb = this.repo.createQueryBuilder('s').orderBy('s.name', 'ASC');
-
-    if (search) {
-      qb.where('LOWER(s.name) LIKE :search', {
-        search: `%${search.toLowerCase()}%`,
-      });
-    }
-
-    const total = await qb.getCount();
-    const data = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    return { data, total, page, limit };
   }
 
   async findOne(id: string) {
@@ -84,7 +79,9 @@ export class SubjectService {
     if (dto.name && dto.name.toLowerCase() !== record.name.toLowerCase()) {
       const existing = await this.repo.findOneBy({ name: dto.name });
       if (existing) {
-        throw new ConflictException(`Ya existe un curso con el nombre "${dto.name}"`);
+        throw new ConflictException(
+          `Ya existe un curso con el nombre "${dto.name}"`,
+        );
       }
     }
     Object.assign(record, dto);

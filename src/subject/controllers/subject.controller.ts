@@ -6,15 +6,13 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
-  Post,
-  Query,
+  Post
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateSubjectDto } from '../dto/create-subject.dto';
 import { ListSubjectDto } from '../dto/list-subject.dto';
-import { QuerySubjectDto } from '../dto/query-subject.dto';
 import { UpdateSubjectDto } from '../dto/update-subject.dto';
 import { SubjectService } from '../services/subject.service';
 
@@ -33,16 +31,6 @@ export class SubjectController {
     return this.service.findAll(body);
   }
 
-  @Get()
-  findAllUnpaginated(@Query() query: QuerySubjectDto) {
-    const page = parseInt(query.page ?? '1');
-    const limit = parseInt(query.limit ?? '10');
-    if (query.page === undefined && query.limit === undefined) {
-      return this.service.findAllUnpaginated();
-    }
-    return this.service.findAllPaginated(page, limit, query.search);
-  }
-
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.findOne(id);
@@ -54,7 +42,10 @@ export class SubjectController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSubjectDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSubjectDto,
+  ) {
     return this.service.update(id, dto);
   }
 
