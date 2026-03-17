@@ -7,14 +7,12 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateStudentDto } from '../dto/create-student.dto';
 import { ListStudentDto } from '../dto/list-student.dto';
-import { QueryStudentDto } from '../dto/query-student.dto';
 import { UpdateStudentDto } from '../dto/update-student.dto';
 import { StudentService } from '../services/student.service';
 
@@ -31,13 +29,6 @@ export class StudentController {
   @Post('list')
   findAll(@Body() body: ListStudentDto) {
     return this.studentService.findAll(body);
-  }
-
-  @Get()
-  async findAllByQuery(@Query() query: QueryStudentDto) {
-    const page = parseInt(query.page ?? '1', 10);
-    const limit = parseInt(query.limit ?? '10', 10);
-    return this.studentService.findAllPaginated(page, limit, query.search);
   }
 
   @Get(':id')

@@ -152,11 +152,22 @@ export class StudentService {
 
     const qb = this.studentRepository
       .createQueryBuilder('s')
-      .leftJoinAndSelect('s.person', 'p')
-      .leftJoinAndSelect('p.personRoles', 'pr')
-      .leftJoinAndSelect('pr.role', 'r', 'r.id = :id', {
+      .select(['s.id'])
+      .leftJoin('s.person', 'p')
+      .addSelect([
+        'p.id',
+        'p.documentTypeId',
+        'p.documentNumber',
+        'p.names',
+        'p.paternalLastName',
+        'p.maternalLastName',
+      ])
+      .leftJoin('p.personRoles', 'pr')
+      .addSelect(['pr.isActive'])
+      .leftJoin('pr.role', 'r', 'r.id = :id', {
         id: RoleId.STUDENT,
       })
+      .addSelect(['r.id', 'r.name'])
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -172,7 +183,10 @@ export class StudentService {
 
     if (page && limit) {
       total = await qb.getCount();
-      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+      data = await qb
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
     } else {
       data = await qb.getMany();
       total = data.length;
@@ -180,42 +194,12 @@ export class StudentService {
 
     const mapped = data.map((s) => ({
       ...s,
-      isActive: s.person.personRoles[0]?.isActive ?? true,
+      isActive: !!s.person.personRoles.find(
+        (pr) => pr.role.id === RoleId.STUDENT,
+      ),
     }));
 
     return { data: mapped, total, pagination: { page, limit } };
-  }
-
-  async findAllPaginated(page: number, limit: number, search?: string) {
-    const qb = this.studentRepository
-      .createQueryBuilder('s')
-      .leftJoinAndSelect('s.person', 'p')
-      .leftJoinAndSelect('p.personRoles', 'pr')
-      .leftJoinAndSelect('pr.role', 'r', 'r.id = :id', {
-        id: RoleId.STUDENT,
-      })
-      .orderBy('p.paternalLastName', 'ASC')
-      .addOrderBy('p.names', 'ASC');
-
-    if (search) {
-      qb.where(
-        'LOWER(p.names) LIKE :search OR LOWER(p.paternalLastName) LIKE :search OR LOWER(p.maternalLastName) LIKE :search OR p.documentNumber LIKE :search',
-        { search: `%${search.toLowerCase()}%` },
-      );
-    }
-
-    const total = await qb.getCount();
-    const data = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    const mapped = data.map((s) => ({
-      ...s,
-      isActive: s.person.personRoles[0]?.isActive ?? true,
-    }));
-
-    return { data: mapped, total, page, limit };
   }
 
   async findOne(id: string) {
@@ -223,15 +207,16 @@ export class StudentService {
       where: { id },
       relations: { person: { personRoles: { role: true } } },
     });
+
     if (!student) {
-      throw new NotFoundException(`Student with ID ${id} not found`);
+      throw new NotFoundException(`Estudiante no encontrado`);
     }
 
     const studentPersonRole = student.person.personRoles.find(
       (pr) => pr.role?.id === RoleId.STUDENT,
     );
 
-    return { ...student, isActive: studentPersonRole?.isActive ?? true };
+    return { ...student, isActive: !!studentPersonRole?.isActive };
   }
 
   async findById(id: string) {
