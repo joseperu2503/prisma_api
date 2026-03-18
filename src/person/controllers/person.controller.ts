@@ -1,6 +1,19 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { Response } from 'express';
+import { CreatePersonDto } from '../dto/create-person.dto';
 import { SearchPersonDto } from '../dto/search-person.dto';
+import { UpdatePersonDto } from '../dto/update-person.dto';
 import { PersonService } from '../services/person.service';
 
 @Controller('people')
@@ -12,8 +25,13 @@ export class PersonController {
     return this.personService.search(dto.query, dto.page, dto.limit);
   }
 
+  @Post('create')
+  create(@Body() dto: CreatePersonDto) {
+    return this.personService.createPerson(dto);
+  }
+
   @Get('by-document')
-  async findByDocument(
+  findByDocument(
     @Query('documentTypeId') documentTypeId: string,
     @Query('documentNumber') documentNumber: string,
   ) {
@@ -28,15 +46,11 @@ export class PersonController {
     if (!documentNumbers) {
       return res
         .status(400)
-        .json({
-          message: 'Debe proporcionar números de documento de personas',
-        });
+        .json({ message: 'Debe proporcionar números de documento de personas' });
     }
 
     const personDocumentNumbers = documentNumbers.split(',');
-    const buffer = await this.personService.generateQrPdf(
-      personDocumentNumbers,
-    );
+    const buffer = await this.personService.generateQrPdf(personDocumentNumbers);
 
     res.set({
       'Content-Type': 'application/pdf',
@@ -45,5 +59,21 @@ export class PersonController {
     });
 
     res.end(buffer);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.personService.findOne(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdatePersonDto) {
+    return this.personService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  remove(@Param('id') id: string) {
+    return this.personService.remove(id);
   }
 }

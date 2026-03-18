@@ -9,8 +9,9 @@ import PDFDocument from 'pdfkit';
 import * as QRCode from 'qrcode';
 import { Role } from 'src/auth/entities/role.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { DataSource, In, QueryRunner, Repository } from 'typeorm';
+import { DataSource, In, Not, QueryRunner, Repository } from 'typeorm';
 import { CreatePersonDto } from '../dto/create-person.dto';
+import { UpdatePersonDto } from '../dto/update-person.dto';
 import { Person } from '../entities/person.entity';
 
 @Injectable()
@@ -305,6 +306,42 @@ export class PersonService {
         await queryRunner.release();
       }
     }
+  }
+
+  async findOne(id: string): Promise<Person> {
+    const person = await this.personRepository.findOne({ where: { id } });
+    if (!person) {
+      throw new NotFoundException('Persona no encontrada');
+    }
+    return person;
+  }
+
+  async update(id: string, dto: UpdatePersonDto): Promise<Person> {
+    const person = await this.findOne(id);
+
+    if (dto.documentTypeId || dto.documentNumber) {
+      const documentTypeId = dto.documentTypeId ?? person.documentTypeId;
+      const documentNumber = dto.documentNumber ?? person.documentNumber;
+
+      const duplicate = await this.personRepository.findOne({
+        where: { documentTypeId, documentNumber, id: Not(id) },
+      });
+
+      if (duplicate) {
+        throw new HttpException(
+          { success: false, message: 'Ya existe una persona con ese tipo y número de documento' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    Object.assign(person, dto);
+    return this.personRepository.save(person);
+  }
+
+  async remove(id: string): Promise<void> {
+    const person = await this.findOne(id);
+    await this.personRepository.remove(person);
   }
 
   async updateOrCreatePerson(dto: CreatePersonDto, runner?: QueryRunner) {
