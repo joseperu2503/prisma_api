@@ -31,9 +31,9 @@ export class GuardianService {
   ) {}
 
   async create(dto: CreateGuardianDto) {
-    if (!dto.personId && !dto.person) {
+    if (!dto.person.id && !dto.person.new) {
       throw new BadRequestException(
-        'Debe proporcionar personId o los datos de la nueva persona',
+        'Debe proporcionar person.id o person.new con los datos de la nueva persona',
       );
     }
 
@@ -44,15 +44,15 @@ export class GuardianService {
     try {
       let person: Person;
 
-      if (dto.personId) {
+      if (dto.person.id) {
         const found = await queryRunner.manager.findOne(Person, {
-          where: { id: dto.personId },
+          where: { id: dto.person.id },
         });
         if (!found) throw new NotFoundException('Persona no encontrada');
         person = found;
       } else {
         person = await this.personService.createPerson(
-          dto.person!,
+          dto.person.new!,
           queryRunner,
         );
       }

@@ -1,16 +1,10 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsUUID, ValidateNested } from 'class-validator';
-import { CreatePersonDto } from 'src/person/dto/create-person.dto';
+import { IsDefined, ValidateNested } from 'class-validator';
+import { PersonDto } from 'src/person/dto/person.dto';
 
 export class CreateGuardianDto {
-  /** Usar persona ya existente por su id */
-  @IsOptional()
-  @IsUUID()
-  personId?: string;
-
-  /** Crear nueva persona y registrarla como apoderado */
-  @IsOptional()
+  @IsDefined()
   @ValidateNested()
-  @Type(() => CreatePersonDto)
-  person?: CreatePersonDto;
+  @Type(() => PersonDto)
+  person: PersonDto;
 }
