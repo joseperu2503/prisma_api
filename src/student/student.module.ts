@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicYearModule } from 'src/academic-year/academic-year.module';
+import { GuardianModule } from 'src/guardian/guardian.module';
 import { Role } from 'src/auth/entities/role.entity';
 import { User } from 'src/auth/entities/user.entity';
 import { GradeModule } from 'src/grade/grade.module';
@@ -19,6 +20,7 @@ import { StudentService } from './services/student.service';
     GradeModule,
     AcademicYearModule,
     PersonModule,
+    GuardianModule,
   ],
   exports: [StudentService],
 })

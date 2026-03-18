@@ -180,11 +180,40 @@ export class GuardianService {
       total = data.length;
     }
 
+    const guardianIds = data.map((g) => g.id);
+
+    const studentGuardians = guardianIds.length
+      ? await this.dataSource
+          .getRepository(StudentGuardian)
+          .createQueryBuilder('sg')
+          .leftJoinAndSelect('sg.student', 'st')
+          .leftJoinAndSelect('st.person', 'sp')
+          .where('sg.guardianId IN (:...ids)', { ids: guardianIds })
+          .select(['sg.guardianId', 'st.id', 'sp.id', 'sp.names', 'sp.paternalLastName', 'sp.maternalLastName', 'sp.documentNumber', 'sp.documentTypeId'])
+          .getRawMany()
+      : [];
+
+    const studentsByGuardian = new Map<string, { id: string; person: { names: string; paternalLastName: string; maternalLastName: string; documentNumber: string } }[]>();
+    for (const sg of studentGuardians) {
+      const gId = sg.sg_guardian_id;
+      if (!studentsByGuardian.has(gId)) studentsByGuardian.set(gId, []);
+      studentsByGuardian.get(gId)!.push({
+        id: sg.st_id,
+        person: {
+          names: sg.sp_names,
+          paternalLastName: sg.sp_paternal_last_name,
+          maternalLastName: sg.sp_maternal_last_name,
+          documentNumber: sg.sp_document_number,
+        },
+      });
+    }
+
     const mapped = data.map((g) => ({
       ...g,
       isActive:
         g.person.personRoles.find((pr) => pr.role?.id === RoleId.GUARDIAN)
           ?.isActive ?? true,
+      students: studentsByGuardian.get(g.id) ?? [],
     }));
 
     return {

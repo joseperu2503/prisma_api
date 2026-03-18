@@ -14,6 +14,7 @@ import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
+import { GuardianService } from 'src/guardian/services/guardian.service';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
 import { ListStudentDto } from '../dto/list-student.dto';
@@ -35,6 +36,7 @@ export class StudentService {
     private readonly dataSource: DataSource,
 
     private readonly personService: PersonService,
+    private readonly guardianService: GuardianService,
   ) {}
 
   async updateOrCreate(
@@ -114,6 +116,15 @@ export class StudentService {
 
       if (!isExternalTransaction) {
         await queryRunner.commitTransaction();
+      }
+
+      if (!isExternalTransaction && createStudentDto.guardians?.length) {
+        for (const g of createStudentDto.guardians) {
+          await this.guardianService.create({
+            person: g.person,
+            studentIds: [savedStudent.id],
+          });
+        }
       }
 
       return {
