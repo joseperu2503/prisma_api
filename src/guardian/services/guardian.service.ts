@@ -11,11 +11,13 @@ import { RoleId } from 'src/auth/enums/role-id.enum';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
+import { Student } from 'src/student/entities/student.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateGuardianDto } from '../dto/create-guardian.dto';
 import { ListGuardianDto } from '../dto/list-guardian.dto';
 import { UpdateGuardianDto } from '../dto/update-guardian.dto';
 import { Guardian } from '../entities/guardian.entity';
+import { StudentGuardian } from '../entities/student-guardian.entity';
 
 @Injectable()
 export class GuardianService {
@@ -90,6 +92,22 @@ export class GuardianService {
           personId: person.id,
         });
         guardian = await queryRunner.manager.save(guardian);
+      }
+
+      // Link students
+      if (dto.studentIds?.length) {
+        for (const studentId of dto.studentIds) {
+          const student = await queryRunner.manager.findOne(Student, { where: { id: studentId } });
+          if (!student) throw new NotFoundException(`Estudiante ${studentId} no encontrado`);
+
+          const existing = await queryRunner.manager.findOne(StudentGuardian, {
+            where: { studentId, guardianId: guardian.id },
+          });
+          if (!existing) {
+            const sg = queryRunner.manager.create(StudentGuardian, { studentId, guardianId: guardian.id });
+            await queryRunner.manager.save(sg);
+          }
+        }
       }
 
       await queryRunner.commitTransaction();
@@ -188,7 +206,45 @@ export class GuardianService {
       (pr) => pr.role?.id === RoleId.GUARDIAN,
     );
 
-    return { ...guardian, isActive: guardianRole?.isActive ?? true };
+    const studentGuardians = await this.dataSource
+      .getRepository(StudentGuardian)
+      .find({ where: { guardianId: id }, relations: { student: { person: true } } });
+
+    const students = studentGuardians.map((sg) => ({
+      id: sg.student.id,
+      person: {
+        id: sg.student.person.id,
+        names: sg.student.person.names,
+        paternalLastName: sg.student.person.paternalLastName,
+        maternalLastName: sg.student.person.maternalLastName,
+        documentNumber: sg.student.person.documentNumber,
+        documentTypeId: sg.student.person.documentTypeId,
+      },
+    }));
+
+    return { ...guardian, isActive: guardianRole?.isActive ?? true, students };
+  }
+
+  async updateStudents(id: string, studentIds: string[]) {
+    const guardian = await this.guardianRepository.findOne({ where: { id } });
+    if (!guardian) throw new NotFoundException('Apoderado no encontrado');
+
+    const repo = this.dataSource.getRepository(StudentGuardian);
+
+    await repo.delete({ guardianId: id });
+
+    if (studentIds.length) {
+      for (const studentId of studentIds) {
+        const student = await this.dataSource
+          .getRepository(Student)
+          .findOne({ where: { id: studentId } });
+        if (!student) throw new NotFoundException(`Estudiante ${studentId} no encontrado`);
+
+        await repo.save(repo.create({ guardianId: id, studentId }));
+      }
+    }
+
+    return this.findOne(id);
   }
 
   async update(id: string, dto: UpdateGuardianDto) {

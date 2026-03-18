@@ -1,4 +1,3 @@
-import { RelationshipType } from 'src/common/entities/relationship-type.entity';
 import { Student } from 'src/student/entities/student.entity';
 import {
   Column,
@@ -29,16 +28,6 @@ export class StudentGuardian {
 
   @Column('uuid', { name: 'guardian_id' })
   guardianId: string;
-
-  @ManyToOne(() => RelationshipType)
-  @JoinColumn({ name: 'relationship_type_id' })
-  relationshipType: RelationshipType;
-
-  @Column('uuid', { name: 'relationship_type_id' })
-  relationshipTypeId: string;
-
-  @Column({ name: 'is_primary', type: 'boolean', default: false })
-  isPrimary: boolean;
 
   @CreateDateColumn({
     type: 'timestamptz',
