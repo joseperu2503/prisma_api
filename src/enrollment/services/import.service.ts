@@ -75,7 +75,6 @@ export class ImportService {
             documentTypeId: 'dni',
             documentNumber: documentNumber,
           },
-          password: '123456',
         },
       });
     }
