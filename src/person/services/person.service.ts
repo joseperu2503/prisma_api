@@ -209,10 +209,102 @@ export class PersonService {
     return result;
   }
 
+  async search(query?: string, page = 1, limit = 10) {
+    const qb = this.personRepository
+      .createQueryBuilder('p')
+      .select([
+        'p.id',
+        'p.names',
+        'p.paternalLastName',
+        'p.maternalLastName',
+        'p.documentNumber',
+        'p.documentTypeId',
+        'p.email',
+        'p.phone',
+        'p.address',
+      ])
+      .orderBy('p.paternalLastName', 'ASC')
+      .addOrderBy('p.names', 'ASC');
+
+    if (query) {
+      qb.where(
+        'LOWER(p.names) LIKE :q OR LOWER(p.paternalLastName) LIKE :q OR LOWER(p.maternalLastName) LIKE :q OR p.documentNumber LIKE :q',
+        { q: `%${query.toLowerCase()}%` },
+      );
+    }
+
+    const total = await qb.getCount();
+    const data = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return { data, total, pagination: { page, limit } };
+  }
+
   async findByDocument(documentTypeId: string, documentNumber: string) {
     return this.personRepository.findOne({
       where: { documentTypeId, documentNumber },
     });
+  }
+
+  async createPerson(dto: CreatePersonDto, runner?: QueryRunner) {
+    const queryRunner = runner ?? this.dataSource.createQueryRunner();
+    const isExternalTransaction = !!runner;
+
+    if (!isExternalTransaction) {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+    }
+
+    try {
+      const { ...newPerson } = dto;
+
+      let person: Person | null = null;
+
+      const existingPerson = await queryRunner.manager.findOne(Person, {
+        where: {
+          documentTypeId: newPerson.documentTypeId,
+          documentNumber: newPerson.documentNumber,
+        },
+      });
+
+      if (existingPerson) {
+        throw new HttpException(
+          {
+            success: false,
+            message: 'Ya existe una persona con ese documento',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      person = queryRunner.manager.create(Person, { ...newPerson });
+      person = await queryRunner.manager.save(person);
+
+      return person;
+    } catch (error) {
+      if (!isExternalTransaction) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Ocurrió un error al crear la persona',
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      if (!isExternalTransaction) {
+        await queryRunner.release();
+      }
+    }
   }
 
   async updateOrCreatePerson(dto: CreatePersonDto, runner?: QueryRunner) {

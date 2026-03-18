@@ -379,6 +379,34 @@ export class AttendanceService {
     return { data, total, page, limit };
   }
 
+  async getMyAttendance(personId: string, from?: string, to?: string) {
+    const qb = this.dataSource
+      .getRepository(Attendance)
+      .createQueryBuilder('a')
+      .leftJoinAndSelect('a.logs', 'log')
+      .leftJoinAndSelect('log.type', 'type')
+      .leftJoinAndSelect('log.status', 'status')
+      .where('a.personId = :personId', { personId })
+      .orderBy('a.date', 'ASC')
+      .addOrderBy('log.markedAt', 'ASC');
+
+    if (from) qb.andWhere('a.date >= :from', { from });
+    if (to) qb.andWhere('a.date <= :to', { to });
+
+    const attendances = await qb.getMany();
+
+    return attendances.map((a) => ({
+      date: a.date,
+      logs: a.logs.map((log) => ({
+        typeId: log.typeId,
+        typeName: log.type?.name,
+        statusId: log.statusId,
+        statusName: log.status?.name,
+        markedAt: log.markedAt,
+      })),
+    }));
+  }
+
   async getAttendanceDayLogs(dto: QueryAttendanceDayLogsDto) {
     const { classId, studentId, academicYearId, date, page, limit } = dto;
 

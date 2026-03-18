@@ -163,6 +163,24 @@ export class AdminService {
     return { ...user, isActive: adminPersonRole?.isActive ?? true };
   }
 
+  async resetAllPasswords() {
+    const users = await this.userRepository.find({ relations: { person: true } });
+
+    await Promise.all(
+      users.map((user) =>
+        this.userRepository.update(user.id, {
+          password: bcrypt.hashSync(user.person.documentNumber, 10),
+        }),
+      ),
+    );
+
+    return {
+      success: true,
+      count: users.length,
+      message: `${users.length} contraseñas restablecidas al número de documento.`,
+    };
+  }
+
   async toggleActive(id: string) {
     const user = await this.userRepository.findOne({
       where: { id },

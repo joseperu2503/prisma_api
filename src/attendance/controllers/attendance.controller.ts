@@ -44,4 +44,13 @@ export class AttendanceController {
       to,
     );
   }
+
+  @Get('my-attendance')
+  getMyAttendance(
+    @GetUser() user: any,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.attendanceService.getMyAttendance(user.personId, from, to);
+  }
 }

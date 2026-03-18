@@ -1,10 +1,16 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { SearchPersonDto } from '../dto/search-person.dto';
 import { PersonService } from '../services/person.service';
 
 @Controller('people')
 export class PersonController {
   constructor(private readonly personService: PersonService) {}
+
+  @Post('search')
+  search(@Body() dto: SearchPersonDto) {
+    return this.personService.search(dto.query, dto.page, dto.limit);
+  }
 
   @Get('by-document')
   async findByDocument(

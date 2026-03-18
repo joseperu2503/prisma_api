@@ -24,6 +24,11 @@ export class AdminController {
     return this.adminService.create(dto);
   }
 
+  @Post('reset-all-passwords')
+  resetAllPasswords() {
+    return this.adminService.resetAllPasswords();
+  }
+
   @Post('list')
   findAll(@Body() body: ListAdminDto) {
     return this.adminService.findAll(body);
