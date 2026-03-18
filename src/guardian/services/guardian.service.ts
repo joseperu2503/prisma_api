@@ -311,6 +311,37 @@ export class GuardianService {
     };
   }
 
+  async findByStudent(studentId: string) {
+    const studentGuardians = await this.dataSource
+      .getRepository(StudentGuardian)
+      .find({
+        where: { studentId },
+        relations: { guardian: { person: true } },
+      });
+
+    return studentGuardians.map((sg) => ({
+      id: sg.guardian.id,
+      person: {
+        id: sg.guardian.person.id,
+        names: sg.guardian.person.names,
+        paternalLastName: sg.guardian.person.paternalLastName,
+        maternalLastName: sg.guardian.person.maternalLastName,
+        documentNumber: sg.guardian.person.documentNumber,
+        documentTypeId: sg.guardian.person.documentTypeId,
+        email: sg.guardian.person.email,
+        phone: sg.guardian.person.phone,
+        address: sg.guardian.person.address,
+      },
+    }));
+  }
+
+  async removeStudentLink(studentId: string, guardianId: string) {
+    const repo = this.dataSource.getRepository(StudentGuardian);
+    const link = await repo.findOne({ where: { studentId, guardianId } });
+    if (!link) throw new NotFoundException('Vínculo apoderado-estudiante no encontrado');
+    await repo.remove(link);
+  }
+
   async remove(id: string) {
     const guardian = await this.guardianRepository.findOne({ where: { id } });
     if (!guardian) throw new NotFoundException('Apoderado no encontrado');
