@@ -1,7 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsDefined, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { PersonDto } from 'src/person/dto/person.dto';
-import { CreatePersonDto } from 'src/person/dto/create-person.dto';
 
 class GuardianPersonDto {
   @IsDefined()
@@ -11,9 +10,10 @@ class GuardianPersonDto {
 }
 
 export class CreateStudentDto {
+  @IsDefined()
   @ValidateNested()
-  @Type(() => CreatePersonDto)
-  person: CreatePersonDto;
+  @Type(() => PersonDto)
+  person: PersonDto;
 
   @IsOptional()
   @IsString()

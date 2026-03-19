@@ -12,11 +12,20 @@ import { User } from './entities/user.entity';
 import { AuthService } from './services/auth.service';
 import { FacebookService } from './services/facebook.service';
 import { GoogleService } from './services/google.service';
+import { RoleService } from './services/role.service';
+import { UserService } from './services/user.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, FacebookService, GoogleService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    FacebookService,
+    GoogleService,
+    UserService,
+    RoleService,
+  ],
   imports: [
     TypeOrmModule.forFeature([
       User,
@@ -39,6 +48,14 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
     HttpModule,
   ],
-  exports: [TypeOrmModule, JwtStrategy, PassportModule, JwtModule, AuthService],
+  exports: [
+    TypeOrmModule,
+    JwtStrategy,
+    PassportModule,
+    JwtModule,
+    AuthService,
+    UserService,
+    RoleService,
+  ],
 })
 export class AuthModule {}

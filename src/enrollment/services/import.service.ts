@@ -69,11 +69,13 @@ export class ImportService {
         classId: class_.id,
         student: {
           person: {
-            names: names,
-            paternalLastName: paternalLastName,
-            maternalLastName: maternalLastName,
-            documentTypeId: 'dni',
-            documentNumber: documentNumber,
+            new: {
+              names: names,
+              paternalLastName: paternalLastName,
+              maternalLastName: maternalLastName,
+              documentTypeId: 'dni',
+              documentNumber: documentNumber,
+            },
           },
         },
       });

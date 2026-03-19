@@ -11,6 +11,7 @@ import { Role } from 'src/auth/entities/role.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { DataSource, In, Not, QueryRunner, Repository } from 'typeorm';
 import { CreatePersonDto } from '../dto/create-person.dto';
+import { PersonDto } from '../dto/person.dto';
 import { UpdatePersonDto } from '../dto/update-person.dto';
 import { Person } from '../entities/person.entity';
 
@@ -329,7 +330,10 @@ export class PersonService {
 
       if (duplicate) {
         throw new HttpException(
-          { success: false, message: 'Ya existe una persona con ese tipo y número de documento' },
+          {
+            success: false,
+            message: 'Ya existe una persona con ese tipo y número de documento',
+          },
           HttpStatus.BAD_REQUEST,
         );
       }
@@ -374,6 +378,67 @@ export class PersonService {
       }
 
       return person;
+    } catch (error) {
+      if (!isExternalTransaction) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        {
+          success: false,
+          message: 'An error occurred while creating the person',
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      if (!isExternalTransaction) {
+        await queryRunner.release();
+      }
+    }
+  }
+
+  async findOrCreate(personDto: PersonDto, runner?: QueryRunner) {
+    const queryRunner = runner ?? this.dataSource.createQueryRunner();
+    const isExternalTransaction = !!runner;
+
+    if (!isExternalTransaction) {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+    }
+
+    try {
+      let person: Person;
+      if (personDto.id) {
+        const found = await queryRunner.manager.findOne(Person, {
+          where: { id: personDto.id },
+        });
+        if (!found) {
+          throw new NotFoundException(`Persona no encontrada`);
+        }
+        person = found;
+      } else if (personDto.new) {
+        person = await this.createPerson(personDto.new, queryRunner);
+      } else {
+        throw new HttpException(
+          {
+            success: false,
+            message: 'Debes proporcionar id o datos de nueva persona',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (!isExternalTransaction) {
+        await queryRunner.commitTransaction();
+      }
+
+      return person;
+      
     } catch (error) {
       if (!isExternalTransaction) {
         await queryRunner.rollbackTransaction();

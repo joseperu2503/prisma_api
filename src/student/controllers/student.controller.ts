@@ -28,7 +28,7 @@ export class StudentController {
 
   @Post('create')
   async create(@Body() createStudentDto: CreateStudentDto) {
-    return this.studentService.updateOrCreate(createStudentDto);
+    return this.studentService.create(createStudentDto);
   }
 
   @Post('list')

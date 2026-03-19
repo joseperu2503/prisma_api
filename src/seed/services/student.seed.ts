@@ -118,7 +118,11 @@ export class StudentSeed {
 
   async run() {
     for (const studentData of this.students) {
-      await this.studentService.updateOrCreate(studentData);
+      await this.studentService.create({
+        person: {
+          new: studentData.person,
+        },
+      });
     }
   }
 }

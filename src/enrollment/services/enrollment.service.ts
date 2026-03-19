@@ -30,7 +30,7 @@ export class EnrollmentService {
     await queryRunner.startTransaction();
 
     try {
-      const savedStudent = await this.studentService.updateOrCreate(
+      const savedStudent = await this.studentService.create(
         dto.student,
         queryRunner,
       );

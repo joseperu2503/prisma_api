@@ -6,15 +6,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.entity';
-import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
+import { RoleService } from 'src/auth/services/role.service';
+import { UserService } from 'src/auth/services/user.service';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
+import { GuardianService } from 'src/guardian/services/guardian.service';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
-import { GuardianService } from 'src/guardian/services/guardian.service';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CreateStudentDto } from '../dto/create-student.dto';
 import { ListStudentDto } from '../dto/list-student.dto';
@@ -37,12 +37,13 @@ export class StudentService {
 
     private readonly personService: PersonService,
     private readonly guardianService: GuardianService,
+
+    private readonly userService: UserService,
+
+    private readonly roleService: RoleService,
   ) {}
 
-  async updateOrCreate(
-    createStudentDto: CreateStudentDto,
-    runner?: QueryRunner,
-  ) {
+  async create(createStudentDto: CreateStudentDto, runner?: QueryRunner) {
     const queryRunner = runner ?? this.dataSource.createQueryRunner();
     const isExternalTransaction = !!runner;
 
@@ -55,63 +56,35 @@ export class StudentService {
       const { person: personDto, password } = createStudentDto;
 
       // 1️⃣ Resolver Persona
-      const person = await this.personService.updateOrCreatePerson(
+      let person: Person = await this.personService.findOrCreate(
         personDto,
         queryRunner,
       );
 
       // 2️⃣ Resolver/Crear Usuario
-      let user = await queryRunner.manager.findOne(User, {
-        where: { personId: person.id },
-      });
-
-      if (!user) {
-        user = queryRunner.manager.create(User, {
-          personId: person.id,
-          password: bcrypt.hashSync(password ?? person.documentNumber, 10),
-        });
-        user = await queryRunner.manager.save(user);
-      }
+      let user = await this.userService.findOrCreate(
+        person.id,
+        person.documentNumber,
+        queryRunner,
+      );
 
       // 3️⃣ Asignar Rol de Estudiante a la PERSONA
-      const studentRole = await queryRunner.manager.findOne(Role, {
-        where: { id: RoleId.STUDENT },
-      });
-
-      if (!studentRole) {
-        throw new NotFoundException(
-          `Role with code 'STUDENT' not found. Run seed first.`,
-        );
-      }
-
-      const existingPersonRole = await queryRunner.manager.findOne(PersonRole, {
-        where: { personId: person.id, roleId: studentRole.id },
-      });
-
-      if (!existingPersonRole) {
-        const personRole = queryRunner.manager.create(PersonRole, {
-          personId: person.id,
-          roleId: studentRole.id,
-        });
-        await queryRunner.manager.save(personRole);
-      }
+      await this.roleService.assignRole(person.id, RoleId.STUDENT, queryRunner);
 
       // 4️⃣ Validar unicidad y crear Student
-      let savedStudent: Student | null = null;
+      let student: Student | null = null;
 
-      const existingStudent = await queryRunner.manager.findOne(Student, {
+      student = await queryRunner.manager.findOne(Student, {
         where: { personId: person.id },
       });
 
-      if (existingStudent) {
-        savedStudent = existingStudent;
-      } else {
-        const student = queryRunner.manager.create(Student, {
+      if (!student) {
+        student = queryRunner.manager.create(Student, {
           personId: person.id,
           userId: user.id,
         });
 
-        savedStudent = await queryRunner.manager.save(student);
+        student = await queryRunner.manager.save(student);
       }
 
       if (!isExternalTransaction) {
@@ -122,13 +95,13 @@ export class StudentService {
         for (const g of createStudentDto.guardians) {
           await this.guardianService.create({
             person: g.person,
-            studentIds: [savedStudent.id],
+            studentIds: [student.id],
           });
         }
       }
 
       return {
-        id: savedStudent.id,
+        id: student.id,
         success: true,
         message: 'Student created successfully',
       };
