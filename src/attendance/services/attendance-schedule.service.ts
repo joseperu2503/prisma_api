@@ -76,11 +76,11 @@ export class AttendanceScheduleService {
       ]);
 
       if (!classExists) {
-        throw new NotFoundException(`Class with id ${dto.classId} not found`);
+        throw new NotFoundException(`Clase no encontrada`);
       }
       if (!yearExists) {
         throw new NotFoundException(
-          `Academic year with id ${dto.academicYearId} not found`,
+          `Año académico no encontrado`,
         );
       }
 
@@ -121,8 +121,8 @@ export class AttendanceScheduleService {
         await manager.save(classAcademicYear);
       }
 
-      // Check for overlapping schedules on the same day
-      const existingSchedules = await manager.find(AttendanceSchedule, {
+      // Validate only one schedule per day
+      const existingSchedule = await manager.findOne(AttendanceSchedule, {
         where: {
           attendanceScheduleGroupId:
             classAcademicYear.attendanceScheduleGroup.id,
@@ -131,18 +131,9 @@ export class AttendanceScheduleService {
         },
       });
 
-      const hasOverlap = existingSchedules.some((existing) => {
-        const newStart = dto.entryStart;
-        const newEnd = dto.exit;
-        const existingStart = existing.entryStart;
-        const existingEnd = existing.exit;
-
-        return newStart < existingEnd && newEnd > existingStart;
-      });
-
-      if (hasOverlap) {
+      if (existingSchedule) {
         throw new BadRequestException(
-          'El horario se superpone con otro horario',
+          'Ya existe un horario de asistencia para este día',
         );
       }
 

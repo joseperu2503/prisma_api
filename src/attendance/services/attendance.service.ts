@@ -10,7 +10,6 @@ import { DateUtils } from 'src/common/utils/date.utils';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
-import { Student } from 'src/student/entities/student.entity';
 import {
   Between,
   DataSource,
@@ -75,10 +74,7 @@ export class AttendanceService {
 
         const date = params.date ? new Date(params.date) : new Date();
 
-        // Get day of week (0 = Sunday, 1 = Monday, etc.)
-        // Convert to 0 = Monday, 6 = Sunday for database
-        const dayOfWeek = (date.getDay() + 6) % 7;
-
+        const dayOfWeek = DateUtils.getDayOfWeek();
         // console.log({
         //   date: date,
         //   dateString: new Date().toLocaleDateString(),
@@ -87,6 +83,7 @@ export class AttendanceService {
         //   getCurrentDateTime: DateUtils.getCurrentDateTime(),
         //   getDayOfWeek: DateUtils.getDayOfWeek(),
         //   dayOfWeek,
+        //   date2: new Date(DateUtils.getCurrentDateTime()),
         // });
 
         const currentTime = DateUtils.getCurrentTime(); // HH:MM:SS
@@ -105,6 +102,7 @@ export class AttendanceService {
                 endDate: MoreThanOrEqual(date),
               },
             },
+            relations: { academicYear: true },
           });
 
           if (!enrollment) {
@@ -117,8 +115,6 @@ export class AttendanceService {
             where: {
               isActive: true,
               dayOfWeek,
-              // entryStart: LessThanOrEqual(currentTime),
-              // exit: MoreThanOrEqual(currentTime),
               attendanceScheduleGroup: {
                 classAcademicYear: {
                   classId: enrollment.classId,
@@ -183,20 +179,16 @@ export class AttendanceService {
         }
 
         // Calculate attendance status based on current time and schedule
-        const currentTimeHM = currentTime.substring(0, 5); // HH:MM format
         let statusId: AttendanceStatusId;
 
         if (params.type === AttendanceTypeId.ENTRY) {
-          if (
-            currentTimeHM >= attendanceSchedule.entryStart &&
-            currentTimeHM <= attendanceSchedule.entryEnd
-          ) {
+          if (currentTime <= attendanceSchedule.entryEnd) {
             statusId = AttendanceStatusId.ON_TIME;
           } else {
             statusId = AttendanceStatusId.LATE;
           }
         } else {
-          if (currentTimeHM >= attendanceSchedule.exit) {
+          if (currentTime >= attendanceSchedule.exit) {
             statusId = AttendanceStatusId.ON_TIME;
           } else {
             statusId = AttendanceStatusId.EARLY_EXIT;
@@ -206,6 +198,10 @@ export class AttendanceService {
         const attendanceStatus = await manager.findOne(AttendanceStatus, {
           where: { id: statusId },
         });
+
+        if (!attendanceStatus) {
+          throw new NotFoundException(`Status de asistencia no encontrado`);
+        }
 
         const attendanceLog = manager.create(AttendanceLog, {
           attendanceId: attendance.id,
@@ -223,7 +219,7 @@ export class AttendanceService {
           data: {
             status: {
               id: statusId,
-              name: attendanceStatus?.name ?? statusId,
+              name: attendanceStatus.name,
             },
             person: personData,
           },
@@ -311,7 +307,8 @@ export class AttendanceService {
   }
 
   async getAttendanceHistory(dto: QueryAttendanceHistoryDto) {
-    const { classId, studentId, academicYearId, month, year, page, limit } = dto;
+    const { classId, studentId, academicYearId, month, year, page, limit } =
+      dto;
 
     const enrollmentRepo = this.dataSource.getRepository(Enrollment);
     const attendanceRepo = this.dataSource.getRepository(Attendance);
