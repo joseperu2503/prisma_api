@@ -27,6 +27,16 @@ export class DateUtils {
     return `${date} ${time}`;
   }
 
+  static getTimeFromDate(date: Date): string {
+    return date.toLocaleTimeString('en-GB', {
+      timeZone: TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }); // HH:mm:ss
+  }
+
   static getDayOfWeek(): number {
     const date = new Date();
 

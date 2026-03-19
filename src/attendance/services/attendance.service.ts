@@ -404,6 +404,60 @@ export class AttendanceService {
     }));
   }
 
+  async recalculateStatuses(): Promise<{
+    total: number;
+    updated: number;
+    skipped: number;
+  }> {
+    const logs = await this.attendanceLogRepository.find({
+      relations: {
+        attendance: { attendanceSchedule: true },
+      },
+    });
+
+    let updated = 0;
+    let skipped = 0;
+    const toUpdate: AttendanceLog[] = [];
+
+    for (const log of logs) {
+      const schedule = log.attendance?.attendanceSchedule;
+      if (!schedule) {
+        skipped++;
+        continue;
+      }
+
+      const markedAtTime = DateUtils.getTimeFromDate(log.markedAt);
+
+      let newStatusId: AttendanceStatusId;
+
+      if (log.typeId === AttendanceTypeId.ENTRY) {
+        newStatusId =
+          markedAtTime <= schedule.entryEnd
+            ? AttendanceStatusId.ON_TIME
+            : AttendanceStatusId.LATE;
+      } else {
+        newStatusId =
+          markedAtTime >= schedule.exit
+            ? AttendanceStatusId.ON_TIME
+            : AttendanceStatusId.EARLY_EXIT;
+      }
+
+      if (log.statusId !== newStatusId) {
+        log.statusId = newStatusId;
+        toUpdate.push(log);
+        updated++;
+      } else {
+        skipped++;
+      }
+    }
+
+    if (toUpdate.length > 0) {
+      await this.attendanceLogRepository.save(toUpdate);
+    }
+
+    return { total: logs.length, updated, skipped };
+  }
+
   async getAttendanceDayLogs(dto: QueryAttendanceDayLogsDto) {
     const { classId, studentId, academicYearId, date, page, limit } = dto;
 
@@ -431,7 +485,7 @@ export class AttendanceService {
       .leftJoinAndSelect('createdBy.person', 'createdByPerson')
       .where('att.personId IN (:...personIds)', { personIds })
       .andWhere('att.date = :date', { date })
-      .orderBy('log.markedAt', 'ASC')
+      .orderBy('log.markedAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();

@@ -20,10 +20,10 @@ export class AttendanceLog {
   id: string;
 
   @ManyToOne(() => Attendance, (day) => day.logs)
-  @JoinColumn({ name: 'attendance_day_id' })
+  @JoinColumn({ name: 'attendance_id' })
   attendance: Attendance;
 
-  @Column('uuid', { name: 'attendance_day_id' })
+  @Column('uuid', { name: 'attendance_id' })
   attendanceId: string;
 
   @ManyToOne(() => AttendanceType)

@@ -45,6 +45,11 @@ export class AttendanceController {
     );
   }
 
+  @Post('recalculate-statuses')
+  recalculateStatuses() {
+    return this.attendanceService.recalculateStatuses();
+  }
+
   @Get('my-attendance')
   getMyAttendance(
     @GetUser() user: any,
