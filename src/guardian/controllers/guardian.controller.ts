@@ -13,7 +13,6 @@ import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateGuardianDto } from '../dto/create-guardian.dto';
 import { ListGuardianDto } from '../dto/list-guardian.dto';
-import { UpdateGuardianStudentsDto } from '../dto/update-guardian-students.dto';
 import { UpdateGuardianDto } from '../dto/update-guardian.dto';
 import { GuardianService } from '../services/guardian.service';
 
@@ -47,14 +46,6 @@ export class GuardianController {
     @Body() dto: UpdateGuardianDto,
   ) {
     return this.guardianService.update(id, dto);
-  }
-
-  @Patch(':id/students')
-  updateStudents(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateGuardianStudentsDto,
-  ) {
-    return this.guardianService.updateStudents(id, dto.studentIds);
   }
 
   @Patch(':id/toggle-active')

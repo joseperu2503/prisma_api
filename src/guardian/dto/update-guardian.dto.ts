@@ -1,35 +1,15 @@
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsOptional, IsUUID, ValidateNested } from 'class-validator';
+import { UpdatePersonDto } from 'src/person/dto/update-person.dto';
 
 export class UpdateGuardianDto {
   @IsOptional()
-  @IsString()
-  names?: string;
+  @ValidateNested()
+  @Type(() => UpdatePersonDto)
+  person?: UpdatePersonDto;
 
   @IsOptional()
-  @IsString()
-  paternalLastName?: string;
-
-  @IsOptional()
-  @IsString()
-  maternalLastName?: string;
-
-  @IsOptional()
-  @IsString()
-  documentTypeId?: string;
-
-  @IsOptional()
-  @IsString()
-  documentNumber?: string;
-
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
-
-  @IsOptional()
-  @IsString()
-  address?: string;
+  @IsArray()
+  @IsUUID('4', { each: true })
+  studentIds?: string[];
 }

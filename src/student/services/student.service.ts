@@ -101,7 +101,7 @@ export class StudentService {
           guardianIds.push(guardian.id);
         }
 
-        await this.guardianService.syncStudentGuardians2(
+        await this.guardianService.syncStudentGuardians(
           [student.id],
           guardianIds,
           queryRunner,
@@ -240,7 +240,7 @@ export class StudentService {
       if (!student) {
         throw new NotFoundException(`Estudiante no encontrado`);
       }
-
+      
       Object.assign(student.person, dto.person);
       await queryRunner.manager.save(student.person);
 
@@ -255,7 +255,7 @@ export class StudentService {
           guardianIds.push(guardian.id);
         }
 
-        await this.guardianService.syncStudentGuardians2(
+        await this.guardianService.syncStudentGuardians(
           guardianIds,
           [student.id],
           queryRunner,
