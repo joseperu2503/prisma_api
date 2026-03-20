@@ -13,6 +13,7 @@ import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
 import { Student } from 'src/student/entities/student.entity';
 import { DataSource, Repository } from 'typeorm';
+import { PersonDto } from 'src/person/dto/person.dto';
 import { CreateGuardianDto } from '../dto/create-guardian.dto';
 import { ListGuardianDto } from '../dto/list-guardian.dto';
 import { UpdateGuardianDto } from '../dto/update-guardian.dto';
@@ -333,6 +334,82 @@ export class GuardianService {
         address: sg.guardian.person.address,
       },
     }));
+  }
+
+  async syncStudentGuardians(studentId: string, guardians: { person: PersonDto }[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const newGuardianIds: string[] = [];
+
+      for (const g of guardians) {
+        if (!g.person.id && !g.person.new) {
+          throw new BadRequestException('Cada apoderado debe tener person.id o person.new');
+        }
+
+        // 1. Resolver persona
+        let person: Person;
+        if (g.person.id) {
+          const found = await queryRunner.manager.findOne(Person, { where: { id: g.person.id } });
+          if (!found) throw new NotFoundException(`Persona con id ${g.person.id} no encontrada`);
+          person = found;
+        } else {
+          person = await this.personService.updateOrCreatePerson(g.person.new!, queryRunner);
+        }
+
+        // 2. Asignar rol GUARDIAN si no lo tiene
+        const existingRole = await queryRunner.manager.findOne(PersonRole, {
+          where: { personId: person.id, roleId: RoleId.GUARDIAN },
+        });
+        if (!existingRole) {
+          const guardianRole = await queryRunner.manager.findOne(Role, { where: { id: RoleId.GUARDIAN } });
+          if (!guardianRole) throw new NotFoundException('Rol GUARDIAN no encontrado');
+          await queryRunner.manager.save(
+            queryRunner.manager.create(PersonRole, { personId: person.id, roleId: RoleId.GUARDIAN }),
+          );
+        }
+
+        // 3. Encontrar o crear Guardian
+        let guardian = await queryRunner.manager.findOne(Guardian, { where: { personId: person.id } });
+        if (!guardian) {
+          guardian = await queryRunner.manager.save(
+            queryRunner.manager.create(Guardian, { personId: person.id }),
+          );
+        }
+
+        // 4. Asegurar vínculo estudiante-apoderado
+        const linkExists = await queryRunner.manager.findOne(StudentGuardian, {
+          where: { studentId, guardianId: guardian.id },
+        });
+        if (!linkExists) {
+          await queryRunner.manager.save(
+            queryRunner.manager.create(StudentGuardian, { studentId, guardianId: guardian.id }),
+          );
+        }
+
+        newGuardianIds.push(guardian.id);
+      }
+
+      // 5. Eliminar vínculos que ya no están en la lista
+      const currentLinks = await queryRunner.manager.find(StudentGuardian, { where: { studentId } });
+      const toRemove = currentLinks.filter((l) => !newGuardianIds.includes(l.guardianId));
+      if (toRemove.length) {
+        await queryRunner.manager.remove(toRemove);
+      }
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        { success: false, message: 'Error al sincronizar apoderados', error: error.message },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async removeStudentLink(studentId: string, guardianId: string) {

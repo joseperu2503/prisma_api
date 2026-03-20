@@ -1,23 +1,17 @@
-import { IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsDefined, IsOptional, ValidateNested } from 'class-validator';
+import { UpdatePersonDto } from 'src/person/dto/update-person.dto';
+import { GuardianPersonDto } from './create-student.dto';
 
 export class UpdateStudentDto {
-  @IsOptional()
-  @IsString()
-  names?: string;
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => UpdatePersonDto)
+  person: UpdatePersonDto;
 
   @IsOptional()
-  @IsString()
-  paternalLastName?: string;
-
-  @IsOptional()
-  @IsString()
-  maternalLastName?: string;
-
-  @IsOptional()
-  @IsString()
-  documentTypeId?: string;
-
-  @IsOptional()
-  @IsString()
-  documentNumber?: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => GuardianPersonDto)
+  guardians?: GuardianPersonDto[];
 }

@@ -205,10 +205,13 @@ export class StudentService {
   }
 
   async findOne(id: string) {
-    const student = await this.studentRepository.findOne({
-      where: { id },
-      relations: { person: { personRoles: { role: true } } },
-    });
+    const [student, guardians] = await Promise.all([
+      this.studentRepository.findOne({
+        where: { id },
+        relations: { person: { personRoles: { role: true } } },
+      }),
+      this.guardianService.findByStudent(id),
+    ]);
 
     if (!student) {
       throw new NotFoundException(`Estudiante no encontrado`);
@@ -218,14 +221,7 @@ export class StudentService {
       (pr) => pr.role?.id === RoleId.STUDENT,
     );
 
-    return { ...student, isActive: !!studentPersonRole?.isActive };
-  }
-
-  async findById(id: string) {
-    return this.studentRepository.findOne({
-      where: { id },
-      relations: { person: true },
-    });
+    return { ...student, isActive: !!studentPersonRole?.isActive, guardians };
   }
 
   async update(id: string, dto: UpdateStudentDto) {
@@ -236,12 +232,15 @@ export class StudentService {
     if (!student) {
       throw new NotFoundException(`Estudiante no encontrado`);
     }
-    Object.assign(student.person, dto);
+
+    Object.assign(student.person, dto.person);
     await this.personRepository.save(student.person);
-    return this.studentRepository.findOne({
-      where: { id },
-      relations: { person: true },
-    });
+
+    if (dto.guardians !== undefined) {
+      await this.guardianService.syncStudentGuardians(id, dto.guardians);
+    }
+
+    return this.findOne(id);
   }
 
   async toggleActive(id: string) {
