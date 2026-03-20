@@ -55,20 +55,6 @@ export class StudentService {
     try {
       const { person: personDto, password } = createStudentDto;
 
-      // validar que no haya estudiante con el mismo documento
-
-      if (personDto.id) {
-        const existing = await queryRunner.manager.findOne(Student, {
-          where: { personId: personDto.id },
-        });
-
-        if (existing) {
-          throw new ConflictException(
-            'La persona seleccionada ya está registrada como estudiante',
-          );
-        }
-      }
-
       // 1️⃣ Resolver Persona
       let person: Person = await this.personService.findOrCreate(
         personDto,
@@ -92,26 +78,38 @@ export class StudentService {
         where: { personId: person.id },
       });
 
-      if (!student) {
-        student = queryRunner.manager.create(Student, {
-          personId: person.id,
-          userId: user.id,
-        });
+      if (student) {
+        throw new ConflictException(
+          'La persona ya está registrada como estudiante',
+        );
+      }
 
-        student = await queryRunner.manager.save(student);
+      student = queryRunner.manager.create(Student, {
+        personId: person.id,
+        userId: user.id,
+      });
+
+      student = await queryRunner.manager.save(student);
+      const guardianIds: string[] = [];
+
+      if (createStudentDto.guardians?.length) {
+        for (const g of createStudentDto.guardians) {
+          const guardian = await this.guardianService.create(g, queryRunner, {
+            throwIfExists: false,
+          });
+
+          guardianIds.push(guardian.id);
+        }
+
+        await this.guardianService.syncStudentGuardians2(
+          [student.id],
+          guardianIds,
+          queryRunner,
+        );
       }
 
       if (!isExternalTransaction) {
         await queryRunner.commitTransaction();
-      }
-
-      if (!isExternalTransaction && createStudentDto.guardians?.length) {
-        for (const g of createStudentDto.guardians) {
-          await this.guardianService.create({
-            person: g.person,
-            studentIds: [student.id],
-          });
-        }
       }
 
       return {
@@ -224,23 +222,73 @@ export class StudentService {
     return { ...student, isActive: !!studentPersonRole?.isActive, guardians };
   }
 
-  async update(id: string, dto: UpdateStudentDto) {
-    const student = await this.studentRepository.findOne({
-      where: { id },
-      relations: { person: true },
-    });
-    if (!student) {
-      throw new NotFoundException(`Estudiante no encontrado`);
+  async update(id: string, dto: UpdateStudentDto, runner?: QueryRunner) {
+    const queryRunner = runner ?? this.dataSource.createQueryRunner();
+    const isExternalTransaction = !!runner;
+
+    if (!isExternalTransaction) {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
     }
 
-    Object.assign(student.person, dto.person);
-    await this.personRepository.save(student.person);
+    try {
+      const student = await queryRunner.manager.findOne(Student, {
+        where: { id },
+        relations: { person: true },
+      });
 
-    if (dto.guardians !== undefined) {
-      await this.guardianService.syncStudentGuardians(id, dto.guardians);
+      if (!student) {
+        throw new NotFoundException(`Estudiante no encontrado`);
+      }
+
+      Object.assign(student.person, dto.person);
+      await queryRunner.manager.save(student.person);
+
+      const guardianIds: string[] = [];
+
+      if (dto.guardians != undefined) {
+        for (const g of dto.guardians) {
+          const guardian = await this.guardianService.create(g, queryRunner, {
+            throwIfExists: false,
+          });
+
+          guardianIds.push(guardian.id);
+        }
+
+        await this.guardianService.syncStudentGuardians2(
+          guardianIds,
+          [student.id],
+          queryRunner,
+        );
+      }
+
+      if (!isExternalTransaction) {
+        await queryRunner.commitTransaction();
+      }
+
+      return this.findOne(id);
+    } catch (error) {
+      if (!isExternalTransaction) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Ocurrió un error al actualizar el estudiante',
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      if (!isExternalTransaction) {
+        await queryRunner.release();
+      }
     }
-
-    return this.findOne(id);
   }
 
   async toggleActive(id: string) {

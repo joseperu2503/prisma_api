@@ -122,6 +122,7 @@ export class StudentSeed {
         person: {
           new: studentData.person,
         },
+        guardians: [],
       });
     }
   }

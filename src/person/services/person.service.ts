@@ -11,7 +11,7 @@ import { Role } from 'src/auth/entities/role.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { DataSource, In, Not, QueryRunner, Repository } from 'typeorm';
 import { CreatePersonDto } from '../dto/create-person.dto';
-import { PersonDto } from '../dto/person.dto';
+import { FindOrCreatePersonDto } from '../dto/find-or-create-person.dto';
 import { UpdatePersonDto } from '../dto/update-person.dto';
 import { Person } from '../entities/person.entity';
 
@@ -402,7 +402,7 @@ export class PersonService {
     }
   }
 
-  async findOrCreate(personDto: PersonDto, runner?: QueryRunner) {
+  async findOrCreate(personDto: FindOrCreatePersonDto, runner?: QueryRunner) {
     const queryRunner = runner ?? this.dataSource.createQueryRunner();
     const isExternalTransaction = !!runner;
 

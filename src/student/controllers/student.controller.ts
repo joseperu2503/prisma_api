@@ -3,16 +3,14 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   Param,
   ParseUUIDPipe,
   Patch,
-  Post,
+  Post
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { GuardianService } from 'src/guardian/services/guardian.service';
 import { CreateStudentDto } from '../dto/create-student.dto';
 import { ListStudentDto } from '../dto/list-student.dto';
 import { UpdateStudentDto } from '../dto/update-student.dto';
@@ -21,10 +19,7 @@ import { StudentService } from '../services/student.service';
 @Auth([RoleId.ADMIN, RoleId.STUDENT], [ClientType.WEB])
 @Controller('students')
 export class StudentController {
-  constructor(
-    private readonly studentService: StudentService,
-    private readonly guardianService: GuardianService,
-  ) {}
+  constructor(private readonly studentService: StudentService) {}
 
   @Post('create')
   async create(@Body() createStudentDto: CreateStudentDto) {
@@ -41,11 +36,6 @@ export class StudentController {
     return this.studentService.findOne(id);
   }
 
-  @Get(':id/guardians')
-  async findGuardians(@Param('id', ParseUUIDPipe) id: string) {
-    return this.guardianService.findByStudent(id);
-  }
-
   @Patch(':id')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -57,15 +47,6 @@ export class StudentController {
   @Patch(':id/toggle-active')
   async toggleActive(@Param('id', ParseUUIDPipe) id: string) {
     return this.studentService.toggleActive(id);
-  }
-
-  @Delete(':id/guardians/:guardianId')
-  @HttpCode(204)
-  async removeGuardianLink(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Param('guardianId', ParseUUIDPipe) guardianId: string,
-  ) {
-    return this.guardianService.removeStudentLink(id, guardianId);
   }
 
   @Delete(':id')

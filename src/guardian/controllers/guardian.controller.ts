@@ -13,8 +13,8 @@ import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateGuardianDto } from '../dto/create-guardian.dto';
 import { ListGuardianDto } from '../dto/list-guardian.dto';
-import { UpdateGuardianDto } from '../dto/update-guardian.dto';
 import { UpdateGuardianStudentsDto } from '../dto/update-guardian-students.dto';
+import { UpdateGuardianDto } from '../dto/update-guardian.dto';
 import { GuardianService } from '../services/guardian.service';
 
 @Auth([RoleId.ADMIN], [ClientType.WEB])
@@ -23,8 +23,12 @@ export class GuardianController {
   constructor(private readonly guardianService: GuardianService) {}
 
   @Post('create')
-  create(@Body() dto: CreateGuardianDto) {
-    return this.guardianService.create(dto);
+  async create(@Body() dto: CreateGuardianDto) {
+    const guardian = await this.guardianService.create(dto);
+    return {
+      success: true,
+      message: 'Apoderado registrado exitosamente',
+    };
   }
 
   @Post('list')

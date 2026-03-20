@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import { IsOptional, IsUUID, ValidateNested } from 'class-validator';
 import { CreatePersonDto } from './create-person.dto';
 
-export class PersonDto {
+export class FindOrCreatePersonDto {
   /** Usar persona ya existente por su id */
   @IsOptional()
   @IsUUID()

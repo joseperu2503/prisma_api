@@ -1,12 +1,18 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsDefined, IsOptional, IsUUID, ValidateNested } from 'class-validator';
-import { PersonDto } from 'src/person/dto/person.dto';
+import {
+  IsArray,
+  IsDefined,
+  IsOptional,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
+import { FindOrCreatePersonDto } from 'src/person/dto/find-or-create-person.dto';
 
 export class CreateGuardianDto {
   @IsDefined()
   @ValidateNested()
-  @Type(() => PersonDto)
-  person: PersonDto;
+  @Type(() => FindOrCreatePersonDto)
+  person: FindOrCreatePersonDto;
 
   @IsOptional()
   @IsArray()
