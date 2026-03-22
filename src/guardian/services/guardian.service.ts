@@ -326,6 +326,32 @@ export class GuardianService {
     };
   }
 
+  async findMyStudents(personId: string) {
+    const guardian = await this.guardianRepository.findOne({
+      where: { personId },
+    });
+    if (!guardian) throw new NotFoundException('No estás registrado como apoderado');
+
+    const studentGuardians = await this.dataSource
+      .getRepository(StudentGuardian)
+      .find({
+        where: { guardianId: guardian.id },
+        relations: { student: { person: true } },
+      });
+
+    return studentGuardians.map((sg) => ({
+      id: sg.student.id,
+      person: {
+        id: sg.student.person.id,
+        names: sg.student.person.names,
+        paternalLastName: sg.student.person.paternalLastName,
+        maternalLastName: sg.student.person.maternalLastName,
+        documentNumber: sg.student.person.documentNumber,
+        documentTypeId: sg.student.person.documentTypeId,
+      },
+    }));
+  }
+
   async findByStudent(studentId: string) {
     const studentGuardians = await this.dataSource
       .getRepository(StudentGuardian)

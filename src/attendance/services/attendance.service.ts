@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { DateUtils } from 'src/common/utils/date.utils';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
+import { Student } from 'src/student/entities/student.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
 import {
@@ -402,6 +403,16 @@ export class AttendanceService {
         markedAt: log.markedAt,
       })),
     }));
+  }
+
+  async getStudentAttendance(studentId: string, from?: string, to?: string) {
+    const student = await this.dataSource
+      .getRepository(Student)
+      .findOne({ where: { id: studentId } });
+
+    if (!student) throw new NotFoundException('Estudiante no encontrado');
+
+    return this.getMyAttendance(student.personId, from, to);
   }
 
   async recalculateStatuses(): Promise<{

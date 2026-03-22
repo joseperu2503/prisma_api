@@ -7,7 +7,9 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
@@ -20,6 +22,13 @@ import { GuardianService } from '../services/guardian.service';
 @Controller('guardians')
 export class GuardianController {
   constructor(private readonly guardianService: GuardianService) {}
+
+  @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Get('my-students')
+  getMyStudents(@Req() req: Request) {
+    const personId = (req.user as any).person.id as string;
+    return this.guardianService.findMyStudents(personId);
+  }
 
   @Post('create')
   async create(@Body() dto: CreateGuardianDto) {
