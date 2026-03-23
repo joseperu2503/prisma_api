@@ -6,7 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AttendanceLog } from 'src/attendance/entities/attendance-log.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
+import { DateUtils } from 'src/common/utils/date.utils';
 import { RoleService } from 'src/auth/services/role.service';
 import { UserService } from 'src/auth/services/user.service';
 import { PersonRole } from 'src/person/entities/person-role.entity';
@@ -373,6 +375,42 @@ export class GuardianService {
         phone: sg.guardian.person.phone,
         address: sg.guardian.person.address,
       },
+    }));
+  }
+
+  async getRecentAttendance(personId: string) {
+    const guardian = await this.guardianRepository.findOne({
+      where: { personId },
+    });
+    if (!guardian) return [];
+
+    const studentGuardians = await this.dataSource
+      .getRepository(StudentGuardian)
+      .find({
+        where: { guardianId: guardian.id },
+        relations: { student: { person: true } },
+      });
+
+    if (studentGuardians.length === 0) return [];
+
+    const studentPersonIds = studentGuardians.map((sg) => sg.student.personId);
+
+    const logs = await this.dataSource
+      .getRepository(AttendanceLog)
+      .createQueryBuilder('log')
+      .innerJoinAndSelect('log.attendance', 'att')
+      .innerJoinAndSelect('att.person', 'person')
+      .where('att.personId IN (:...personIds)', { personIds: studentPersonIds })
+      .andWhere('att.date = :today', { today: DateUtils.getCurrentDate() })
+      .orderBy('log.markedAt', 'DESC')
+      .take(2)
+      .getMany();
+
+    return logs.map((log) => ({
+      studentFirstName: log.attendance.person.names.split(' ')[0],
+      typeId: log.typeId,
+      statusId: log.statusId,
+      markedAt: log.markedAt,
     }));
   }
 

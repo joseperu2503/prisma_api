@@ -5,6 +5,7 @@ import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { QueryAttendanceDayLogsDto } from '../dto/query-attendance-day-logs.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
+import { QueryStudentsAttendanceDto } from '../dto/query-students-attendance.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceService } from '../services/attendance.service';
 
@@ -49,6 +50,16 @@ export class AttendanceController {
   @Post('recalculate-statuses')
   recalculateStatuses() {
     return this.attendanceService.recalculateStatuses();
+  }
+
+  @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Post('students')
+  getStudentsAttendance(@Body() dto: QueryStudentsAttendanceDto) {
+    return this.attendanceService.getStudentsAttendance(
+      dto.studentIds,
+      dto.from,
+      dto.to,
+    );
   }
 
   @Auth([RoleId.GUARDIAN], [ClientType.APP])

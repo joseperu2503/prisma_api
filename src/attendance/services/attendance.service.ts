@@ -491,6 +491,25 @@ export class AttendanceService {
     return this.getMyAttendance(student.personId, from, to);
   }
 
+  async getStudentsAttendance(
+    studentIds: string[],
+    from?: string,
+    to?: string,
+  ): Promise<Record<string, Awaited<ReturnType<typeof this.getMyAttendance>>>> {
+    const students = await this.dataSource
+      .getRepository(Student)
+      .find({ where: { id: In(studentIds) } });
+
+    const entries = await Promise.all(
+      students.map(async (s) => {
+        const days = await this.getMyAttendance(s.personId, from, to);
+        return [s.id, days] as const;
+      }),
+    );
+
+    return Object.fromEntries(entries);
+  }
+
   async recalculateStatuses(): Promise<{
     total: number;
     updated: number;

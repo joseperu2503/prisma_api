@@ -30,6 +30,13 @@ export class GuardianController {
     return this.guardianService.findMyStudents(personId);
   }
 
+  @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Get('my-students/recent-attendance')
+  getRecentAttendance(@Req() req: Request) {
+    const personId = (req.user as any).person.id as string;
+    return this.guardianService.getRecentAttendance(personId);
+  }
+
   @Post('create')
   async create(@Body() dto: CreateGuardianDto) {
     const guardian = await this.guardianService.create(dto);
