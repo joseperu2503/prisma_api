@@ -5,12 +5,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { DateUtils } from 'src/common/utils/date.utils';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
-import { Student } from 'src/student/entities/student.entity';
+import { Guardian } from 'src/guardian/entities/guardian.entity';
+import { StudentGuardian } from 'src/guardian/entities/student-guardian.entity';
+import { NotificationsService } from 'src/notifications/services/notifications.service';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
+import { Student } from 'src/student/entities/student.entity';
 import {
   Between,
   DataSource,
@@ -38,10 +42,19 @@ export class AttendanceService {
     private readonly dataSource: DataSource,
 
     private readonly personService: PersonService,
+
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async registerAttendance(params: RegisterAttendanceDto, authUserId: string) {
-    return await this.dataSource.transaction(async (manager) => {
+    let notificationPayload: {
+      studentPersonId: string;
+      studentNames: string;
+      typeId: AttendanceTypeId;
+      statusId: AttendanceStatusId;
+    } | null = null;
+
+    const result = await this.dataSource.transaction(async (manager) => {
       try {
         const person = await manager.findOne(Person, {
           where: {
@@ -214,6 +227,13 @@ export class AttendanceService {
 
         await manager.save(attendanceLog);
 
+        notificationPayload = {
+          studentPersonId: person.id,
+          studentNames: person.names,
+          typeId: params.type as AttendanceTypeId,
+          statusId,
+        };
+
         return {
           success: true,
           message: 'Asistencia registrada correctamente',
@@ -240,6 +260,62 @@ export class AttendanceService {
         );
       }
     });
+
+    if (notificationPayload) {
+      this.notifyGuardians(notificationPayload).catch(() => {});
+    }
+
+    return result;
+  }
+
+  private async notifyGuardians(payload: {
+    studentPersonId: string;
+    studentNames: string;
+    typeId: AttendanceTypeId;
+    statusId: AttendanceStatusId;
+  }): Promise<void> {
+    const student = await this.dataSource
+      .getRepository(Student)
+      .findOneBy({ personId: payload.studentPersonId });
+
+    if (!student) return;
+
+    const studentGuardians = await this.dataSource
+      .getRepository(StudentGuardian)
+      .find({ where: { studentId: student.id }, relations: { guardian: true } });
+
+    if (studentGuardians.length === 0) return;
+
+    const guardianPersonIds = studentGuardians.map((sg) => sg.guardian.personId);
+
+    const users = await this.dataSource
+      .getRepository(User)
+      .find({ where: { personId: In(guardianPersonIds) } });
+
+    if (users.length === 0) return;
+
+    const firstName = payload.studentNames.split(' ')[0];
+    const isEntry = payload.typeId === AttendanceTypeId.ENTRY;
+    const typeLabel = isEntry ? 'Entrada' : 'Salida';
+    const verb = isEntry ? 'llegó' : 'salió';
+
+    let statusLabel: string;
+    if (isEntry) {
+      statusLabel =
+        payload.statusId === AttendanceStatusId.ON_TIME ? 'a tiempo' : 'tarde';
+    } else {
+      statusLabel =
+        payload.statusId === AttendanceStatusId.ON_TIME
+          ? 'a tiempo'
+          : 'de forma temprana';
+    }
+
+    const title = `${typeLabel} registrada`;
+    const body = `${firstName} ${verb} ${statusLabel}`;
+
+    await Promise.all(
+      users.map((u) => this.notificationsService.sendToUser(u.id, title, body)),
+    );
   }
 
   async getAttendanceByDocument(

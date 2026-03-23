@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
 import { Class } from 'src/class/entities/class.entity';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 import { PersonModule } from 'src/person/person.module';
 import { AttendanceController } from './controllers/attendance.controller';
 import { AttendanceScheduleController } from './controllers/attendance-schedule.controller';
@@ -31,6 +32,7 @@ import { AttendanceScheduleService } from './services/attendance-schedule.servic
       AcademicYear,
     ]),
     PersonModule,
+    NotificationsModule,
   ],
   exports: [TypeOrmModule, AttendanceService, AttendanceScheduleService],
 })

@@ -26,6 +26,7 @@ import { SeedCommand } from './seed/commands/seed.command';
 import { SeedModule } from './seed/seed.module';
 import { StudentModule } from './student/student.module';
 import { SubjectModule } from './subject/subject.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { TeacherModule } from './teacher/teacher.module';
 
 @Module({
@@ -60,6 +61,7 @@ import { TeacherModule } from './teacher/teacher.module';
     SubjectModule,
     EnrollmentModule,
     AppVersionModule,
+    NotificationsModule,
   ],
   providers: [SeedCommand],
 })
