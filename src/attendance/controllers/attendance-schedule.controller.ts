@@ -9,12 +9,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateAttendanceScheduleDto } from '../dto/create-attendance-schedule.dto';
 import { AttendanceScheduleService } from '../services/attendance-schedule.service';
 
-@Auth([RoleId.ADMIN], [ClientType.WEB])
+@Auth([RoleId.ADMIN])
 @Controller('attendance/schedules')
 export class AttendanceScheduleController {
   constructor(private readonly service: AttendanceScheduleService) {}

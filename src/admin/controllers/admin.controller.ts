@@ -5,16 +5,15 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
-  Post
+  Post,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateAdminDto } from '../dto/create-admin.dto';
 import { ListAdminDto } from '../dto/list-admin.dto';
 import { AdminService } from '../services/admin.service';
 
-@Auth([RoleId.ADMIN, RoleId.STUDENT], [ClientType.WEB])
+@Auth([RoleId.ADMIN, RoleId.STUDENT])
 @Controller('admins')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}

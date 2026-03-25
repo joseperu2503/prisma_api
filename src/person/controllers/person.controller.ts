@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreatePersonDto } from '../dto/create-person.dto';
 import { SearchPersonDto } from '../dto/search-person.dto';
@@ -24,7 +23,7 @@ import { PersonService } from '../services/person.service';
 export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
-  @Auth([RoleId.ADMIN, RoleId.GUARDIAN, RoleId.STUDENT, RoleId.EMPLOYEE], [ClientType.APP])
+  @Auth([RoleId.ADMIN, RoleId.GUARDIAN, RoleId.STUDENT, RoleId.EMPLOYEE])
   @Get('me')
   getMe(@Req() req: Request) {
     const personId = (req.user as any).person.id as string;
@@ -55,13 +54,15 @@ export class PersonController {
     @Res() res: Response,
   ) {
     if (!documentNumbers) {
-      return res
-        .status(400)
-        .json({ message: 'Debe proporcionar números de documento de personas' });
+      return res.status(400).json({
+        message: 'Debe proporcionar números de documento de personas',
+      });
     }
 
     const personDocumentNumbers = documentNumbers.split(',');
-    const buffer = await this.personService.generateQrPdf(personDocumentNumbers);
+    const buffer = await this.personService.generateQrPdf(
+      personDocumentNumbers,
+    );
 
     res.set({
       'Content-Type': 'application/pdf',

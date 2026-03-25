@@ -6,17 +6,16 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
-  Post
+  Post,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateClassDto } from '../dto/create-class.dto';
 import { ListClassDto } from '../dto/list-class.dto';
 import { UpdateClassDto } from '../dto/update-class.dto';
 import { ClassService } from '../services/class.service';
 
-@Auth([RoleId.ADMIN], [ClientType.WEB])
+@Auth([RoleId.ADMIN])
 @Controller('classes')
 export class ClassController {
   constructor(private readonly service: ClassService) {}

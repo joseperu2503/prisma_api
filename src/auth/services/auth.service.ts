@@ -10,8 +10,6 @@ import {
   LoginRequestDto,
 } from '../dto/login-request.dto';
 import { User } from '../entities/user.entity';
-import { ClientType } from '../enums/client-type.enum';
-import { RoleId } from '../enums/role-id.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { FacebookService } from './facebook.service';
 import { GoogleService } from './google.service';
@@ -27,7 +25,7 @@ export class AuthService {
   ) {}
 
   async login(params: LoginRequestDto) {
-    const { password, documentNumber, client } = params;
+    const { password, documentNumber } = params;
 
     const user = await this.userRepository.findOne({
       where: { person: { documentNumber } },
@@ -48,22 +46,7 @@ export class AuthService {
       throw new UnauthorizedException(`Credenciales inválidas`);
     }
 
-    const roleCodes = user.person.personRoles.map((pr) => pr.role.id);
-
-    const allowedByClient: Record<ClientType, RoleId[]> = {
-      web: [RoleId.ADMIN],
-      app: [RoleId.ADMIN, RoleId.STUDENT],
-    };
-
-    const allowed = allowedByClient[client];
-
-    if (!roleCodes.some((r) => allowed.includes(r))) {
-      throw new UnauthorizedException(
-        'El usuario no tiene permisos para acceder',
-      );
-    }
-
-    return this.buildAuthResponse(user, client);
+    return this.buildAuthResponse(user);
   }
 
   async loginGoogle(params: LoginGoogleRequestDto): Promise<AuthResponseDto> {
@@ -116,10 +99,7 @@ export class AuthService {
     return token;
   }
 
-  private buildAuthResponse(
-    user: User,
-    client: ClientType = ClientType.WEB,
-  ): AuthResponseDto {
+  private buildAuthResponse(user: User): AuthResponseDto {
     const roleCodes = user.person.personRoles.map((pr) => pr.role.id);
 
     return {
@@ -134,7 +114,6 @@ export class AuthService {
       },
       token: this.getJwt({
         userId: user.id,
-        client,
         roles: roleCodes,
         personId: user.person.id,
         names: user.person.names,

@@ -1,5 +1,4 @@
-import { IsEnum, IsIn, IsString } from 'class-validator';
-import { ClientType } from '../enums/client-type.enum';
+import { IsIn, IsString } from 'class-validator';
 
 export class LoginRequestDto {
   @IsString()
@@ -7,9 +6,6 @@ export class LoginRequestDto {
 
   @IsString()
   password: string;
-
-  @IsEnum(ClientType)
-  client: ClientType;
 }
 
 export class LoginGoogleRequestDto {

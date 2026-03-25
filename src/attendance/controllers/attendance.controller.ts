@@ -1,7 +1,14 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
-import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { QueryAttendanceDayLogsDto } from '../dto/query-attendance-day-logs.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
@@ -52,7 +59,7 @@ export class AttendanceController {
     return this.attendanceService.recalculateStatuses();
   }
 
-  @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Auth([RoleId.GUARDIAN])
   @Post('students')
   getStudentsAttendance(@Body() dto: QueryStudentsAttendanceDto) {
     return this.attendanceService.getStudentsAttendance(
@@ -62,7 +69,7 @@ export class AttendanceController {
     );
   }
 
-  @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Auth([RoleId.GUARDIAN])
   @Get('student/:studentId')
   getStudentAttendance(
     @Param('studentId', ParseUUIDPipe) studentId: string,

@@ -8,11 +8,10 @@ import {
   Patch,
   Post,
   UploadedFile,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
 import { ListEnrollmentDto } from '../dto/list-enrollment.dto';
@@ -20,7 +19,7 @@ import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
 import { EnrollmentService } from '../services/enrollment.service';
 import { ImportService } from '../services/import.service';
 
-@Auth([RoleId.ADMIN], [ClientType.WEB])
+@Auth([RoleId.ADMIN])
 @Controller('enrollments')
 export class EnrollmentController {
   constructor(

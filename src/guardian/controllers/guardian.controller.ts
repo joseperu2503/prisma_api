@@ -11,26 +11,25 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateGuardianDto } from '../dto/create-guardian.dto';
 import { ListGuardianDto } from '../dto/list-guardian.dto';
 import { UpdateGuardianDto } from '../dto/update-guardian.dto';
 import { GuardianService } from '../services/guardian.service';
 
-@Auth([RoleId.ADMIN], [ClientType.WEB])
+@Auth([RoleId.ADMIN])
 @Controller('guardians')
 export class GuardianController {
   constructor(private readonly guardianService: GuardianService) {}
 
-  @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Auth([RoleId.GUARDIAN])
   @Get('my-students')
   getMyStudents(@Req() req: Request) {
     const personId = (req.user as any).person.id as string;
     return this.guardianService.findMyStudents(personId);
   }
 
-  @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Auth([RoleId.GUARDIAN])
   @Get('my-students/:studentId/person')
   getStudentPerson(
     @Req() req: Request,
@@ -40,7 +39,7 @@ export class GuardianController {
     return this.guardianService.getStudentPersonData(personId, studentId);
   }
 
-  @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Auth([RoleId.GUARDIAN])
   @Get('my-students/recent-attendance')
   getRecentAttendance(@Req() req: Request) {
     const personId = (req.user as any).person.id as string;

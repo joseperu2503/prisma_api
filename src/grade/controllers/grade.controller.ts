@@ -9,7 +9,6 @@ import {
   Post,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { ClientType } from 'src/auth/enums/client-type.enum';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { AssignGradeToYearDto } from '../dto/assign-grade-to-year.dto';
 import { CreateGradeDto } from '../dto/create-grade.dto';
@@ -17,7 +16,7 @@ import { ListGradesDto } from '../dto/list-grades.dto';
 import { UpdateGradeDto } from '../dto/update-grade.dto';
 import { GradeService } from '../services/grade.service';
 
-@Auth([RoleId.ADMIN], [ClientType.WEB])
+@Auth([RoleId.ADMIN])
 @Controller('grades')
 export class GradeController {
   constructor(private readonly gradeService: GradeService) {}
