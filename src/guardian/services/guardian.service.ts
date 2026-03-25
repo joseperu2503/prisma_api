@@ -8,9 +8,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { AttendanceLog } from 'src/attendance/entities/attendance-log.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { DateUtils } from 'src/common/utils/date.utils';
+import { Student } from 'src/student/entities/student.entity';
 import { RoleService } from 'src/auth/services/role.service';
 import { UserService } from 'src/auth/services/user.service';
+import { DateUtils } from 'src/common/utils/date.utils';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
@@ -400,6 +401,8 @@ export class GuardianService {
       .createQueryBuilder('log')
       .innerJoinAndSelect('log.attendance', 'att')
       .innerJoinAndSelect('att.person', 'person')
+      .innerJoinAndSelect('log.type', 'type')
+      .innerJoinAndSelect('log.status', 'status')
       .where('att.personId IN (:...personIds)', { personIds: studentPersonIds })
       .andWhere('att.date = :today', { today: DateUtils.getCurrentDate() })
       .orderBy('log.markedAt', 'DESC')
@@ -411,7 +414,32 @@ export class GuardianService {
       typeId: log.typeId,
       statusId: log.statusId,
       markedAt: log.markedAt,
+      typeName: log.type.name,
+      statusName: log.status.name,
     }));
+  }
+
+  async getStudentPersonData(guardianPersonId: string, studentId: string) {
+    const guardian = await this.guardianRepository.findOne({
+      where: { personId: guardianPersonId },
+    });
+    if (!guardian) throw new NotFoundException('No estás registrado como apoderado');
+
+    const studentGuardian = await this.dataSource
+      .getRepository(StudentGuardian)
+      .findOne({ where: { guardianId: guardian.id, studentId } });
+
+    if (!studentGuardian)
+      throw new NotFoundException('Estudiante no encontrado');
+
+    const student = await this.dataSource.getRepository(Student).findOne({
+      where: { id: studentId },
+      relations: { person: { documentType: true, gender: true } },
+    });
+
+    if (!student) throw new NotFoundException('Estudiante no encontrado');
+
+    return this.personService.mapPersonData(student.person);
   }
 
   async syncStudentGuardians(

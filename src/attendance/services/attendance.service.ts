@@ -9,8 +9,8 @@ import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { DateUtils } from 'src/common/utils/date.utils';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
-import { Guardian } from 'src/guardian/entities/guardian.entity';
 import { StudentGuardian } from 'src/guardian/entities/student-guardian.entity';
+import { NotificationType } from 'src/notifications/enums/notification-type.enum';
 import { NotificationsService } from 'src/notifications/services/notifications.service';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
@@ -52,6 +52,7 @@ export class AttendanceService {
       studentNames: string;
       typeId: AttendanceTypeId;
       statusId: AttendanceStatusId;
+      markedAt: Date;
     } | null = null;
 
     const result = await this.dataSource.transaction(async (manager) => {
@@ -232,6 +233,7 @@ export class AttendanceService {
           studentNames: person.names,
           typeId: params.type as AttendanceTypeId,
           statusId,
+          markedAt: date,
         };
 
         return {
@@ -273,6 +275,7 @@ export class AttendanceService {
     studentNames: string;
     typeId: AttendanceTypeId;
     statusId: AttendanceStatusId;
+    markedAt: Date;
   }): Promise<void> {
     const student = await this.dataSource
       .getRepository(Student)
@@ -282,11 +285,16 @@ export class AttendanceService {
 
     const studentGuardians = await this.dataSource
       .getRepository(StudentGuardian)
-      .find({ where: { studentId: student.id }, relations: { guardian: true } });
+      .find({
+        where: { studentId: student.id },
+        relations: { guardian: true },
+      });
 
     if (studentGuardians.length === 0) return;
 
-    const guardianPersonIds = studentGuardians.map((sg) => sg.guardian.personId);
+    const guardianPersonIds = studentGuardians.map(
+      (sg) => sg.guardian.personId,
+    );
 
     const users = await this.dataSource
       .getRepository(User)
@@ -310,11 +318,31 @@ export class AttendanceService {
           : 'de forma temprana';
     }
 
-    const title = `${typeLabel} registrada`;
-    const body = `${firstName} ${verb} ${statusLabel}`;
+    const time = payload.markedAt.toLocaleTimeString('es-PE', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'America/Lima',
+    });
+    const dateStr = payload.markedAt.toLocaleDateString('es-PE', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'America/Lima',
+    });
+
+    const title = `${typeLabel} registrada · ${time}`;
+    const body = `${firstName} ${verb} ${statusLabel} · ${dateStr}`;
 
     await Promise.all(
-      users.map((u) => this.notificationsService.sendToUser(u.id, title, body)),
+      users.map((u) =>
+        this.notificationsService.sendToUser({
+          userId: u.id,
+          title,
+          body,
+          type: NotificationType.ATTENDANCE,
+        }),
+      ),
     );
   }
 
@@ -495,19 +523,43 @@ export class AttendanceService {
     studentIds: string[],
     from?: string,
     to?: string,
-  ): Promise<Record<string, Awaited<ReturnType<typeof this.getMyAttendance>>>> {
+  ) {
     const students = await this.dataSource
       .getRepository(Student)
-      .find({ where: { id: In(studentIds) } });
+      .find({ where: { id: In(studentIds) }, relations: { person: true } });
 
-    const entries = await Promise.all(
-      students.map(async (s) => {
-        const days = await this.getMyAttendance(s.personId, from, to);
-        return [s.id, days] as const;
-      }),
-    );
+    if (students.length === 0) return [];
 
-    return Object.fromEntries(entries);
+    const personIds = students.map((s) => s.personId);
+    const personToStudentId = new Map(students.map((s) => [s.personId, s.id]));
+
+    const qb = this.dataSource
+      .getRepository(AttendanceLog)
+      .createQueryBuilder('log')
+      .innerJoinAndSelect('log.attendance', 'a')
+      .innerJoinAndSelect('a.person', 'person')
+      .leftJoinAndSelect('log.type', 'type')
+      .leftJoinAndSelect('log.status', 'status')
+      .where('a.personId IN (:...personIds)', { personIds })
+      .orderBy('log.markedAt', 'ASC');
+
+    if (from) qb.andWhere('a.date >= :from', { from });
+    if (to) qb.andWhere('a.date <= :to', { to });
+
+    const logs = await qb.getMany();
+
+    return logs.map((log) => ({
+      studentId: personToStudentId.get(log.attendance.personId),
+      names: log.attendance.person.names,
+      paternalLastName: log.attendance.person.paternalLastName,
+      maternalLastName: log.attendance.person.maternalLastName,
+      date: log.attendance.date,
+      typeId: log.typeId,
+      typeName: log.type?.name,
+      statusId: log.statusId,
+      statusName: log.status?.name,
+      markedAt: log.markedAt,
+    }));
   }
 
   async recalculateStatuses(): Promise<{

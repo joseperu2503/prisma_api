@@ -8,9 +8,13 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ClientType } from 'src/auth/enums/client-type.enum';
+import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreatePersonDto } from '../dto/create-person.dto';
 import { SearchPersonDto } from '../dto/search-person.dto';
 import { UpdatePersonDto } from '../dto/update-person.dto';
@@ -19,6 +23,13 @@ import { PersonService } from '../services/person.service';
 @Controller('people')
 export class PersonController {
   constructor(private readonly personService: PersonService) {}
+
+  @Auth([RoleId.ADMIN, RoleId.GUARDIAN, RoleId.STUDENT, RoleId.EMPLOYEE], [ClientType.APP])
+  @Get('me')
+  getMe(@Req() req: Request) {
+    const personId = (req.user as any).person.id as string;
+    return this.personService.getMyPersonData(personId);
+  }
 
   @Post('search')
   search(@Body() dto: SearchPersonDto) {

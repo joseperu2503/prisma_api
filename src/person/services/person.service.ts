@@ -317,6 +317,31 @@ export class PersonService {
     return person;
   }
 
+  async getMyPersonData(personId: string) {
+    const person = await this.personRepository.findOne({
+      where: { id: personId },
+      relations: { documentType: true, gender: true },
+    });
+    if (!person) throw new NotFoundException('Persona no encontrada');
+    return this.mapPersonData(person);
+  }
+
+  mapPersonData(person: Person) {
+    return {
+      names: person.names,
+      paternalLastName: person.paternalLastName,
+      maternalLastName: person.maternalLastName,
+      documentType: person.documentType?.name ?? null,
+      documentTypeId: person.documentTypeId,
+      documentNumber: person.documentNumber,
+      email: person.email ?? null,
+      phone: person.phone ?? null,
+      birthDate: person.birthDate ?? null,
+      address: person.address ?? null,
+      gender: person.gender?.name ?? null,
+    };
+  }
+
   async update(id: string, dto: UpdatePersonDto): Promise<Person> {
     const person = await this.findOne(id);
 

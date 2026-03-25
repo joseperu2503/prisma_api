@@ -31,6 +31,16 @@ export class GuardianController {
   }
 
   @Auth([RoleId.GUARDIAN], [ClientType.APP])
+  @Get('my-students/:studentId/person')
+  getStudentPerson(
+    @Req() req: Request,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+  ) {
+    const personId = (req.user as any).person.id as string;
+    return this.guardianService.getStudentPersonData(personId, studentId);
+  }
+
+  @Auth([RoleId.GUARDIAN], [ClientType.APP])
   @Get('my-students/recent-attendance')
   getRecentAttendance(@Req() req: Request) {
     const personId = (req.user as any).person.id as string;

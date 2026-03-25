@@ -4,6 +4,7 @@ import * as admin from 'firebase-admin';
 import { In, Repository } from 'typeorm';
 import { RegisterFcmTokenDto } from '../dto/register-fcm-token.dto';
 import { FcmToken } from '../entities/fcm-token.entity';
+import { NotificationType } from '../enums/notification-type.enum';
 
 @Injectable()
 export class NotificationsService {
@@ -29,19 +30,25 @@ export class NotificationsService {
     await this.fcmTokenRepo.delete({ userId });
   }
 
-  async sendToUser(
-    userId: string,
-    title: string,
-    body: string,
-    data?: Record<string, string>,
-  ): Promise<void> {
+  async sendToUser(params: {
+    userId: string;
+    title: string;
+    body: string;
+    type?: NotificationType;
+    data?: Record<string, string>;
+  }): Promise<void> {
+    const { userId, title, body, type, data } = params;
+
     const tokens = await this.fcmTokenRepo.find({ where: { userId } });
     if (tokens.length === 0) return;
 
     const messages: admin.messaging.Message[] = tokens.map((t) => ({
       token: t.token,
       notification: { title, body },
-      ...(data && { data }),
+      data: {
+        ...(data ?? {}),
+        ...(type && { type }), // 👈 aquí agregas el type
+      },
     }));
 
     try {
