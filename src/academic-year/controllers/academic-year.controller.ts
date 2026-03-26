@@ -30,6 +30,11 @@ export class AcademicYearController {
     return this.academicYearService.findAll(body);
   }
 
+  @Get('active')
+  findActive() {
+    return this.academicYearService.findActive();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.academicYearService.findOne(id);

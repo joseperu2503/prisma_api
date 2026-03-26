@@ -616,6 +616,65 @@ export class AttendanceService {
     return { total: logs.length, updated, skipped };
   }
 
+  async getAttendanceDayStudents(
+    academicYearId: string,
+    date: string,
+    classId?: string,
+  ) {
+    const enrollmentRepo = this.dataSource.getRepository(Enrollment);
+    const whereClause: any = { academicYearId, isActive: true };
+    if (classId) whereClause.classId = classId;
+
+    const enrollments = await enrollmentRepo.find({
+      where: whereClause,
+      relations: { student: { person: true }, class: true },
+      order: { class: { name: 'ASC' } },
+    });
+
+    if (enrollments.length === 0) return [];
+
+    const personIds = enrollments.map((e) => e.student.personId);
+
+    const logs = await this.dataSource
+      .getRepository(AttendanceLog)
+      .createQueryBuilder('log')
+      .innerJoinAndSelect('log.attendance', 'att')
+      .leftJoinAndSelect('log.status', 'status')
+      .where('att.personId IN (:...personIds)', { personIds })
+      .andWhere('att.date = :date', { date })
+      .getMany();
+
+    const logsByPerson = new Map<string, AttendanceLog[]>();
+    for (const log of logs) {
+      const pid = log.attendance.personId;
+      if (!logsByPerson.has(pid)) logsByPerson.set(pid, []);
+      logsByPerson.get(pid)!.push(log);
+    }
+
+    return enrollments.map((e) => {
+      const person = e.student.person;
+      const studentLogs = logsByPerson.get(person.id) ?? [];
+      const entryLog = studentLogs.find((l) => l.typeId === AttendanceTypeId.ENTRY);
+      const exitLog = studentLogs.find((l) => l.typeId === AttendanceTypeId.EXIT);
+      return {
+        studentId: e.studentId,
+        names: person.names,
+        paternalLastName: person.paternalLastName,
+        maternalLastName: person.maternalLastName,
+        className: e.class.name,
+        classId: e.classId,
+        entry: entryLog
+          ? {
+              statusId: entryLog.statusId,
+              statusName: entryLog.status?.name ?? null,
+              markedAt: entryLog.markedAt,
+            }
+          : null,
+        exit: exitLog ? { markedAt: exitLog.markedAt } : null,
+      };
+    });
+  }
+
   async getAttendanceDayLogs(dto: QueryAttendanceDayLogsDto) {
     const { classId, studentId, academicYearId, date, page, limit } = dto;
 

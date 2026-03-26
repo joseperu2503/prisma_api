@@ -66,6 +66,10 @@ export class ClassService {
     return this.repo.find({ order: { name: 'ASC' } });
   }
 
+  async findAllActive() {
+    return this.repo.find({ where: { isActive: true }, order: { name: 'ASC' } });
+  }
+
   async findOne(id: string) {
     const record = await this.repo.findOneBy({ id });
     if (!record) {

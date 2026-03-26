@@ -11,6 +11,7 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { QueryAttendanceDayLogsDto } from '../dto/query-attendance-day-logs.dto';
+import { QueryAttendanceDayStudentsDto } from '../dto/query-attendance-day-students.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { QueryStudentsAttendanceDto } from '../dto/query-students-attendance.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
@@ -34,6 +35,15 @@ export class AttendanceController {
   @Post('day-logs')
   getDayLogs(@Body() dto: QueryAttendanceDayLogsDto) {
     return this.attendanceService.getAttendanceDayLogs(dto);
+  }
+
+  @Post('day-students')
+  getDayStudents(@Body() dto: QueryAttendanceDayStudentsDto) {
+    return this.attendanceService.getAttendanceDayStudents(
+      dto.academicYearId,
+      dto.date,
+      dto.classId,
+    );
   }
 
   @Get('last-attendances-day')

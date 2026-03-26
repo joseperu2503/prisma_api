@@ -167,6 +167,13 @@ export class AcademicYearService {
     return await this.academicYearRepository.save(academicYear);
   }
 
+  async findActive() {
+    return this.academicYearRepository.findOne({
+      where: { isActive: true },
+      order: { startDate: 'DESC' },
+    });
+  }
+
   async findByName(name: string) {
     return await this.academicYearRepository.findOneBy({ name });
   }

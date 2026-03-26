@@ -30,6 +30,11 @@ export class ClassController {
     return this.service.findAll(body);
   }
 
+  @Get('active')
+  findActive() {
+    return this.service.findAllActive();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.findOne(id);
