@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import PDFDocument from 'pdfkit';
 import * as QRCode from 'qrcode';
 import { Role } from 'src/auth/entities/role.entity';
+import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { DataSource, In, Not, QueryRunner, Repository } from 'typeorm';
 import { CreatePersonDto } from '../dto/create-person.dto';
@@ -370,7 +371,28 @@ export class PersonService {
 
   async remove(id: string): Promise<void> {
     const person = await this.findOne(id);
-    await this.personRepository.remove(person);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.delete(User, { personId: id });
+      await queryRunner.manager.remove(Person, person);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Error al eliminar la persona',
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async updateOrCreatePerson(dto: CreatePersonDto, runner?: QueryRunner) {
@@ -463,7 +485,6 @@ export class PersonService {
       }
 
       return person;
-      
     } catch (error) {
       if (!isExternalTransaction) {
         await queryRunner.rollbackTransaction();

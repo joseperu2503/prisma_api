@@ -66,20 +66,33 @@ export class GuardianController {
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateGuardianDto,
   ) {
-    return this.guardianService.update(id, dto);
+    await this.guardianService.update(id, dto);
+
+    return {
+      success: true,
+      message: 'Apoderado actualizado correctamente',
+    };
   }
 
   @Patch(':id/toggle-active')
-  toggleActive(@Param('id', ParseUUIDPipe) id: string) {
-    return this.guardianService.toggleActive(id);
+  async toggleActive(@Param('id', ParseUUIDPipe) id: string) {
+    this.guardianService.toggleActive(id);
+    return {
+      success: true,
+      message: 'Apoderado actualizado correctamente',
+    };
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.guardianService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    await this.guardianService.remove(id);
+    return {
+      success: true,
+      message: 'Apoderado eliminado correctamente',
+    };
   }
 }

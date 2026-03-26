@@ -8,13 +8,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { AttendanceLog } from 'src/attendance/entities/attendance-log.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { Student } from 'src/student/entities/student.entity';
 import { RoleService } from 'src/auth/services/role.service';
 import { UserService } from 'src/auth/services/user.service';
 import { DateUtils } from 'src/common/utils/date.utils';
 import { PersonRole } from 'src/person/entities/person-role.entity';
 import { Person } from 'src/person/entities/person.entity';
 import { PersonService } from 'src/person/services/person.service';
+import { Student } from 'src/student/entities/student.entity';
 import { DataSource, In, QueryRunner, Repository } from 'typeorm';
 import { CreateGuardianDto } from '../dto/create-guardian.dto';
 import { ListGuardianDto } from '../dto/list-guardian.dto';
@@ -95,7 +95,13 @@ export class GuardianService {
       }
 
       if (dto.studentIds?.length) {
-        this.syncStudentGuardians(dto.studentIds, [guardian.id], queryRunner);
+        await this.syncStudentGuardians(
+          {
+            guardianIds: [guardian.id],
+            studentIds: dto.studentIds,
+          },
+          queryRunner,
+        );
       }
 
       if (!isExternalTransaction) {
@@ -286,11 +292,16 @@ export class GuardianService {
       }
 
       if (dto.studentIds !== undefined) {
-        await this.syncStudentGuardians([id], dto.studentIds, queryRunner);
+        await this.syncStudentGuardians(
+          {
+            guardianIds: [id],
+            studentIds: dto.studentIds,
+          },
+          queryRunner,
+        );
       }
 
       await queryRunner.commitTransaction();
-      return this.findOne(id);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error instanceof HttpException) throw error;
@@ -319,21 +330,14 @@ export class GuardianService {
 
     personRole.isActive = !personRole.isActive;
     await this.personRoleRepository.save(personRole);
-
-    return {
-      id: guardian.id,
-      isActive: personRole.isActive,
-      message: personRole.isActive
-        ? 'Apoderado activado'
-        : 'Apoderado desactivado',
-    };
   }
 
   async findMyStudents(personId: string) {
     const guardian = await this.guardianRepository.findOne({
       where: { personId },
     });
-    if (!guardian) throw new NotFoundException('No estás registrado como apoderado');
+    if (!guardian)
+      throw new NotFoundException('No estás registrado como apoderado');
 
     const studentGuardians = await this.dataSource
       .getRepository(StudentGuardian)
@@ -423,7 +427,8 @@ export class GuardianService {
     const guardian = await this.guardianRepository.findOne({
       where: { personId: guardianPersonId },
     });
-    if (!guardian) throw new NotFoundException('No estás registrado como apoderado');
+    if (!guardian)
+      throw new NotFoundException('No estás registrado como apoderado');
 
     const studentGuardian = await this.dataSource
       .getRepository(StudentGuardian)
@@ -443,8 +448,7 @@ export class GuardianService {
   }
 
   async syncStudentGuardians(
-    guardianIds: string[],
-    studentIds: string[],
+    params: { guardianIds: string[]; studentIds: string[] },
     runner?: QueryRunner,
   ) {
     const queryRunner = runner ?? this.dataSource.createQueryRunner();
@@ -456,6 +460,8 @@ export class GuardianService {
     }
 
     try {
+      const { guardianIds, studentIds } = params;
+
       // 1. Fetch existing links involving any of the given guardians or students
       const existing = await queryRunner.manager.find(StudentGuardian, {
         where: [
@@ -519,6 +525,15 @@ export class GuardianService {
   async remove(id: string) {
     const guardian = await this.guardianRepository.findOne({ where: { id } });
     if (!guardian) throw new NotFoundException('Apoderado no encontrado');
+
+    const studentCount = await this.dataSource
+      .getRepository(StudentGuardian)
+      .countBy({ guardianId: id });
+
+    if (studentCount > 0)
+      throw new ConflictException(
+        `No se puede eliminar el apoderado porque tiene ${studentCount} estudiante(s) asignado(s)`,
+      );
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
