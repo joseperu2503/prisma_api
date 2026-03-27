@@ -8,6 +8,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
+import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateAdminDto } from '../dto/create-admin.dto';
 import { ListAdminDto } from '../dto/list-admin.dto';
@@ -39,7 +41,10 @@ export class AdminController {
   }
 
   @Patch(':id/toggle-active')
-  toggleActive(@Param('id', ParseUUIDPipe) id: string) {
-    return this.adminService.toggleActive(id);
+  toggleActive(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() currentUser: User,
+  ) {
+    return this.adminService.toggleActive(id, currentUser.id);
   }
 }

@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -181,7 +182,7 @@ export class AdminService {
     };
   }
 
-  async toggleActive(id: string) {
+  async toggleActive(id: string, currentUserId: string) {
     const user = await this.userRepository.findOne({
       where: { id },
       relations: { person: { personRoles: { role: true } } },
@@ -197,6 +198,10 @@ export class AdminService {
 
     if (!adminPersonRole) {
       throw new NotFoundException(`Rol de administrador no encontrado`);
+    }
+
+    if (id === currentUserId && adminPersonRole.isActive) {
+      throw new ForbiddenException(`No puedes desactivarte a ti mismo`);
     }
 
     adminPersonRole.isActive = !adminPersonRole.isActive;
