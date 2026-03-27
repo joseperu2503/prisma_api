@@ -65,9 +65,9 @@ export class NotificationsService {
           ) {
             invalidTokens.push(tokens[index].token);
           }
-          this.logger.warn(
-            `FCM send failed for token ${tokens[index].token}: ${code}`,
-          );
+          // this.logger.warn(
+          //   `FCM send failed for token ${tokens[index].token}: ${code}`,
+          // );
         }
       });
 
