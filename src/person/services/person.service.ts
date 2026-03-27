@@ -421,60 +421,6 @@ export class PersonService {
     }
   }
 
-  // async updateOrCreatePerson(dto: CreatePersonDto, runner?: QueryRunner) {
-  //   const queryRunner = runner ?? this.dataSource.createQueryRunner();
-  //   const isExternalTransaction = !!runner;
-
-  //   if (!isExternalTransaction) {
-  //     await queryRunner.connect();
-  //     await queryRunner.startTransaction();
-  //   }
-
-  //   try {
-  //     const { ...newPerson } = dto;
-
-  //     let person: Person | null = null;
-
-  //     const existingPerson = await queryRunner.manager.findOne(Person, {
-  //       where: {
-  //         documentTypeId: newPerson.documentTypeId,
-  //         documentNumber: newPerson.documentNumber,
-  //       },
-  //     });
-
-  //     if (existingPerson) {
-  //       queryRunner.manager.merge(Person, existingPerson, newPerson);
-  //       person = await queryRunner.manager.save(existingPerson);
-  //     } else {
-  //       person = queryRunner.manager.create(Person, { ...newPerson });
-  //       person = await queryRunner.manager.save(person);
-  //     }
-
-  //     return person;
-  //   } catch (error) {
-  //     if (!isExternalTransaction) {
-  //       await queryRunner.rollbackTransaction();
-  //     }
-
-  //     if (error instanceof HttpException) {
-  //       throw error;
-  //     }
-
-  //     throw new HttpException(
-  //       {
-  //         success: false,
-  //         message: 'Error al crear la persona',
-  //         error: error.message,
-  //       },
-  //       HttpStatus.INTERNAL_SERVER_ERROR,
-  //     );
-  //   } finally {
-  //     if (!isExternalTransaction) {
-  //       await queryRunner.release();
-  //     }
-  //   }
-  // }
-
   async findOrCreate(personDto: FindOrCreatePersonDto, runner?: QueryRunner) {
     const queryRunner = runner ?? this.dataSource.createQueryRunner();
     const isExternalTransaction = !!runner;
