@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsOptional, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsOptional,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 import { UpdatePersonDto } from 'src/person/dto/update-person.dto';
 
 export class UpdateGuardianDto {
@@ -12,4 +18,8 @@ export class UpdateGuardianDto {
   @IsArray()
   @IsUUID('4', { each: true })
   studentIds?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

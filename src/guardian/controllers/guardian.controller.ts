@@ -17,7 +17,6 @@ import { ListGuardianDto } from '../dto/list-guardian.dto';
 import { UpdateGuardianDto } from '../dto/update-guardian.dto';
 import { GuardianService } from '../services/guardian.service';
 
-@Auth([RoleId.ADMIN])
 @Controller('guardians')
 export class GuardianController {
   constructor(private readonly guardianService: GuardianService) {}
@@ -46,6 +45,7 @@ export class GuardianController {
     return this.guardianService.getRecentAttendance(personId);
   }
 
+  @Auth([RoleId.ADMIN])
   @Post('create')
   async create(@Body() dto: CreateGuardianDto) {
     const guardian = await this.guardianService.create(dto);
@@ -55,16 +55,19 @@ export class GuardianController {
     };
   }
 
+  @Auth([RoleId.ADMIN])
   @Post('list')
   findAll(@Body() body: ListGuardianDto) {
     return this.guardianService.findAll(body);
   }
 
+  @Auth([RoleId.ADMIN])
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.guardianService.findOne(id);
   }
 
+  @Auth([RoleId.ADMIN])
   @Patch(':id')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -78,15 +81,7 @@ export class GuardianController {
     };
   }
 
-  @Patch(':id/toggle-active')
-  async toggleActive(@Param('id', ParseUUIDPipe) id: string) {
-    this.guardianService.toggleActive(id);
-    return {
-      success: true,
-      message: 'Apoderado actualizado correctamente',
-    };
-  }
-
+  @Auth([RoleId.ADMIN])
   @Delete(':id')
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.guardianService.remove(id);

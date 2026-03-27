@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsDefined,
   IsOptional,
   IsUUID,
@@ -18,4 +19,8 @@ export class CreateGuardianDto {
   @IsArray()
   @IsUUID('4', { each: true })
   studentIds?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

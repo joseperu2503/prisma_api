@@ -28,9 +28,6 @@ export class GuardianService {
     @InjectRepository(Guardian)
     private readonly guardianRepository: Repository<Guardian>,
 
-    @InjectRepository(PersonRole)
-    private readonly personRoleRepository: Repository<PersonRole>,
-
     private readonly dataSource: DataSource,
     private readonly personService: PersonService,
 
@@ -101,6 +98,14 @@ export class GuardianService {
             studentIds: dto.studentIds,
           },
           queryRunner,
+        );
+      }
+
+      if (dto.isActive !== undefined) {
+        await queryRunner.manager.update(
+          PersonRole,
+          { personId: person.id, roleId: RoleId.GUARDIAN },
+          { isActive: dto.isActive },
         );
       }
 
@@ -284,6 +289,7 @@ export class GuardianService {
         where: { id },
         relations: { person: true },
       });
+
       if (!guardian) throw new NotFoundException('Apoderado no encontrado');
 
       if (dto.person) {
@@ -298,6 +304,14 @@ export class GuardianService {
             studentIds: dto.studentIds,
           },
           queryRunner,
+        );
+      }
+
+      if (dto.isActive !== undefined) {
+        await queryRunner.manager.update(
+          PersonRole,
+          { personId: guardian.personId, roleId: RoleId.GUARDIAN },
+          { isActive: dto.isActive },
         );
       }
 
@@ -316,20 +330,6 @@ export class GuardianService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  async toggleActive(id: string) {
-    const guardian = await this.guardianRepository.findOne({ where: { id } });
-    if (!guardian) throw new NotFoundException('Apoderado no encontrado');
-
-    const personRole = await this.personRoleRepository.findOne({
-      where: { personId: guardian.personId, roleId: RoleId.GUARDIAN },
-    });
-    if (!personRole)
-      throw new NotFoundException('Rol de apoderado no encontrado');
-
-    personRole.isActive = !personRole.isActive;
-    await this.personRoleRepository.save(personRole);
   }
 
   async findMyStudents(personId: string) {
@@ -427,6 +427,7 @@ export class GuardianService {
     const guardian = await this.guardianRepository.findOne({
       where: { personId: guardianPersonId },
     });
+
     if (!guardian)
       throw new NotFoundException('No estás registrado como apoderado');
 
