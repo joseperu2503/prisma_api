@@ -1,10 +1,13 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-
+import { Body, Controller, HttpCode, Patch, Post } from '@nestjs/common';
+import { Auth } from '../decorators/auth.decorator';
+import { GetUser } from '../decorators/get-user.decorator';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 import {
   LoginFacebookRequestDto,
   LoginGoogleRequestDto,
   LoginRequestDto,
 } from '../dto/login-request.dto';
+import { User } from '../entities/user.entity';
 import { AuthService } from '../services/auth.service';
 
 @Controller('auth')
@@ -25,5 +28,13 @@ export class AuthController {
   @Post('login-facebook')
   loginFacebook(@Body() request: LoginFacebookRequestDto) {
     return this.authService.loginFacebook(request);
+  }
+
+  @Auth()
+  @Patch('change-password')
+  async changePassword(@GetUser() user: User, @Body() dto: ChangePasswordDto) {
+    console.log('user', user);
+    await this.authService.changePassword(user.id, dto);
+    return { success: true, message: 'Contraseña actualizada correctamente' };
   }
 }

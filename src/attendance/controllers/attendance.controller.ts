@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
+import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { QueryAttendanceDayLogsDto } from '../dto/query-attendance-day-logs.dto';
 import { QueryAttendanceDayStudentsDto } from '../dto/query-attendance-day-students.dto';
@@ -91,7 +92,7 @@ export class AttendanceController {
 
   @Get('my-attendance')
   getMyAttendance(
-    @GetUser() user: any,
+    @GetUser() user: User,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {

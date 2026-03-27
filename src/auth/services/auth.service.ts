@@ -1,9 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { AuthResponseDto } from '../dto/auth-response.dto';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 import {
   LoginFacebookRequestDto,
   LoginGoogleRequestDto,
@@ -92,6 +97,21 @@ export class AuthService {
     }
 
     return this.buildAuthResponse(user);
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) throw new UnauthorizedException('Usuario no encontrado');
+
+    if (!bcrypt.compareSync(dto.currentPassword, user.password)) {
+      throw new BadRequestException('La contraseña actual es incorrecta');
+    }
+
+    user.password = bcrypt.hashSync(dto.newPassword, 10);
+    await this.userRepository.save(user);
   }
 
   private getJwt(payload: JwtPayload) {
