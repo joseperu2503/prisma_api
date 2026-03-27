@@ -5,9 +5,9 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  UpdateDateColumn
 } from 'typeorm';
 
 @Entity('students')
@@ -15,14 +15,14 @@ export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Person)
+  @OneToOne(() => Person)
   @JoinColumn({ name: 'person_id' })
   person: Person;
 
   @Column('uuid', { name: 'person_id' })
   personId: string;
 
-  @ManyToOne(() => User)
+  @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 

@@ -155,9 +155,7 @@ export class GuardianService {
         'p.phone',
       ])
       .leftJoin('p.personRoles', 'pr')
-      .addSelect(['pr.isActive'])
-      .leftJoin('pr.role', 'r', 'r.id = :roleId', { roleId: RoleId.GUARDIAN })
-      .addSelect(['r.id'])
+      .addSelect(['pr.isActive', 'pr.roleId'])
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
@@ -216,6 +214,7 @@ export class GuardianService {
         };
       }[]
     >();
+
     for (const sg of studentGuardians) {
       const gId = sg.sg_guardian_id;
       if (!studentsByGuardian.has(gId)) studentsByGuardian.set(gId, []);
@@ -230,13 +229,25 @@ export class GuardianService {
       });
     }
 
-    const mapped = data.map((g) => ({
-      ...g,
-      isActive:
-        g.person.personRoles.find((pr) => pr.role?.id === RoleId.GUARDIAN)
-          ?.isActive ?? true,
-      students: studentsByGuardian.get(g.id) ?? [],
-    }));
+    const mapped = data.map((g) => {
+      const isActive =
+        g.person.personRoles.find((pr) => pr.roleId === RoleId.GUARDIAN)
+          ?.isActive ?? true;
+
+      const students = studentsByGuardian.get(g.id) ?? [];
+
+      const {
+        id,
+        person: { names, paternalLastName, maternalLastName, documentNumber },
+      } = g;
+
+      return {
+        id,
+        person: { names, paternalLastName, maternalLastName, documentNumber },
+        isActive: isActive,
+        students: students,
+      };
+    });
 
     return {
       data: mapped,
@@ -248,14 +259,16 @@ export class GuardianService {
   async findOne(id: string) {
     const guardian = await this.guardianRepository.findOne({
       where: { id },
-      relations: { person: { personRoles: { role: true } } },
+      relations: {
+        person: {
+          personRoles: { role: true },
+          documentType: true,
+          gender: true,
+        },
+      },
     });
 
     if (!guardian) throw new NotFoundException('Apoderado no encontrado');
-
-    const guardianRole = guardian.person.personRoles.find(
-      (pr) => pr.role?.id === RoleId.GUARDIAN,
-    );
 
     const studentGuardians = await this.dataSource
       .getRepository(StudentGuardian)
@@ -276,7 +289,42 @@ export class GuardianService {
       },
     }));
 
-    return { ...guardian, isActive: guardianRole?.isActive ?? true, students };
+    const isActive =
+      guardian.person.personRoles.find((pr) => pr.roleId === RoleId.GUARDIAN)
+        ?.isActive ?? true;
+
+    const {
+      person: {
+        names,
+        paternalLastName,
+        maternalLastName,
+        documentNumber,
+        documentType,
+        email,
+        phone,
+        address,
+        gender,
+        birthDate,
+      },
+    } = guardian;
+
+    return {
+      id,
+      person: {
+        names,
+        paternalLastName,
+        maternalLastName,
+        documentNumber,
+        documentType,
+        email,
+        phone,
+        address,
+        gender,
+        birthDate,
+      },
+      isActive: isActive,
+      students,
+    };
   }
 
   async update(id: string, dto: UpdateGuardianDto) {

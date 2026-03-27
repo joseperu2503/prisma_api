@@ -2,7 +2,6 @@ import { User } from 'src/auth/entities/user.entity';
 import { DocumentType } from 'src/common/entities/document-type.entity';
 import { Gender } from 'src/common/entities/gender.entity';
 import { Employee } from 'src/employee/entities/employee.entity';
-import { Student } from 'src/student/entities/student.entity';
 import {
   Column,
   CreateDateColumn,
@@ -33,9 +32,6 @@ export class Person {
 
   @OneToMany(() => Employee, (employee) => employee.person)
   employees: Employee[];
-
-  @OneToMany(() => Student, (student) => student.person)
-  students: Student[];
 
   @Column({ name: 'names', type: 'varchar', length: 100 })
   names: string;
