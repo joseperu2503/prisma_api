@@ -284,7 +284,8 @@ export class EnrollmentService {
       }
 
       // 3. Update enrollment class
-      await queryRunner.manager.update(Enrollment, { id }, { classId: dto.classId });
+      enrollment.classId = dto.classId;
+      await queryRunner.manager.save(Enrollment, enrollment);
 
       await queryRunner.commitTransaction();
       return this.findOne(id);
