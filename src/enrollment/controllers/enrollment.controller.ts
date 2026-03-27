@@ -13,6 +13,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
+import { ChangeClassEnrollmentDto } from '../dto/change-class-enrollment.dto';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
 import { ListEnrollmentDto } from '../dto/list-enrollment.dto';
 import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
@@ -45,6 +46,14 @@ export class EnrollmentController {
   @Patch(':id/toggle-active')
   toggleActive(@Param('id', ParseUUIDPipe) id: string) {
     return this.enrollmentService.toggleActive(id);
+  }
+
+  @Patch(':id/change-class')
+  changeClass(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ChangeClassEnrollmentDto,
+  ) {
+    return this.enrollmentService.changeClass(id, dto);
   }
 
   @Patch(':id')

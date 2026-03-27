@@ -37,6 +37,7 @@ export class NotificationsService {
     type?: NotificationType;
     data?: Record<string, string>;
   }): Promise<void> {
+    // console.log('sendToUser', params);
     const { userId, title, body, type, data } = params;
 
     const tokens = await this.fcmTokenRepo.find({ where: { userId } });
