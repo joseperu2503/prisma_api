@@ -50,7 +50,7 @@ export class EmployeeService {
       }
 
       // 2. Resolver/crear persona
-      const person = await this.personService.updateOrCreatePerson(
+      const person = await this.personService.findOrCreate(
         personDto,
         queryRunner,
       );
@@ -62,7 +62,7 @@ export class EmployeeService {
       if (!user) {
         user = queryRunner.manager.create(User, {
           personId: person.id,
-          password: bcrypt.hashSync(personDto.documentNumber, 10),
+          password: bcrypt.hashSync(person.documentNumber, 10),
         });
         user = await queryRunner.manager.save(user);
       }

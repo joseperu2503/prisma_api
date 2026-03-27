@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   Param,
   Patch,
   Post,
@@ -15,7 +14,7 @@ import { Request, Response } from 'express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreatePersonDto } from '../dto/create-person.dto';
-import { SearchPersonDto } from '../dto/search-person.dto';
+import { ListPersonDto } from '../dto/list-person.dto';
 import { UpdatePersonDto } from '../dto/update-person.dto';
 import { PersonService } from '../services/person.service';
 
@@ -30,14 +29,15 @@ export class PersonController {
     return this.personService.getMyPersonData(personId);
   }
 
-  @Post('search')
-  search(@Body() dto: SearchPersonDto) {
-    return this.personService.search(dto.query, dto.page, dto.limit);
+  @Post('list')
+  async list(@Body() dto: ListPersonDto) {
+    return this.personService.list(dto);
   }
 
   @Post('create')
-  create(@Body() dto: CreatePersonDto) {
-    return this.personService.createPerson(dto);
+  async create(@Body() dto: CreatePersonDto) {
+    await this.personService.createPerson(dto);
+    return { success: true, message: 'Persona creada correctamente' };
   }
 
   @Get('by-document')
@@ -60,9 +60,7 @@ export class PersonController {
     }
 
     const personDocumentNumbers = documentNumbers.split(',');
-    const buffer = await this.personService.generateQrPdf(
-      personDocumentNumbers,
-    );
+    const buffer = await this.personService.generateQrPdf(personDocumentNumbers);
 
     res.set({
       'Content-Type': 'application/pdf',
@@ -74,18 +72,32 @@ export class PersonController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.personService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const person = await this.personService.findOne(id);
+    return {
+      id: person.id,
+      names: person.names,
+      paternalLastName: person.paternalLastName,
+      maternalLastName: person.maternalLastName,
+      documentTypeId: person.documentTypeId,
+      documentNumber: person.documentNumber,
+      birthDate: person.birthDate ?? null,
+      email: person.email ?? null,
+      phone: person.phone ?? null,
+      address: person.address ?? null,
+      genderId: person.genderId ?? null,
+    };
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdatePersonDto) {
-    return this.personService.update(id, dto);
+  async update(@Param('id') id: string, @Body() dto: UpdatePersonDto) {
+    await this.personService.update(id, dto);
+    return { success: true, message: 'Persona actualizada correctamente' };
   }
 
   @Delete(':id')
-  @HttpCode(204)
-  remove(@Param('id') id: string) {
-    return this.personService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.personService.remove(id);
+    return { success: true, message: 'Persona eliminada correctamente' };
   }
 }

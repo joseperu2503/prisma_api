@@ -36,7 +36,7 @@ export class AdminService {
     try {
       const { person: personDto, password } = dto;
 
-      const person = await this.personService.updateOrCreatePerson(
+      const person = await this.personService.findOrCreate(
         personDto,
         queryRunner,
       );

@@ -13,6 +13,7 @@ import { RoleId } from 'src/auth/enums/role-id.enum';
 import { DataSource, In, Not, QueryRunner, Repository } from 'typeorm';
 import { CreatePersonDto } from '../dto/create-person.dto';
 import { FindOrCreatePersonDto } from '../dto/find-or-create-person.dto';
+import { ListPersonDto } from '../dto/list-person.dto';
 import { UpdatePersonDto } from '../dto/update-person.dto';
 import { Person } from '../entities/person.entity';
 
@@ -212,7 +213,11 @@ export class PersonService {
     return result;
   }
 
-  async search(query?: string, page = 1, limit = 10) {
+  async list(dto: ListPersonDto) {
+    const { pagination, search } = dto;
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 10;
+
     const qb = this.personRepository
       .createQueryBuilder('p')
       .select([
@@ -226,13 +231,17 @@ export class PersonService {
         'p.phone',
         'p.address',
       ])
+      .leftJoin('p.personRoles', 'pr')
+      .addSelect(['pr.roleId', 'pr.isActive'])
+      .leftJoin('pr.role', 'r')
+      .addSelect(['r.id', 'r.name'])
       .orderBy('p.paternalLastName', 'ASC')
       .addOrderBy('p.names', 'ASC');
 
-    if (query) {
+    if (search) {
       qb.where(
         'LOWER(p.names) LIKE :q OR LOWER(p.paternalLastName) LIKE :q OR LOWER(p.maternalLastName) LIKE :q OR p.documentNumber LIKE :q',
-        { q: `%${query.toLowerCase()}%` },
+        { q: `%${search.toLowerCase()}%` },
       );
     }
 
@@ -242,7 +251,24 @@ export class PersonService {
       .take(limit)
       .getMany();
 
-    return { data, total, pagination: { page, limit } };
+    const mapped = data.map((p) => ({
+      id: p.id,
+      names: p.names,
+      paternalLastName: p.paternalLastName,
+      maternalLastName: p.maternalLastName,
+      documentNumber: p.documentNumber,
+      documentTypeId: p.documentTypeId,
+      email: p.email ?? null,
+      phone: p.phone ?? null,
+      address: p.address ?? null,
+      roles: (p.personRoles ?? []).map((pr) => ({
+        id: pr.role?.id,
+        name: pr.role?.name,
+        isActive: pr.isActive,
+      })),
+    }));
+
+    return { data: mapped, total, pagination: { page, limit } };
   }
 
   async findByDocument(documentTypeId: string, documentNumber: string) {
@@ -395,59 +421,59 @@ export class PersonService {
     }
   }
 
-  async updateOrCreatePerson(dto: CreatePersonDto, runner?: QueryRunner) {
-    const queryRunner = runner ?? this.dataSource.createQueryRunner();
-    const isExternalTransaction = !!runner;
+  // async updateOrCreatePerson(dto: CreatePersonDto, runner?: QueryRunner) {
+  //   const queryRunner = runner ?? this.dataSource.createQueryRunner();
+  //   const isExternalTransaction = !!runner;
 
-    if (!isExternalTransaction) {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-    }
+  //   if (!isExternalTransaction) {
+  //     await queryRunner.connect();
+  //     await queryRunner.startTransaction();
+  //   }
 
-    try {
-      const { ...newPerson } = dto;
+  //   try {
+  //     const { ...newPerson } = dto;
 
-      let person: Person | null = null;
+  //     let person: Person | null = null;
 
-      const existingPerson = await queryRunner.manager.findOne(Person, {
-        where: {
-          documentTypeId: newPerson.documentTypeId,
-          documentNumber: newPerson.documentNumber,
-        },
-      });
+  //     const existingPerson = await queryRunner.manager.findOne(Person, {
+  //       where: {
+  //         documentTypeId: newPerson.documentTypeId,
+  //         documentNumber: newPerson.documentNumber,
+  //       },
+  //     });
 
-      if (existingPerson) {
-        queryRunner.manager.merge(Person, existingPerson, newPerson);
-        person = await queryRunner.manager.save(existingPerson);
-      } else {
-        person = queryRunner.manager.create(Person, { ...newPerson });
-        person = await queryRunner.manager.save(person);
-      }
+  //     if (existingPerson) {
+  //       queryRunner.manager.merge(Person, existingPerson, newPerson);
+  //       person = await queryRunner.manager.save(existingPerson);
+  //     } else {
+  //       person = queryRunner.manager.create(Person, { ...newPerson });
+  //       person = await queryRunner.manager.save(person);
+  //     }
 
-      return person;
-    } catch (error) {
-      if (!isExternalTransaction) {
-        await queryRunner.rollbackTransaction();
-      }
+  //     return person;
+  //   } catch (error) {
+  //     if (!isExternalTransaction) {
+  //       await queryRunner.rollbackTransaction();
+  //     }
 
-      if (error instanceof HttpException) {
-        throw error;
-      }
+  //     if (error instanceof HttpException) {
+  //       throw error;
+  //     }
 
-      throw new HttpException(
-        {
-          success: false,
-          message: 'An error occurred while creating the person',
-          error: error.message,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    } finally {
-      if (!isExternalTransaction) {
-        await queryRunner.release();
-      }
-    }
-  }
+  //     throw new HttpException(
+  //       {
+  //         success: false,
+  //         message: 'Error al crear la persona',
+  //         error: error.message,
+  //       },
+  //       HttpStatus.INTERNAL_SERVER_ERROR,
+  //     );
+  //   } finally {
+  //     if (!isExternalTransaction) {
+  //       await queryRunner.release();
+  //     }
+  //   }
+  // }
 
   async findOrCreate(personDto: FindOrCreatePersonDto, runner?: QueryRunner) {
     const queryRunner = runner ?? this.dataSource.createQueryRunner();
@@ -497,7 +523,7 @@ export class PersonService {
       throw new HttpException(
         {
           success: false,
-          message: 'An error occurred while creating the person',
+          message: 'Error al crear la persona',
           error: error.message,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,

@@ -51,7 +51,7 @@ export class TeacherService {
       const { person: personDto, password } = createTeacherDto;
 
       // 1️⃣ Resolver Persona
-      const person = await this.personService.updateOrCreatePerson(
+      const person = await this.personService.findOrCreate(
         personDto,
         queryRunner,
       );

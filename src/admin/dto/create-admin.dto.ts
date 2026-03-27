@@ -1,11 +1,11 @@
 import { Type } from 'class-transformer';
 import { IsOptional, IsString, ValidateNested } from 'class-validator';
-import { CreatePersonDto } from 'src/person/dto/create-person.dto';
+import { FindOrCreatePersonDto } from 'src/person/dto/find-or-create-person.dto';
 
 export class CreateAdminDto {
   @ValidateNested()
-  @Type(() => CreatePersonDto)
-  person: CreatePersonDto;
+  @Type(() => FindOrCreatePersonDto)
+  person: FindOrCreatePersonDto;
 
   @IsOptional()
   @IsString()
