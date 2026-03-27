@@ -321,7 +321,7 @@ export class AttendanceService {
     const time = payload.markedAt.toLocaleTimeString('es-PE', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false,
+      hour12: true,
       timeZone: 'America/Lima',
     });
     const dateStr = payload.markedAt.toLocaleDateString('es-PE', {
@@ -654,8 +654,12 @@ export class AttendanceService {
     return enrollments.map((e) => {
       const person = e.student.person;
       const studentLogs = logsByPerson.get(person.id) ?? [];
-      const entryLog = studentLogs.find((l) => l.typeId === AttendanceTypeId.ENTRY);
-      const exitLog = studentLogs.find((l) => l.typeId === AttendanceTypeId.EXIT);
+      const entryLog = studentLogs.find(
+        (l) => l.typeId === AttendanceTypeId.ENTRY,
+      );
+      const exitLog = studentLogs.find(
+        (l) => l.typeId === AttendanceTypeId.EXIT,
+      );
       return {
         studentId: e.studentId,
         names: person.names,
