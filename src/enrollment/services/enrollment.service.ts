@@ -197,6 +197,8 @@ export class EnrollmentService {
         },
       );
 
+      console.log('newClassAcademicYear', newClassAcademicYear);
+
       if (!newClassAcademicYear) {
         throw new NotFoundException(
           'El aula no está habilitada para el año académico de esta matrícula',
@@ -282,8 +284,7 @@ export class EnrollmentService {
       }
 
       // 3. Update enrollment class
-      enrollment.classId = dto.classId;
-      await queryRunner.manager.save(Enrollment, enrollment);
+      await queryRunner.manager.update(Enrollment, { id }, { classId: dto.classId });
 
       await queryRunner.commitTransaction();
       return this.findOne(id);
