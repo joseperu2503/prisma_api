@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FeeFrequencyId } from 'src/debt/enums/fee-frequency-id.enum';
 import { FeeFrequency } from 'src/debt/entities/fee-frequency.entity';
+import { FeeFrequencyId } from 'src/debt/enums/fee-frequency-id.enum';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -14,7 +14,6 @@ export class FeeFrequencySeed {
   private readonly data = [
     { id: FeeFrequencyId.ONE_TIME, name: 'Una vez' },
     { id: FeeFrequencyId.MONTHLY, name: 'Mensual' },
-    { id: FeeFrequencyId.YEARLY, name: 'Anual' },
   ];
 
   async run() {

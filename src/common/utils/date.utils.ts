@@ -53,4 +53,9 @@ export class DateUtils {
 
     return (jsDay + 6) % 7;
   }
+
+  static formatDate = (d: Date | string) => {
+    const date = new Date(d);
+    return date.toISOString().split('T')[0]; // "YYYY-MM-DD"
+  };
 }

@@ -113,8 +113,8 @@ export class AttendanceService {
                 personId: person.id,
               },
               academicYear: {
-                startDate: LessThanOrEqual(date),
-                endDate: MoreThanOrEqual(date),
+                startDate: LessThanOrEqual(DateUtils.formatDate(date)),
+                endDate: MoreThanOrEqual(DateUtils.formatDate(date)),
               },
             },
             relations: { academicYear: true },

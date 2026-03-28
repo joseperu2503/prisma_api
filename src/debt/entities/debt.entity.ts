@@ -53,6 +53,10 @@ export class Debt {
   @Column({ type: 'date', nullable: true, name: 'due_date' })
   dueDate: Date | null;
 
+  /** Primer día del mes al que pertenece la deuda. Solo para frecuencia MONTHLY. */
+  @Column({ type: 'date', nullable: true, name: 'period_date' })
+  periodDate: Date | null;
+
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 

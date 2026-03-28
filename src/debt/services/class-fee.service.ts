@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
-import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { DebtStatusId } from 'src/debt/enums/debt-status-id.enum';
+import { FeeFrequencyId } from 'src/debt/enums/fee-frequency-id.enum';
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateClassFeeDto } from '../dto/create-class-fee.dto';
@@ -24,7 +25,10 @@ export class ClassFeeService {
     private readonly dataSource: DataSource,
   ) {}
 
-  private async resolveClassAcademicYear(classId: string, academicYearId: string) {
+  private async resolveClassAcademicYear(
+    classId: string,
+    academicYearId: string,
+  ) {
     const cay = await this.dataSource.getRepository(ClassAcademicYear).findOne({
       where: { classId, academicYearId },
     });
@@ -53,11 +57,18 @@ export class ClassFeeService {
       );
     }
 
-    const fee = this.repo.create({ classAcademicYearId: cay.id, conceptId, ...rest });
+    const fee = this.repo.create({
+      classAcademicYearId: cay.id,
+      conceptId,
+      ...rest,
+    });
     return this.repo.save(fee);
   }
 
-  async findByClass(classId: string, academicYearId: string): Promise<ClassFee[]> {
+  async findByClass(
+    classId: string,
+    academicYearId: string,
+  ): Promise<ClassFee[]> {
     const cay = await this.resolveClassAcademicYear(classId, academicYearId);
     return this.repo.find({
       where: { classAcademicYearId: cay.id },
@@ -91,9 +102,12 @@ export class ClassFeeService {
     await this.repo.remove(fee);
   }
 
-  async generateDebts(id: string): Promise<{ created: number; skipped: number }> {
+  async generateDebts(
+    id: string,
+  ): Promise<{ created: number; skipped: number }> {
     const fee = await this.findOne(id);
     const { classId, academicYearId } = fee.classAcademicYear;
+    const { startDate, endDate } = fee.classAcademicYear.academicYear;
 
     const enrollments = await this.dataSource.getRepository(Enrollment).find({
       where: { classId, academicYearId, isActive: true },
@@ -105,40 +119,114 @@ export class ClassFeeService {
     const studentIds = enrollments.map((e) => e.studentId);
 
     const students = await this.dataSource.getRepository(Student).find({
-      where: studentIds.map((id) => ({ id })),
+      where: studentIds.map((sid) => ({ id: sid })),
       select: ['id', 'personId'],
     });
 
-    const personIdByStudentId = new Map(students.map((s) => [s.id, s.personId]));
-
+    const personIdByStudentId = new Map(
+      students.map((s) => [s.id, s.personId]),
+    );
     const personIds = students.map((s) => s.personId);
 
+    const periods = this.buildPeriods(
+      fee.frequencyId,
+      this.toLocalDate(startDate),
+      this.toLocalDate(endDate),
+    );
+
+    // Load existing debts for this fee + persons to detect duplicates
     const existingDebts = await this.dataSource
       .getRepository(Debt)
       .createQueryBuilder('d')
-      .select('d.personId')
+      .select(['d.personId', 'd.periodDate', 'd.dueDate'])
       .where('d.classFeeId = :classFeeId', { classFeeId: fee.id })
       .andWhere('d.personId IN (:...personIds)', { personIds })
       .getMany();
 
-    const alreadyHasDebt = new Set(existingDebts.map((d) => d.personId));
-    const toCreate = studentIds.filter(
-      (sid) => !alreadyHasDebt.has(personIdByStudentId.get(sid)!),
+    // Key by periodDate for MONTHLY, by dueDate for others
+    const existingSet = new Set(
+      existingDebts.map(
+        (d) => `${d.personId}_${this.formatDate(d.periodDate ?? d.dueDate)}`,
+      ),
     );
 
-    if (toCreate.length > 0) {
-      const debts = toCreate.map((studentId) =>
-        this.dataSource.getRepository(Debt).create({
-          personId: personIdByStudentId.get(studentId)!,
-          conceptId: fee.conceptId,
-          classFeeId: fee.id,
-          amount: fee.amount,
-          statusId: DebtStatusId.PENDING,
-        }),
-      );
-      await this.dataSource.getRepository(Debt).save(debts);
+    const toCreate: Partial<Debt>[] = [];
+
+    for (const studentId of studentIds) {
+      const personId = personIdByStudentId.get(studentId)!;
+      for (const period of periods) {
+        const key = `${personId}_${this.formatDate(period.periodDate ?? period.dueDate)}`;
+        if (!existingSet.has(key)) {
+          toCreate.push({
+            personId,
+            conceptId: fee.conceptId,
+            classFeeId: fee.id,
+            amount: fee.amount,
+            statusId: DebtStatusId.PENDING,
+            dueDate: period.dueDate,
+            periodDate: period.periodDate,
+          });
+        }
+      }
     }
 
-    return { created: toCreate.length, skipped: alreadyHasDebt.size };
+    if (toCreate.length > 0) {
+      const repo = this.dataSource.getRepository(Debt);
+      await repo.save(toCreate.map((d) => repo.create(d)));
+    }
+
+    const total = studentIds.length * periods.length;
+    return { created: toCreate.length, skipped: total - toCreate.length };
+  }
+
+  /**
+   * Returns the list of due dates for the given frequency and academic year range.
+   * - ONE_TIME → [null]
+   * - YEARLY   → [endDate]
+   * - MONTHLY  → one date per month (28th), or endDate if endDate.day < 28 in the last month
+   */
+  private buildPeriods(
+    frequencyId: string,
+    startDate: Date,
+    endDate: Date,
+  ): { dueDate: Date | null; periodDate: Date | null }[] {
+    if (frequencyId === FeeFrequencyId.ONE_TIME) {
+      return [{ dueDate: null, periodDate: null }];
+    }
+
+    // MONTHLY — one entry per month in the academic year range
+    const periods: { dueDate: Date; periodDate: Date }[] = [];
+    let year = startDate.getFullYear();
+    let month = startDate.getMonth(); // 0-indexed
+
+    const endYear = endDate.getFullYear();
+    const endMonth = endDate.getMonth();
+
+    while (year < endYear || (year === endYear && month <= endMonth)) {
+      const day28 = new Date(year, month, 28);
+      periods.push({
+        dueDate: day28 <= endDate ? day28 : new Date(endDate),
+        periodDate: new Date(year, month, 1),
+      });
+
+      month++;
+      if (month > 11) {
+        month = 0;
+        year++;
+      }
+    }
+
+    return periods;
+  }
+
+  private toLocalDate(d: string): Date {
+    const [year, month, day] = d.split('T')[0].split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private formatDate(d: Date | string | null): string {
+    if (!d) return 'null';
+    if (typeof d === 'string') return d.split('T')[0];
+    return d.toISOString().split('T')[0];
   }
 }
