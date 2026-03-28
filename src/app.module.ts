@@ -28,6 +28,7 @@ import { StudentModule } from './student/student.module';
 import { SubjectModule } from './subject/subject.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TeacherModule } from './teacher/teacher.module';
+import { DebtModule } from './debt/debt.module';
 
 @Module({
   controllers: [AppController],
@@ -62,6 +63,7 @@ import { TeacherModule } from './teacher/teacher.module';
     EnrollmentModule,
     AppVersionModule,
     NotificationsModule,
+    DebtModule,
   ],
   providers: [SeedCommand],
 })

@@ -10,6 +10,10 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ClassModule } from 'src/class/class.module';
 import { Class } from 'src/class/entities/class.entity';
 import { CommonModule } from 'src/common/common.module';
+import { DebtConceptType } from 'src/debt/entities/debt-concept-type.entity';
+import { DebtStatus } from 'src/debt/entities/debt-status.entity';
+import { FeeFrequency } from 'src/debt/entities/fee-frequency.entity';
+import { PaymentMethod } from 'src/debt/entities/payment-method.entity';
 import { EmployeeModule } from 'src/employee/employee.module';
 import { EnrollmentModule } from 'src/enrollment/enrollment.module';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
@@ -27,11 +31,15 @@ import { AttendanceStatusSeed } from './services/attendance-status.seed';
 import { AttendanceTypeSeed } from './services/attendance-type.seed';
 import { AttendanceSeed } from './services/attendance.seed';
 import { ClassSeed } from './services/class.seed';
+import { DebtConceptTypeSeed } from './services/debt-concept-type.seed';
+import { DebtStatusSeed } from './services/debt-status.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
 import { EnrollmentSeed } from './services/enrollment.seed';
+import { FeeFrequencySeed } from './services/fee-frequency.seed';
 import { GenderSeed } from './services/gender.seed';
 import { GradeSeed } from './services/grade.seed';
 import { LevelSeed } from './services/level.seed';
+import { PaymentMethodSeed } from './services/payment-method.seed';
 import { PermissionSeed } from './services/permission.seed';
 import { RelationshipTypeSeed } from './services/relationship-type.seed';
 import { RoleSeed } from './services/role.seed';
@@ -57,6 +65,10 @@ import { StudentSeed } from './services/student.seed';
     AttendanceSeed,
     AdminSeed,
     AppPlatformSeed,
+    DebtConceptTypeSeed,
+    DebtStatusSeed,
+    FeeFrequencySeed,
+    PaymentMethodSeed,
   ],
   imports: [
     AuthModule,
@@ -80,6 +92,10 @@ import { StudentSeed } from './services/student.seed';
       Person,
       Student,
       AppPlatform,
+      DebtConceptType,
+      DebtStatus,
+      FeeFrequency,
+      PaymentMethod,
     ]),
   ],
   exports: [SeedService],
