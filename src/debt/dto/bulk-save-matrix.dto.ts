@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsUUID, Min, ValidateNested, IsArray } from 'class-validator';
+import { IsNumber, IsOptional, IsUUID, Min, ValidateNested, IsArray } from 'class-validator';
 
 export class UpdateDebtItemDto {
   @IsUUID()
@@ -7,7 +7,12 @@ export class UpdateDebtItemDto {
 
   @IsNumber()
   @Min(0)
-  amount: number;
+  baseAmount: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
 }
 
 export class CreateDebtItemDto {
@@ -15,14 +20,16 @@ export class CreateDebtItemDto {
   personId: string;
 
   @IsUUID()
-  classFeeId: string;
-
-  @IsUUID()
   installmentId: string;
 
   @IsNumber()
   @Min(0)
-  amount: number;
+  baseAmount: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
 }
 
 export class BulkSaveMatrixDto {

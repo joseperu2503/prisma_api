@@ -18,10 +18,13 @@ export class DebtService {
   ) {}
 
   async create(dto: CreateDebtDto): Promise<Debt> {
+    const discount = dto.discount ?? 0;
     const debt = this.debtRepo.create({
       personId: dto.personId,
       conceptId: dto.conceptId,
-      amount: dto.amount,
+      baseAmount: dto.baseAmount,
+      discount,
+      amount: dto.baseAmount - discount,
       dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
       notes: dto.notes ?? null,
       statusId: DebtStatusId.PENDING,
@@ -34,7 +37,12 @@ export class DebtService {
 
     if (dto.updates.length > 0) {
       for (const item of dto.updates) {
-        await this.debtRepo.update(item.debtId, { amount: item.amount });
+        const discount = item.discount ?? 0;
+        await this.debtRepo.update(item.debtId, {
+          baseAmount: item.baseAmount,
+          discount,
+          amount: item.baseAmount - discount,
+        });
       }
       updated = dto.updates.length;
     }
@@ -50,16 +58,18 @@ export class DebtService {
 
       const toCreate = dto.creates
         .map((item) => {
-          const period = installmentMap.get(item.installmentId);
-          if (!period) return null;
+          const installment = installmentMap.get(item.installmentId);
+          if (!installment) return null;
+          const discount = item.discount ?? 0;
           return this.debtRepo.create({
             personId: item.personId,
-            conceptId: period.classFee.conceptId,
-            classFeeId: item.classFeeId,
-            amount: item.amount,
+            conceptId: installment.classFee.conceptId,
+            feeInstallmentId: item.installmentId,
+            baseAmount: item.baseAmount,
+            discount,
+            amount: item.baseAmount - discount,
             statusId: DebtStatusId.PENDING,
-            dueDate: period.dueDate ? new Date(period.dueDate) : null,
-            periodDate: period.periodDate ? new Date(period.periodDate) : null,
+            dueDate: installment.dueDate ? new Date(installment.dueDate) : null,
           });
         })
         .filter((d): d is Debt => d !== null);
@@ -76,7 +86,8 @@ export class DebtService {
       .createQueryBuilder('debt')
       .leftJoinAndSelect('debt.concept', 'concept')
       .leftJoinAndSelect('debt.status', 'status')
-      .leftJoinAndSelect('debt.classFee', 'classFee')
+      .leftJoinAndSelect('debt.feeInstallment', 'feeInstallment')
+      .leftJoinAndSelect('feeInstallment.classFee', 'classFee')
       .leftJoinAndSelect('classFee.classAcademicYear', 'cay')
       .leftJoinAndSelect('cay.class', 'class')
       .leftJoinAndSelect('cay.academicYear', 'academicYear')

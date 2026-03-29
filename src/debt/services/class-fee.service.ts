@@ -170,50 +170,31 @@ export class ClassFeeService {
       relations: { person: true },
     });
 
-    const classFeeIds = fees.map((f) => f.id);
+    const installmentIds = columns.map((c) => c.installmentId);
     const personIds = students.map((s) => s.personId);
 
-    // Load all relevant debts
+    // Load all relevant debts directly by installmentId
     let debts: Debt[] = [];
-    if (classFeeIds.length > 0 && personIds.length > 0) {
+    if (installmentIds.length > 0 && personIds.length > 0) {
       debts = await this.dataSource
         .getRepository(Debt)
         .createQueryBuilder('d')
         .leftJoinAndSelect('d.status', 'status')
-        .where('d.classFeeId IN (:...classFeeIds)', { classFeeIds })
+        .where('d.feeInstallmentId IN (:...installmentIds)', { installmentIds })
         .andWhere('d.personId IN (:...personIds)', { personIds })
         .getMany();
     }
 
-    // Build installment key map: "classFeeId_periodDateStr" → installmentId
-    const installmentKeyMap = new Map<string, string>();
-    for (const col of columns) {
-      installmentKeyMap.set(
-        `${col.classFeeId}_${col.periodDate ?? 'null'}`,
-        col.installmentId,
-      );
-    }
-
-    // Index debts by "installmentId_personId"
-    const debtMap = new Map<
-      string,
-      DebtMatrixDto['rows'][number]['cells'][string]
-    >();
+    // Index debts by "feeInstallmentId_personId"
+    const debtMap = new Map<string, DebtMatrixDto['rows'][number]['cells'][string]>();
     for (const debt of debts) {
-      const periodDateStr = debt.periodDate
-        ? this.formatDate(debt.periodDate)
-        : null;
-      const installmentId = installmentKeyMap.get(
-        `${debt.classFeeId}_${periodDateStr ?? 'null'}`,
-      );
-      if (installmentId) {
-        debtMap.set(`${installmentId}_${debt.personId}`, {
-          debtId: debt.id,
-          amount: Number(debt.amount),
-          statusId: debt.statusId,
-          statusName: (debt.status as any)?.name ?? null,
-        });
-      }
+      debtMap.set(`${debt.feeInstallmentId}_${debt.personId}`, {
+        debtId: debt.id,
+        baseAmount: Number(debt.baseAmount),
+        amount: Number(debt.amount),
+        statusId: debt.statusId,
+        statusName: (debt.status as any)?.name ?? null,
+      });
     }
 
     // Build rows
@@ -225,6 +206,7 @@ export class ClassFeeService {
         );
         cells[col.installmentId] = existing ?? {
           debtId: null,
+          baseAmount: col.defaultAmount,
           amount: col.defaultAmount,
           statusId: null,
           statusName: null,
@@ -270,36 +252,34 @@ export class ClassFeeService {
     );
     const personIds = students.map((s) => s.personId);
 
-    // Load existing debts for this fee + persons to detect duplicates
+    // Load existing debts for these installments + persons to detect duplicates
+    const installmentIds = periods.map((p) => p.id);
     const existingDebts = await this.dataSource
       .getRepository(Debt)
       .createQueryBuilder('d')
-      .select(['d.personId', 'd.periodDate', 'd.dueDate'])
-      .where('d.classFeeId = :classFeeId', { classFeeId: fee.id })
+      .select(['d.personId', 'd.feeInstallmentId'])
+      .where('d.feeInstallmentId IN (:...installmentIds)', { installmentIds })
       .andWhere('d.personId IN (:...personIds)', { personIds })
       .getMany();
 
-    const existingSet = new Set(
-      existingDebts.map(
-        (d) => `${d.personId}_${this.formatDate(d.periodDate ?? d.dueDate)}`,
-      ),
-    );
+    const existingSet = new Set(existingDebts.map((d) => `${d.personId}_${d.feeInstallmentId}`));
 
     const toCreate: Partial<Debt>[] = [];
 
     for (const studentId of studentIds) {
       const personId = personIdByStudentId.get(studentId)!;
       for (const period of periods) {
-        const key = `${personId}_${this.formatDate(period.periodDate ?? period.dueDate)}`;
+        const key = `${personId}_${period.id}`;
         if (!existingSet.has(key)) {
           toCreate.push({
             personId,
             conceptId: fee.conceptId,
-            classFeeId: fee.id,
-            amount: period.amount,
+            feeInstallmentId: period.id,
+            baseAmount: Number(period.amount),
+            discount: 0,
+            amount: Number(period.amount),
             statusId: DebtStatusId.PENDING,
             dueDate: period.dueDate ? new Date(period.dueDate) : null,
-            periodDate: period.periodDate ? new Date(period.periodDate) : null,
           });
         }
       }
@@ -314,9 +294,4 @@ export class ClassFeeService {
     return { created: toCreate.length, skipped: total - toCreate.length };
   }
 
-  private formatDate(d: Date | string | null): string {
-    if (!d) return 'null';
-    if (typeof d === 'string') return d.split('T')[0];
-    return d.toISOString().split('T')[0];
-  }
 }

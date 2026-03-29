@@ -9,7 +9,12 @@ export class CreateDebtDto {
 
   @IsNumber()
   @Min(0)
-  amount: number;
+  baseAmount: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
 
   @IsOptional()
   @IsDateString()

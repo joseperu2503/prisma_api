@@ -10,6 +10,7 @@ export class DebtMatrixColumnDto {
 
 export class DebtMatrixCellDto {
   debtId: string | null;
+  baseAmount: number;
   amount: number;
   statusId: string | null;
   statusName: string | null;

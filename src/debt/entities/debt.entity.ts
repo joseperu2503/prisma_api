@@ -9,9 +9,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { ClassFee } from './class-fee.entity';
 import { DebtConcept } from './debt-concept.entity';
 import { DebtStatus } from './debt-status.entity';
+import { FeeInstallment } from './fee_installment.entity';
 import { Payment } from './payment.entity';
 
 @Entity('debts')
@@ -33,12 +33,12 @@ export class Debt {
   @Column('uuid', { name: 'concept_id' })
   conceptId: string;
 
-  @ManyToOne(() => ClassFee, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'class_fee_id' })
-  classFee: ClassFee | null;
+  @ManyToOne(() => FeeInstallment, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'fee_installment_id' })
+  feeInstallment: FeeInstallment | null;
 
-  @Column('uuid', { name: 'class_fee_id', nullable: true })
-  classFeeId: string | null;
+  @Column('uuid', { name: 'fee_installment_id', nullable: true })
+  feeInstallmentId: string | null;
 
   @ManyToOne(() => DebtStatus)
   @JoinColumn({ name: 'status_id' })
@@ -47,15 +47,17 @@ export class Debt {
   @Column({ type: 'varchar', length: 50, name: 'status_id', default: 'PENDING' })
   statusId: string;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'base_amount' })
+  baseAmount: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  discount: number;
+
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
   @Column({ type: 'date', nullable: true, name: 'due_date' })
   dueDate: Date | null;
-
-  /** Primer día del mes al que pertenece la deuda. Solo para frecuencia MONTHLY. */
-  @Column({ type: 'date', nullable: true, name: 'period_date' })
-  periodDate: Date | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;
