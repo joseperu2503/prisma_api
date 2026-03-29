@@ -31,6 +31,14 @@ export class ClassFeeController {
     return this.svc.findByClass(classId, academicYearId);
   }
 
+  @Get('matrix')
+  getMatrix(
+    @Query('classId', ParseUUIDPipe) classId: string,
+    @Query('academicYearId', ParseUUIDPipe) academicYearId: string,
+  ) {
+    return this.svc.getMatrix(classId, academicYearId);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.svc.findOne(id);

@@ -1,4 +1,6 @@
-import { IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNumber, IsString, IsUUID, Min, ValidateNested } from 'class-validator';
+import { CreateFeeInstallmentDto } from './create-class-fee-period.dto';
 
 export class CreateClassFeeDto {
   @IsUUID()
@@ -16,4 +18,8 @@ export class CreateClassFeeDto {
 
   @IsString()
   frequencyId: string;
+
+  @ValidateNested({ each: true })
+  @Type(() => CreateFeeInstallmentDto)
+  installments: CreateFeeInstallmentDto[];
 }

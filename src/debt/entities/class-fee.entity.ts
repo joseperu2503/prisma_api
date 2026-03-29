@@ -5,11 +5,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { DebtConcept } from './debt-concept.entity';
 import { FeeFrequency } from './fee-frequency.entity';
+import { FeeInstallment } from './fee_installment.entity';
 
 @Entity('class_fees')
 export class ClassFee {
@@ -39,6 +41,9 @@ export class ClassFee {
 
   @Column({ type: 'varchar', length: 50, name: 'frequency_id', default: 'ONE_TIME' })
   frequencyId: string;
+
+  @OneToMany(() => FeeInstallment, (p) => p.classFee)
+  installments: FeeInstallment[];
 
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive: boolean;

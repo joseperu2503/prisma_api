@@ -2,7 +2,7 @@ import { IsDateString, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class
 
 export class CreateDebtDto {
   @IsUUID()
-  studentId: string;
+  personId: string;
 
   @IsUUID()
   conceptId: string;
@@ -14,10 +14,6 @@ export class CreateDebtDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string;
-
-  @IsOptional()
-  @IsString()
-  statusId?: string;
 
   @IsOptional()
   @IsString()
