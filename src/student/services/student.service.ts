@@ -114,11 +114,7 @@ export class StudentService {
         await queryRunner.commitTransaction();
       }
 
-      return {
-        id: student.id,
-        success: true,
-        message: 'Estudiante registrado correctamente',
-      };
+      return student;
     } catch (error) {
       if (!isExternalTransaction) {
         await queryRunner.rollbackTransaction();

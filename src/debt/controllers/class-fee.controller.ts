@@ -4,12 +4,14 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { CreateClassFeeDto } from '../dto/create-class-fee.dto';
+import { UpdateClassFeeDto } from '../dto/update-class-fee.dto';
 import { ClassFeeService } from '../services/class-fee.service';
 
 @Auth([RoleId.ADMIN])
@@ -31,6 +33,14 @@ export class ClassFeeController {
     return this.svc.findByClass(classId, academicYearId);
   }
 
+  @Get('enrolled-students')
+  getEnrolledStudents(
+    @Query('classId', ParseUUIDPipe) classId: string,
+    @Query('academicYearId', ParseUUIDPipe) academicYearId: string,
+  ) {
+    return this.svc.getEnrolledStudents(classId, academicYearId);
+  }
+
   @Get('matrix')
   getMatrix(
     @Query('classId', ParseUUIDPipe) classId: string,
@@ -42,6 +52,15 @@ export class ClassFeeController {
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.svc.findOne(id);
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateClassFeeDto,
+  ) {
+    await this.svc.update(id, dto);
+    return { success: true, message: 'Cobro actualizado correctamente' };
   }
 
   @Post(':id/generate-debts')

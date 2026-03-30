@@ -9,6 +9,8 @@ export class DebtMatrixColumnDto {
 }
 
 export class DebtMatrixCellDto {
+  hasRecord: boolean;
+  applies: boolean;
   debtId: string | null;
   baseAmount: number;
   amount: number;

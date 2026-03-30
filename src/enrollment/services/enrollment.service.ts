@@ -12,6 +12,10 @@ import { Attendance } from 'src/attendance/entities/attendance.entity';
 import { AttendanceStatusId } from 'src/attendance/enums/attenance-status-id.enum';
 import { AttendanceTypeId } from 'src/attendance/enums/attenance-type-id.enum';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
+import { ClassFee } from 'src/debt/entities/class-fee.entity';
+import { Debt } from 'src/debt/entities/debt.entity';
+import { PersonFeeInstallment } from 'src/debt/entities/person-fee-installment.entity';
+import { DebtStatusId } from 'src/debt/enums/debt-status-id.enum';
 import { StudentService } from 'src/student/services/student.service';
 import { DataSource, In, Repository } from 'typeorm';
 import { ChangeClassEnrollmentDto } from '../dto/change-class-enrollment.dto';
@@ -64,6 +68,55 @@ export class EnrollmentService {
       });
 
       await queryRunner.manager.save(enrollment);
+
+      // Register PersonFeeInstallments + Debts for existing class fees
+      const cay = await queryRunner.manager.findOne(ClassAcademicYear, {
+        where: { classId: dto.classId, academicYearId: dto.academicYearId },
+      });
+
+      if (cay) {
+        const fees = await queryRunner.manager.find(ClassFee, {
+          where: { classAcademicYearId: cay.id },
+          relations: { installments: true },
+        });
+
+        const overrideMap = new Map(
+          (dto.feeOverrides ?? []).map((o) => [o.feeInstallmentId, o]),
+        );
+
+        for (const fee of fees) {
+          for (const installment of fee.installments) {
+            const override = overrideMap.get(installment.id);
+            const applies = override?.applies ?? true;
+            const amount = override?.amount ?? Number(installment.amount);
+
+            await queryRunner.manager.save(
+              queryRunner.manager.create(PersonFeeInstallment, {
+                personId: savedStudent.personId,
+                feeInstallmentId: installment.id,
+                applies,
+              }),
+            );
+
+            if (applies) {
+              const debtRepo = queryRunner.manager.getRepository(Debt);
+              await debtRepo.save(
+                debtRepo.create({
+                  personId: savedStudent.personId,
+                  conceptId: fee.conceptId,
+                  feeInstallmentId: installment.id,
+                  baseAmount: amount,
+                  discount: 0,
+                  amount,
+                  statusId: DebtStatusId.PENDING,
+                  dueDate: installment.dueDate ? new Date(installment.dueDate) : null,
+                }),
+              );
+            }
+          }
+        }
+      }
+
       await queryRunner.commitTransaction();
 
       return { success: true, message: 'Matrícula creada correctamente' };

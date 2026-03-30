@@ -12,6 +12,8 @@ import { DocumentTypeSeed } from './document-type.seed';
 import { EnrollmentSeed } from './enrollment.seed';
 import { FeeFrequencySeed } from './fee-frequency.seed';
 import { GenderSeed } from './gender.seed';
+import { IgvAffectationTypeSeed } from './igv-affectation-type.seed';
+import { UnitCodeSeed } from './unit-code.seed';
 import { GradeSeed } from './grade.seed';
 import { LevelSeed } from './level.seed';
 import { PaymentMethodSeed } from './payment-method.seed';
@@ -43,6 +45,8 @@ export class SeedService {
     private readonly debtStatusSeed: DebtStatusSeed,
     private readonly feeFrequencySeed: FeeFrequencySeed,
     private readonly paymentMethodSeed: PaymentMethodSeed,
+    private readonly unitCodeSeed: UnitCodeSeed,
+    private readonly igvAffectationTypeSeed: IgvAffectationTypeSeed,
   ) {}
 
   async runSeed() {
@@ -51,6 +55,8 @@ export class SeedService {
     await this.debtStatusSeed.run();
     await this.feeFrequencySeed.run();
     await this.paymentMethodSeed.run();
+    await this.unitCodeSeed.run();
+    await this.igvAffectationTypeSeed.run();
     await this.documentTypeSeed.run();
     await this.genderSeed.run();
     await this.attendanceTypeSeed.run();

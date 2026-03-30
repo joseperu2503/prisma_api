@@ -10,11 +10,13 @@ import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateClassFeeDto } from '../dto/create-class-fee.dto';
+import { UpdateClassFeeDto } from '../dto/update-class-fee.dto';
 import { DebtMatrixDto } from '../dto/debt-matrix.dto';
 import { ClassFee } from '../entities/class-fee.entity';
 import { DebtConcept } from '../entities/debt-concept.entity';
 import { Debt } from '../entities/debt.entity';
 import { FeeInstallment } from '../entities/fee_installment.entity';
+import { PersonFeeInstallment } from '../entities/person-fee-installment.entity';
 
 @Injectable()
 export class ClassFeeService {
@@ -37,7 +39,7 @@ export class ClassFeeService {
   }
 
   async create(dto: CreateClassFeeDto): Promise<ClassFee> {
-    const { classId, academicYearId, conceptId, installments, ...rest } = dto;
+    const { classId, academicYearId, conceptId, installments, students, ...rest } = dto;
 
     const cay = await this.resolveClassAcademicYear(classId, academicYearId);
 
@@ -59,22 +61,60 @@ export class ClassFeeService {
 
     const fee = await this.dataSource.transaction(async (manager) => {
       const savedFee = await manager.save(
-        manager.create(ClassFee, {
-          classAcademicYearId: cay.id,
-          conceptId,
-          ...rest,
-        }),
+        manager.create(ClassFee, { classAcademicYearId: cay.id, conceptId, ...rest }),
       );
 
-      const periodEntities = installments.map((p) =>
-        manager.create(FeeInstallment, {
-          classFeeId: savedFee.id,
-          periodDate: p.periodDate ?? null,
-          dueDate: p.dueDate ?? null,
-          amount: p.amount,
-        }),
+      const savedInstallments = await manager.save(
+        FeeInstallment,
+        installments.map((p) =>
+          manager.create(FeeInstallment, {
+            classFeeId: savedFee.id,
+            periodDate: p.periodDate ?? null,
+            dueDate: p.dueDate ?? null,
+            amount: savedFee.amount,
+          }),
+        ),
       );
-      await manager.save(FeeInstallment, periodEntities);
+
+      if (students && students.length > 0) {
+        const pfiEntities: PersonFeeInstallment[] = [];
+        const debtEntities: Partial<Debt>[] = [];
+
+        for (const student of students) {
+          for (const entry of student.installments) {
+            const inst = savedInstallments[entry.index];
+            if (!inst) continue;
+
+            pfiEntities.push(
+              manager.create(PersonFeeInstallment, {
+                personId: student.personId,
+                feeInstallmentId: inst.id,
+                applies: entry.applies,
+              }),
+            );
+
+            if (entry.applies) {
+              debtEntities.push({
+                personId: student.personId,
+                conceptId: savedFee.conceptId,
+                feeInstallmentId: inst.id,
+                baseAmount: entry.amount,
+                discount: 0,
+                amount: entry.amount,
+                statusId: DebtStatusId.PENDING,
+                dueDate: inst.dueDate ? new Date(inst.dueDate) : null,
+              });
+            }
+          }
+        }
+
+        await manager.save(PersonFeeInstallment, pfiEntities);
+
+        if (debtEntities.length > 0) {
+          const debtRepo = manager.getRepository(Debt);
+          await debtRepo.save(debtEntities.map((d) => debtRepo.create(d)));
+        }
+      }
 
       return savedFee;
     });
@@ -106,6 +146,13 @@ export class ClassFeeService {
     });
     if (!fee) throw new NotFoundException('Cuota no encontrada');
     return fee;
+  }
+
+  async update(id: string, dto: UpdateClassFeeDto): Promise<ClassFee> {
+    const fee = await this.repo.findOne({ where: { id } });
+    if (!fee) throw new NotFoundException('Cuota no encontrada');
+    Object.assign(fee, dto);
+    return this.repo.save(fee);
   }
 
   async remove(id: string): Promise<void> {
@@ -185,8 +232,19 @@ export class ClassFeeService {
         .getMany();
     }
 
-    // Index debts by "feeInstallmentId_personId"
-    const debtMap = new Map<string, DebtMatrixDto['rows'][number]['cells'][string]>();
+    // Load PersonFeeInstallment records
+    let pfis: PersonFeeInstallment[] = [];
+    if (installmentIds.length > 0 && personIds.length > 0) {
+      pfis = await this.dataSource
+        .getRepository(PersonFeeInstallment)
+        .createQueryBuilder('pfi')
+        .where('pfi.feeInstallmentId IN (:...installmentIds)', { installmentIds })
+        .andWhere('pfi.personId IN (:...personIds)', { personIds })
+        .getMany();
+    }
+
+    // Index by "feeInstallmentId_personId"
+    const debtMap = new Map<string, { debtId: string; baseAmount: number; amount: number; statusId: string; statusName: string | null }>();
     for (const debt of debts) {
       debtMap.set(`${debt.feeInstallmentId}_${debt.personId}`, {
         debtId: debt.id,
@@ -197,19 +255,26 @@ export class ClassFeeService {
       });
     }
 
+    const pfiMap = new Map<string, PersonFeeInstallment>();
+    for (const pfi of pfis) {
+      pfiMap.set(`${pfi.feeInstallmentId}_${pfi.personId}`, pfi);
+    }
+
     // Build rows
     const rows: DebtMatrixDto['rows'] = students.map((student) => {
       const cells: DebtMatrixDto['rows'][number]['cells'] = {};
       for (const col of columns) {
-        const existing = debtMap.get(
-          `${col.installmentId}_${student.personId}`,
-        );
-        cells[col.installmentId] = existing ?? {
-          debtId: null,
-          baseAmount: col.defaultAmount,
-          amount: col.defaultAmount,
-          statusId: null,
-          statusName: null,
+        const key = `${col.installmentId}_${student.personId}`;
+        const pfi = pfiMap.get(key);
+        const debt = debtMap.get(key);
+        cells[col.installmentId] = {
+          hasRecord: !!pfi,
+          applies: pfi?.applies ?? false,
+          debtId: debt?.debtId ?? null,
+          baseAmount: debt?.baseAmount ?? col.defaultAmount,
+          amount: debt?.amount ?? col.defaultAmount,
+          statusId: debt?.statusId ?? null,
+          statusName: debt?.statusName ?? null,
         };
       }
       return {
@@ -222,6 +287,31 @@ export class ClassFeeService {
 
     rows.sort((a, b) => a.studentName.localeCompare(b.studentName));
     return { columns, rows };
+  }
+
+  async getEnrolledStudents(
+    classId: string,
+    academicYearId: string,
+  ): Promise<{ personId: string; studentId: string; studentName: string }[]> {
+    const cay = await this.resolveClassAcademicYear(classId, academicYearId);
+
+    const enrollments = await this.dataSource.getRepository(Enrollment).find({
+      where: { classId: cay.classId, academicYearId: cay.academicYearId, isActive: true },
+    });
+    if (enrollments.length === 0) return [];
+
+    const students = await this.dataSource.getRepository(Student).find({
+      where: enrollments.map((e) => ({ id: e.studentId })),
+      relations: { person: true },
+    });
+
+    return students
+      .map((s) => ({
+        personId: s.personId,
+        studentId: s.id,
+        studentName: `${s.person.paternalLastName} ${s.person.maternalLastName}, ${s.person.names}`,
+      }))
+      .sort((a, b) => a.studentName.localeCompare(b.studentName));
   }
 
   async generateDebts(

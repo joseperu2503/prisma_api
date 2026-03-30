@@ -1,4 +1,4 @@
-import { IsDateString, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsDateString, IsOptional } from 'class-validator';
 
 export class CreateFeeInstallmentDto {
   @IsOptional()
@@ -8,8 +8,4 @@ export class CreateFeeInstallmentDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string | null;
-
-  @IsNumber()
-  @Min(0)
-  amount: number;
 }

@@ -14,6 +14,8 @@ import { DebtConceptType } from 'src/debt/entities/debt-concept-type.entity';
 import { DebtStatus } from 'src/debt/entities/debt-status.entity';
 import { FeeFrequency } from 'src/debt/entities/fee-frequency.entity';
 import { PaymentMethod } from 'src/debt/entities/payment-method.entity';
+import { IgvAffectationType } from 'src/product/entities/igv-affectation-type.entity';
+import { UnitCode } from 'src/product/entities/unit-code.entity';
 import { EmployeeModule } from 'src/employee/employee.module';
 import { EnrollmentModule } from 'src/enrollment/enrollment.module';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
@@ -34,6 +36,8 @@ import { ClassSeed } from './services/class.seed';
 import { DebtConceptTypeSeed } from './services/debt-concept-type.seed';
 import { DebtStatusSeed } from './services/debt-status.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
+import { IgvAffectationTypeSeed } from './services/igv-affectation-type.seed';
+import { UnitCodeSeed } from './services/unit-code.seed';
 import { EnrollmentSeed } from './services/enrollment.seed';
 import { FeeFrequencySeed } from './services/fee-frequency.seed';
 import { GenderSeed } from './services/gender.seed';
@@ -69,6 +73,8 @@ import { StudentSeed } from './services/student.seed';
     DebtStatusSeed,
     FeeFrequencySeed,
     PaymentMethodSeed,
+    UnitCodeSeed,
+    IgvAffectationTypeSeed,
   ],
   imports: [
     AuthModule,
@@ -96,6 +102,8 @@ import { StudentSeed } from './services/student.seed';
       DebtStatus,
       FeeFrequency,
       PaymentMethod,
+      UnitCode,
+      IgvAffectationType,
     ]),
   ],
   exports: [SeedService],

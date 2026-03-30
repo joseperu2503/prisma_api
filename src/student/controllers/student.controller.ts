@@ -22,7 +22,12 @@ export class StudentController {
 
   @Post('create')
   async create(@Body() createStudentDto: CreateStudentDto) {
-    return this.studentService.create(createStudentDto);
+    await this.studentService.create(createStudentDto);
+
+    return {
+      success: true,
+      message: 'Estudiante registrado correctamente',
+    };
   }
 
   @Post('list')

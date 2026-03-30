@@ -17,6 +17,7 @@ import { DebtStatus } from './entities/debt-status.entity';
 import { Debt } from './entities/debt.entity';
 import { FeeFrequency } from './entities/fee-frequency.entity';
 import { FeeInstallment } from './entities/fee_installment.entity';
+import { PersonFeeInstallment } from './entities/person-fee-installment.entity';
 import { PaymentMethod } from './entities/payment-method.entity';
 import { Payment } from './entities/payment.entity';
 import { ClassFeeService } from './services/class-fee.service';
@@ -36,6 +37,7 @@ import { PaymentService } from './services/payment.service';
       PaymentMethod,
       ClassFee,
       FeeInstallment,
+      PersonFeeInstallment,
       FeeFrequency,
       Person,
       Student,

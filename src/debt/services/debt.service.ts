@@ -6,6 +6,7 @@ import { CreateDebtDto } from '../dto/create-debt.dto';
 import { ListDebtDto } from '../dto/list-debt.dto';
 import { Debt } from '../entities/debt.entity';
 import { FeeInstallment } from '../entities/fee_installment.entity';
+import { PersonFeeInstallment } from '../entities/person-fee-installment.entity';
 import { DebtStatusId } from '../enums/debt-status-id.enum';
 
 @Injectable()
@@ -33,8 +34,10 @@ export class DebtService {
   }
 
   async bulkSave(dto: BulkSaveMatrixDto): Promise<{ updated: number; created: number }> {
-    let updated = 0;
+    const pfiRepo = this.dataSource.getRepository(PersonFeeInstallment);
 
+    // Update existing debt amounts
+    let updated = 0;
     if (dto.updates.length > 0) {
       for (const item of dto.updates) {
         const discount = item.discount ?? 0;
@@ -47,6 +50,17 @@ export class DebtService {
       updated = dto.updates.length;
     }
 
+    // Toggle applies on existing PersonFeeInstallment records
+    if (dto.toggles.length > 0) {
+      for (const item of dto.toggles) {
+        await pfiRepo.update(
+          { personId: item.personId, feeInstallmentId: item.installmentId },
+          { applies: item.applies },
+        );
+      }
+    }
+
+    // Create new PersonFeeInstallment records (+ Debt if applies=true)
     let created = 0;
     if (dto.creates.length > 0) {
       const installmentIds = [...new Set(dto.creates.map((c) => c.installmentId))];
@@ -56,26 +70,38 @@ export class DebtService {
       });
       const installmentMap = new Map(installments.map((p) => [p.id, p]));
 
-      const toCreate = dto.creates
-        .map((item) => {
-          const installment = installmentMap.get(item.installmentId);
-          if (!installment) return null;
-          const discount = item.discount ?? 0;
-          return this.debtRepo.create({
-            personId: item.personId,
-            conceptId: installment.classFee.conceptId,
-            feeInstallmentId: item.installmentId,
-            baseAmount: item.baseAmount,
-            discount,
-            amount: item.baseAmount - discount,
-            statusId: DebtStatusId.PENDING,
-            dueDate: installment.dueDate ? new Date(installment.dueDate) : null,
-          });
-        })
-        .filter((d): d is Debt => d !== null);
+      const debtsToCreate: Debt[] = [];
 
-      await this.debtRepo.save(toCreate);
-      created = toCreate.length;
+      for (const item of dto.creates) {
+        const installment = installmentMap.get(item.installmentId);
+        if (!installment) continue;
+
+        await pfiRepo.upsert(
+          { personId: item.personId, feeInstallmentId: item.installmentId, applies: item.applies },
+          ['personId', 'feeInstallmentId'],
+        );
+
+        if (item.applies) {
+          const discount = item.discount ?? 0;
+          debtsToCreate.push(
+            this.debtRepo.create({
+              personId: item.personId,
+              conceptId: installment.classFee.conceptId,
+              feeInstallmentId: item.installmentId,
+              baseAmount: item.baseAmount,
+              discount,
+              amount: item.baseAmount - discount,
+              statusId: DebtStatusId.PENDING,
+              dueDate: installment.dueDate ? new Date(installment.dueDate) : null,
+            }),
+          );
+        }
+      }
+
+      if (debtsToCreate.length > 0) {
+        await this.debtRepo.save(debtsToCreate);
+        created = debtsToCreate.length;
+      }
     }
 
     return { updated, created };

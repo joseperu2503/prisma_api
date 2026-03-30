@@ -29,6 +29,7 @@ import { SubjectModule } from './subject/subject.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TeacherModule } from './teacher/teacher.module';
 import { DebtModule } from './debt/debt.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   controllers: [AppController],
@@ -64,6 +65,7 @@ import { DebtModule } from './debt/debt.module';
     AppVersionModule,
     NotificationsModule,
     DebtModule,
+    ProductModule,
   ],
   providers: [SeedCommand],
 })

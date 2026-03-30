@@ -1,6 +1,18 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsOptional, IsUUID, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsUUID, Min, ValidateNested } from 'class-validator';
 import { CreateStudentDto } from 'src/student/dto/create-student.dto';
+
+export class FeeInstallmentOverrideDto {
+  @IsUUID()
+  feeInstallmentId: string;
+
+  @IsBoolean()
+  applies: boolean;
+
+  @IsNumber()
+  @Min(0)
+  amount: number;
+}
 
 export class CreateEnrollmentDto {
   @ValidateNested()
@@ -19,4 +31,10 @@ export class CreateEnrollmentDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FeeInstallmentOverrideDto)
+  feeOverrides?: FeeInstallmentOverrideDto[];
 }
