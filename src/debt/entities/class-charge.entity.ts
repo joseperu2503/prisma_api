@@ -1,4 +1,5 @@
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
+import { ProductPresentation } from 'src/product/entities/product-presentation.entity';
 import {
   Column,
   CreateDateColumn,
@@ -9,12 +10,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { DebtConcept } from './debt-concept.entity';
-import { FeeFrequency } from './fee-frequency.entity';
-import { FeeInstallment } from './fee_installment.entity';
+import { ChargeFrequency } from './charge-frequency.entity';
+import { ChargeSchedule } from './charge-schedule.entity';
 
-@Entity('class_fees')
-export class ClassFee {
+@Entity('class_charges')
+export class ClassCharge {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -25,25 +25,25 @@ export class ClassFee {
   @Column('uuid', { name: 'class_academic_year_id' })
   classAcademicYearId: string;
 
-  @ManyToOne(() => DebtConcept)
-  @JoinColumn({ name: 'concept_id' })
-  concept: DebtConcept;
+  @ManyToOne(() => ProductPresentation)
+  @JoinColumn({ name: 'presentation_id' })
+  productPresentation: ProductPresentation;
 
-  @Column('uuid', { name: 'concept_id' })
-  conceptId: string;
+  @Column('uuid', { name: 'presentation_id' })
+  productPresentationId: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @ManyToOne(() => FeeFrequency)
+  @ManyToOne(() => ChargeFrequency)
   @JoinColumn({ name: 'frequency_id' })
-  frequency: FeeFrequency;
+  frequency: ChargeFrequency;
 
   @Column({ type: 'varchar', length: 50, name: 'frequency_id', default: 'ONE_TIME' })
   frequencyId: string;
 
-  @OneToMany(() => FeeInstallment, (p) => p.classFee)
-  installments: FeeInstallment[];
+  @OneToMany(() => ChargeSchedule, (p) => p.classCharge)
+  schedules: ChargeSchedule[];
 
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive: boolean;

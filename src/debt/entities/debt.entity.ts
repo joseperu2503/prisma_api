@@ -9,9 +9,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { DebtConcept } from './debt-concept.entity';
 import { DebtStatus } from './debt-status.entity';
-import { FeeInstallment } from './fee_installment.entity';
+import { ChargeSchedule } from './charge-schedule.entity';
 import { Payment } from './payment.entity';
 
 @Entity('debts')
@@ -26,25 +25,23 @@ export class Debt {
   @Column('uuid', { name: 'person_id' })
   personId: string;
 
-  @ManyToOne(() => DebtConcept)
-  @JoinColumn({ name: 'concept_id' })
-  concept: DebtConcept;
+  @ManyToOne(() => ChargeSchedule, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'charge_schedule_id' })
+  chargeSchedule: ChargeSchedule | null;
 
-  @Column('uuid', { name: 'concept_id' })
-  conceptId: string;
-
-  @ManyToOne(() => FeeInstallment, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'fee_installment_id' })
-  feeInstallment: FeeInstallment | null;
-
-  @Column('uuid', { name: 'fee_installment_id', nullable: true })
-  feeInstallmentId: string | null;
+  @Column('uuid', { name: 'charge_schedule_id', nullable: true })
+  chargeScheduleId: string | null;
 
   @ManyToOne(() => DebtStatus)
   @JoinColumn({ name: 'status_id' })
   status: DebtStatus;
 
-  @Column({ type: 'varchar', length: 50, name: 'status_id', default: 'PENDING' })
+  @Column({
+    type: 'varchar',
+    length: 50,
+    name: 'status_id',
+    default: 'PENDING',
+  })
   statusId: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, name: 'base_amount' })

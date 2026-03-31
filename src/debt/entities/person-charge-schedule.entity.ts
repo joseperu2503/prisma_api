@@ -1,9 +1,9 @@
 import { Person } from 'src/person/entities/person.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { FeeInstallment } from './fee_installment.entity';
+import { ChargeSchedule } from './charge-schedule.entity';
 
-@Entity('person_fee_installments')
-export class PersonFeeInstallment {
+@Entity('person_charge_schedules')
+export class PersonChargeSchedule {
   @PrimaryColumn('uuid', { name: 'person_id' })
   personId: string;
 
@@ -11,12 +11,12 @@ export class PersonFeeInstallment {
   @JoinColumn({ name: 'person_id' })
   person: Person;
 
-  @PrimaryColumn('uuid', { name: 'fee_installment_id' })
-  feeInstallmentId: string;
+  @PrimaryColumn('uuid', { name: 'charge_schedule_id' })
+  chargeScheduleId: string;
 
-  @ManyToOne(() => FeeInstallment, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'fee_installment_id' })
-  feeInstallment: FeeInstallment;
+  @ManyToOne(() => ChargeSchedule, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'charge_schedule_id' })
+  chargeSchedule: ChargeSchedule;
 
   @Column({ type: 'boolean', default: true })
   applies: boolean;

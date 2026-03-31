@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested } from 'class-validator';
-import { CreateFeeInstallmentDto } from './create-class-fee-period.dto';
+import { CreateChargeScheduleDto } from './create-charge-schedule.dto';
 
 export class StudentInstallmentEntryDto {
   @IsNumber()
@@ -14,7 +14,7 @@ export class StudentInstallmentEntryDto {
   amount: number;
 }
 
-export class StudentFeeEntryDto {
+export class StudentChargeEntryDto {
   @IsUUID()
   personId: string;
 
@@ -24,7 +24,7 @@ export class StudentFeeEntryDto {
   installments: StudentInstallmentEntryDto[];
 }
 
-export class CreateClassFeeDto {
+export class CreateClassChargeDto {
   @IsUUID()
   classId: string;
 
@@ -32,7 +32,7 @@ export class CreateClassFeeDto {
   academicYearId: string;
 
   @IsUUID()
-  conceptId: string;
+  presentationId: string;
 
   @IsNumber()
   @Min(0)
@@ -42,12 +42,12 @@ export class CreateClassFeeDto {
   frequencyId: string;
 
   @ValidateNested({ each: true })
-  @Type(() => CreateFeeInstallmentDto)
-  installments: CreateFeeInstallmentDto[];
+  @Type(() => CreateChargeScheduleDto)
+  installments: CreateChargeScheduleDto[];
 
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => StudentFeeEntryDto)
-  students?: StudentFeeEntryDto[];
+  @Type(() => StudentChargeEntryDto)
+  students?: StudentChargeEntryDto[];
 }

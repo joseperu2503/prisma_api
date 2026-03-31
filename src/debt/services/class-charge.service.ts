@@ -7,22 +7,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
 import { DebtStatusId } from 'src/debt/enums/debt-status-id.enum';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
+import { ProductPresentation } from 'src/product/entities/product-presentation.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { DataSource, Repository } from 'typeorm';
-import { CreateClassFeeDto } from '../dto/create-class-fee.dto';
-import { UpdateClassFeeDto } from '../dto/update-class-fee.dto';
+import { CreateClassChargeDto } from '../dto/create-class-charge.dto';
 import { DebtMatrixDto } from '../dto/debt-matrix.dto';
-import { ClassFee } from '../entities/class-fee.entity';
-import { DebtConcept } from '../entities/debt-concept.entity';
+import { UpdateClassChargeDto } from '../dto/update-class-charge.dto';
+import { ChargeSchedule } from '../entities/charge-schedule.entity';
+import { ClassCharge } from '../entities/class-charge.entity';
 import { Debt } from '../entities/debt.entity';
-import { FeeInstallment } from '../entities/fee_installment.entity';
-import { PersonFeeInstallment } from '../entities/person-fee-installment.entity';
+import { PersonChargeSchedule } from '../entities/person-charge-schedule.entity';
 
 @Injectable()
-export class ClassFeeService {
+export class ClassChargeService {
   constructor(
-    @InjectRepository(ClassFee)
-    private readonly repo: Repository<ClassFee>,
+    @InjectRepository(ClassCharge)
+    private readonly repo: Repository<ClassCharge>,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -38,46 +38,61 @@ export class ClassFeeService {
     return cay;
   }
 
-  async create(dto: CreateClassFeeDto): Promise<ClassFee> {
-    const { classId, academicYearId, conceptId, installments, students, ...rest } = dto;
+  async create(dto: CreateClassChargeDto): Promise<ClassCharge> {
+    const {
+      classId,
+      academicYearId,
+      presentationId,
+      installments: schedules,
+      students,
+      ...rest
+    } = dto;
 
     const cay = await this.resolveClassAcademicYear(classId, academicYearId);
 
-    const concept = await this.dataSource
-      .getRepository(DebtConcept)
-      .findOne({ where: { id: conceptId } });
+    const presentation = await this.dataSource
+      .getRepository(ProductPresentation)
+      .findOne({ where: { id: presentationId } });
 
-    if (!concept) throw new NotFoundException('Concepto no encontrado');
+    if (!presentation)
+      throw new NotFoundException('Presentación no encontrada');
 
     const existing = await this.repo.findOne({
-      where: { classAcademicYearId: cay.id, conceptId },
+      where: {
+        classAcademicYearId: cay.id,
+        productPresentationId: presentationId,
+      },
     });
 
     if (existing) {
       throw new ConflictException(
-        'Ya existe una cuota con ese concepto para esta clase y año académico',
+        'Ya existe una cuota con esa presentación para esta clase y año académico',
       );
     }
 
-    const fee = await this.dataSource.transaction(async (manager) => {
-      const savedFee = await manager.save(
-        manager.create(ClassFee, { classAcademicYearId: cay.id, conceptId, ...rest }),
+    const charge = await this.dataSource.transaction(async (manager) => {
+      const savedCharge = await manager.save(
+        manager.create(ClassCharge, {
+          classAcademicYearId: cay.id,
+          productPresentationId: presentationId,
+          ...rest,
+        }),
       );
 
       const savedInstallments = await manager.save(
-        FeeInstallment,
-        installments.map((p) =>
-          manager.create(FeeInstallment, {
-            classFeeId: savedFee.id,
+        ChargeSchedule,
+        schedules.map((p) =>
+          manager.create(ChargeSchedule, {
+            classChargeId: savedCharge.id,
             periodDate: p.periodDate ?? null,
             dueDate: p.dueDate ?? null,
-            amount: savedFee.amount,
+            amount: savedCharge.amount,
           }),
         ),
       );
 
       if (students && students.length > 0) {
-        const pfiEntities: PersonFeeInstallment[] = [];
+        const pfiEntities: PersonChargeSchedule[] = [];
         const debtEntities: Partial<Debt>[] = [];
 
         for (const student of students) {
@@ -86,9 +101,9 @@ export class ClassFeeService {
             if (!inst) continue;
 
             pfiEntities.push(
-              manager.create(PersonFeeInstallment, {
+              manager.create(PersonChargeSchedule, {
                 personId: student.personId,
-                feeInstallmentId: inst.id,
+                chargeScheduleId: inst.id,
                 applies: entry.applies,
               }),
             );
@@ -96,8 +111,7 @@ export class ClassFeeService {
             if (entry.applies) {
               debtEntities.push({
                 personId: student.personId,
-                conceptId: savedFee.conceptId,
-                feeInstallmentId: inst.id,
+                chargeScheduleId: inst.id,
                 baseAmount: entry.amount,
                 discount: 0,
                 amount: entry.amount,
@@ -108,7 +122,7 @@ export class ClassFeeService {
           }
         }
 
-        await manager.save(PersonFeeInstallment, pfiEntities);
+        await manager.save(PersonChargeSchedule, pfiEntities);
 
         if (debtEntities.length > 0) {
           const debtRepo = manager.getRepository(Debt);
@@ -116,49 +130,53 @@ export class ClassFeeService {
         }
       }
 
-      return savedFee;
+      return savedCharge;
     });
 
-    return fee;
+    return charge;
   }
 
   async findByClass(
     classId: string,
     academicYearId: string,
-  ): Promise<ClassFee[]> {
+  ): Promise<ClassCharge[]> {
     const cay = await this.resolveClassAcademicYear(classId, academicYearId);
     return this.repo.find({
       where: { classAcademicYearId: cay.id },
-      relations: { concept: true, frequency: true, installments: true },
+      relations: {
+        productPresentation: true,
+        frequency: true,
+        schedules: true,
+      },
       order: { createdAt: 'ASC' },
     });
   }
 
-  async findOne(id: string): Promise<ClassFee> {
-    const fee = await this.repo.findOne({
+  async findOne(id: string): Promise<ClassCharge> {
+    const charge = await this.repo.findOne({
       where: { id },
       relations: {
-        concept: true,
+        productPresentation: true,
         frequency: true,
-        installments: true,
+        schedules: true,
         classAcademicYear: { class: true, academicYear: true },
       },
     });
-    if (!fee) throw new NotFoundException('Cuota no encontrada');
-    return fee;
+    if (!charge) throw new NotFoundException('Cuota no encontrada');
+    return charge;
   }
 
-  async update(id: string, dto: UpdateClassFeeDto): Promise<ClassFee> {
-    const fee = await this.repo.findOne({ where: { id } });
-    if (!fee) throw new NotFoundException('Cuota no encontrada');
-    Object.assign(fee, dto);
-    return this.repo.save(fee);
+  async update(id: string, dto: UpdateClassChargeDto): Promise<ClassCharge> {
+    const charge = await this.repo.findOne({ where: { id } });
+    if (!charge) throw new NotFoundException('Cuota no encontrada');
+    Object.assign(charge, dto);
+    return this.repo.save(charge);
   }
 
   async remove(id: string): Promise<void> {
-    const fee = await this.repo.findOne({ where: { id } });
-    if (!fee) throw new NotFoundException('Cuota no encontrada');
-    await this.repo.remove(fee);
+    const charge = await this.repo.findOne({ where: { id } });
+    if (!charge) throw new NotFoundException('Cuota no encontrada');
+    await this.repo.remove(charge);
   }
 
   async getMatrix(
@@ -167,23 +185,23 @@ export class ClassFeeService {
   ): Promise<DebtMatrixDto> {
     const cay = await this.resolveClassAcademicYear(classId, academicYearId);
 
-    const fees = await this.repo.find({
+    const charges = await this.repo.find({
       where: { classAcademicYearId: cay.id },
-      relations: { concept: true, installments: true },
+      relations: { productPresentation: true, schedules: true },
       order: { createdAt: 'ASC' },
     });
 
-    // Build columns from all periods across all fees
+    // Build columns from all periods across all charges
     const columns: DebtMatrixDto['columns'] = [];
-    for (const fee of fees) {
-      const sortedPeriods = [...fee.installments].sort((a, b) => {
+    for (const charge of charges) {
+      const sortedPeriods = [...charge.schedules].sort((a, b) => {
         if (!a.periodDate && !b.periodDate) return 0;
         if (!a.periodDate) return -1;
         if (!b.periodDate) return 1;
         return a.periodDate.localeCompare(b.periodDate);
       });
       for (const period of sortedPeriods) {
-        let label = fee.concept.name;
+        let label = charge.productPresentation.name;
         if (period.periodDate) {
           const [y, m] = period.periodDate.split('-').map(Number);
           const raw = new Date(y, m - 1, 1).toLocaleString('es', {
@@ -194,8 +212,8 @@ export class ClassFeeService {
         }
         columns.push({
           installmentId: period.id,
-          classFeeId: fee.id,
-          conceptName: fee.concept.name,
+          classChargeId: charge.id,
+          conceptName: charge.productPresentation.name,
           label,
           periodDate: period.periodDate,
           dueDate: period.dueDate,
@@ -227,26 +245,37 @@ export class ClassFeeService {
         .getRepository(Debt)
         .createQueryBuilder('d')
         .leftJoinAndSelect('d.status', 'status')
-        .where('d.feeInstallmentId IN (:...installmentIds)', { installmentIds })
+        .where('d.chargeScheduleId IN (:...installmentIds)', { installmentIds })
         .andWhere('d.personId IN (:...personIds)', { personIds })
         .getMany();
     }
 
-    // Load PersonFeeInstallment records
-    let pfis: PersonFeeInstallment[] = [];
+    // Load PersonChargeSchedule records
+    let pfis: PersonChargeSchedule[] = [];
     if (installmentIds.length > 0 && personIds.length > 0) {
       pfis = await this.dataSource
-        .getRepository(PersonFeeInstallment)
+        .getRepository(PersonChargeSchedule)
         .createQueryBuilder('pfi')
-        .where('pfi.feeInstallmentId IN (:...installmentIds)', { installmentIds })
+        .where('pfi.chargeScheduleId IN (:...installmentIds)', {
+          installmentIds,
+        })
         .andWhere('pfi.personId IN (:...personIds)', { personIds })
         .getMany();
     }
 
-    // Index by "feeInstallmentId_personId"
-    const debtMap = new Map<string, { debtId: string; baseAmount: number; amount: number; statusId: string; statusName: string | null }>();
+    // Index by "chargeScheduleId_personId"
+    const debtMap = new Map<
+      string,
+      {
+        debtId: string;
+        baseAmount: number;
+        amount: number;
+        statusId: string;
+        statusName: string | null;
+      }
+    >();
     for (const debt of debts) {
-      debtMap.set(`${debt.feeInstallmentId}_${debt.personId}`, {
+      debtMap.set(`${debt.chargeScheduleId}_${debt.personId}`, {
         debtId: debt.id,
         baseAmount: Number(debt.baseAmount),
         amount: Number(debt.amount),
@@ -255,9 +284,9 @@ export class ClassFeeService {
       });
     }
 
-    const pfiMap = new Map<string, PersonFeeInstallment>();
+    const pfiMap = new Map<string, PersonChargeSchedule>();
     for (const pfi of pfis) {
-      pfiMap.set(`${pfi.feeInstallmentId}_${pfi.personId}`, pfi);
+      pfiMap.set(`${pfi.chargeScheduleId}_${pfi.personId}`, pfi);
     }
 
     // Build rows
@@ -296,7 +325,11 @@ export class ClassFeeService {
     const cay = await this.resolveClassAcademicYear(classId, academicYearId);
 
     const enrollments = await this.dataSource.getRepository(Enrollment).find({
-      where: { classId: cay.classId, academicYearId: cay.academicYearId, isActive: true },
+      where: {
+        classId: cay.classId,
+        academicYearId: cay.academicYearId,
+        isActive: true,
+      },
     });
     if (enrollments.length === 0) return [];
 
@@ -317,9 +350,9 @@ export class ClassFeeService {
   async generateDebts(
     id: string,
   ): Promise<{ created: number; skipped: number }> {
-    const fee = await this.findOne(id);
-    const { classId, academicYearId } = fee.classAcademicYear;
-    const periods = fee.installments;
+    const charge = await this.findOne(id);
+    const { classId, academicYearId } = charge.classAcademicYear;
+    const periods = charge.schedules;
 
     if (periods.length === 0) return { created: 0, skipped: 0 };
 
@@ -347,12 +380,14 @@ export class ClassFeeService {
     const existingDebts = await this.dataSource
       .getRepository(Debt)
       .createQueryBuilder('d')
-      .select(['d.personId', 'd.feeInstallmentId'])
-      .where('d.feeInstallmentId IN (:...installmentIds)', { installmentIds })
+      .select(['d.personId', 'd.chargeScheduleId'])
+      .where('d.chargeScheduleId IN (:...installmentIds)', { installmentIds })
       .andWhere('d.personId IN (:...personIds)', { personIds })
       .getMany();
 
-    const existingSet = new Set(existingDebts.map((d) => `${d.personId}_${d.feeInstallmentId}`));
+    const existingSet = new Set(
+      existingDebts.map((d) => `${d.personId}_${d.chargeScheduleId}`),
+    );
 
     const toCreate: Partial<Debt>[] = [];
 
@@ -363,8 +398,7 @@ export class ClassFeeService {
         if (!existingSet.has(key)) {
           toCreate.push({
             personId,
-            conceptId: fee.conceptId,
-            feeInstallmentId: period.id,
+            chargeScheduleId: period.id,
             baseAmount: Number(period.amount),
             discount: 0,
             amount: Number(period.amount),
@@ -383,5 +417,4 @@ export class ClassFeeService {
     const total = studentIds.length * periods.length;
     return { created: toCreate.length, skipped: total - toCreate.length };
   }
-
 }

@@ -12,7 +12,7 @@ import { Class } from 'src/class/entities/class.entity';
 import { CommonModule } from 'src/common/common.module';
 import { DebtConceptType } from 'src/debt/entities/debt-concept-type.entity';
 import { DebtStatus } from 'src/debt/entities/debt-status.entity';
-import { FeeFrequency } from 'src/debt/entities/fee-frequency.entity';
+import { ChargeFrequency } from 'src/debt/entities/charge-frequency.entity';
 import { PaymentMethod } from 'src/debt/entities/payment-method.entity';
 import { IgvAffectationType } from 'src/product/entities/igv-affectation-type.entity';
 import { UnitCode } from 'src/product/entities/unit-code.entity';
@@ -39,7 +39,7 @@ import { DocumentTypeSeed } from './services/document-type.seed';
 import { IgvAffectationTypeSeed } from './services/igv-affectation-type.seed';
 import { UnitCodeSeed } from './services/unit-code.seed';
 import { EnrollmentSeed } from './services/enrollment.seed';
-import { FeeFrequencySeed } from './services/fee-frequency.seed';
+import { ChargeFrequencySeed } from './services/charge-frequency.seed';
 import { GenderSeed } from './services/gender.seed';
 import { GradeSeed } from './services/grade.seed';
 import { LevelSeed } from './services/level.seed';
@@ -71,7 +71,7 @@ import { StudentSeed } from './services/student.seed';
     AppPlatformSeed,
     DebtConceptTypeSeed,
     DebtStatusSeed,
-    FeeFrequencySeed,
+    ChargeFrequencySeed,
     PaymentMethodSeed,
     UnitCodeSeed,
     IgvAffectationTypeSeed,
@@ -100,7 +100,7 @@ import { StudentSeed } from './services/student.seed';
       AppPlatform,
       DebtConceptType,
       DebtStatus,
-      FeeFrequency,
+      ChargeFrequency,
       PaymentMethod,
       UnitCode,
       IgvAffectationType,

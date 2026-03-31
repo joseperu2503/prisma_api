@@ -1,6 +1,6 @@
 export class DebtMatrixColumnDto {
   installmentId: string;
-  classFeeId: string;
+  classChargeId: string;
   conceptName: string;
   label: string;
   periodDate: string | null;

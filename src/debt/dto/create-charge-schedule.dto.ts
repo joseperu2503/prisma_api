@@ -1,6 +1,6 @@
 import { IsDateString, IsOptional } from 'class-validator';
 
-export class CreateFeeInstallmentDto {
+export class CreateChargeScheduleDto {
   @IsOptional()
   @IsDateString()
   periodDate?: string | null;

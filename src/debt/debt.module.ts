@@ -4,23 +4,24 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
+import { ProductPresentation } from 'src/product/entities/product-presentation.entity';
 import { Student } from 'src/student/entities/student.entity';
-import { ClassFeeController } from './controllers/class-fee.controller';
+import { ClassChargeController } from './controllers/class-charge.controller';
 import { DebtCatalogController } from './controllers/debt-catalog.controller';
 import { DebtConceptController } from './controllers/debt-concept.controller';
 import { DebtController } from './controllers/debt.controller';
 import { PaymentController } from './controllers/payment.controller';
-import { ClassFee } from './entities/class-fee.entity';
+import { ClassCharge } from './entities/class-charge.entity';
 import { DebtConceptType } from './entities/debt-concept-type.entity';
 import { DebtConcept } from './entities/debt-concept.entity';
 import { DebtStatus } from './entities/debt-status.entity';
 import { Debt } from './entities/debt.entity';
-import { FeeFrequency } from './entities/fee-frequency.entity';
-import { FeeInstallment } from './entities/fee_installment.entity';
-import { PersonFeeInstallment } from './entities/person-fee-installment.entity';
+import { ChargeFrequency } from './entities/charge-frequency.entity';
+import { ChargeSchedule } from './entities/charge-schedule.entity';
+import { PersonChargeSchedule } from './entities/person-charge-schedule.entity';
 import { PaymentMethod } from './entities/payment-method.entity';
 import { Payment } from './entities/payment.entity';
-import { ClassFeeService } from './services/class-fee.service';
+import { ClassChargeService } from './services/class-charge.service';
 import { DebtCatalogService } from './services/debt-catalog.service';
 import { DebtConceptService } from './services/debt-concept.service';
 import { DebtService } from './services/debt.service';
@@ -35,10 +36,11 @@ import { PaymentService } from './services/payment.service';
       DebtStatus,
       Payment,
       PaymentMethod,
-      ClassFee,
-      FeeInstallment,
-      PersonFeeInstallment,
-      FeeFrequency,
+      ClassCharge,
+      ChargeSchedule,
+      PersonChargeSchedule,
+      ChargeFrequency,
+      ProductPresentation,
       Person,
       Student,
       ClassAcademicYear,
@@ -51,14 +53,14 @@ import { PaymentService } from './services/payment.service';
     DebtConceptController,
     DebtController,
     PaymentController,
-    ClassFeeController,
+    ClassChargeController,
   ],
   providers: [
     DebtCatalogService,
     DebtConceptService,
     DebtService,
     PaymentService,
-    ClassFeeService,
+    ClassChargeService,
   ],
   exports: [DebtService],
 })

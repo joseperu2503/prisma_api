@@ -6,19 +6,19 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { ClassFee } from './class-fee.entity';
+import { ClassCharge } from './class-charge.entity';
 
-@Entity('fee_installments')
-export class FeeInstallment {
+@Entity('charge_schedules')
+export class ChargeSchedule {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => ClassFee, (fee) => fee.installments, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'class_fee_id' })
-  classFee: ClassFee;
+  @ManyToOne(() => ClassCharge, (charge) => charge.schedules, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'class_charge_id' })
+  classCharge: ClassCharge;
 
-  @Column('uuid', { name: 'class_fee_id' })
-  classFeeId: string;
+  @Column('uuid', { name: 'class_charge_id' })
+  classChargeId: string;
 
   /** Primer día del mes para MONTHLY, null para ONE_TIME / YEARLY */
   @Column({ type: 'date', nullable: true, name: 'period_date' })

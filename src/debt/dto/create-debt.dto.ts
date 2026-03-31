@@ -5,7 +5,7 @@ export class CreateDebtDto {
   personId: string;
 
   @IsUUID()
-  conceptId: string;
+  presentationId: string;
 
   @IsNumber()
   @Min(0)

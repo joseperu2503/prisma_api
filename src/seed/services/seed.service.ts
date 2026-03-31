@@ -10,7 +10,7 @@ import { DebtConceptTypeSeed } from './debt-concept-type.seed';
 import { DebtStatusSeed } from './debt-status.seed';
 import { DocumentTypeSeed } from './document-type.seed';
 import { EnrollmentSeed } from './enrollment.seed';
-import { FeeFrequencySeed } from './fee-frequency.seed';
+import { ChargeFrequencySeed } from './charge-frequency.seed';
 import { GenderSeed } from './gender.seed';
 import { IgvAffectationTypeSeed } from './igv-affectation-type.seed';
 import { UnitCodeSeed } from './unit-code.seed';
@@ -43,7 +43,7 @@ export class SeedService {
     private readonly appPlatformSeed: AppPlatformSeed,
     private readonly debtConceptTypeSeed: DebtConceptTypeSeed,
     private readonly debtStatusSeed: DebtStatusSeed,
-    private readonly feeFrequencySeed: FeeFrequencySeed,
+    private readonly chargeFrequencySeed: ChargeFrequencySeed,
     private readonly paymentMethodSeed: PaymentMethodSeed,
     private readonly unitCodeSeed: UnitCodeSeed,
     private readonly igvAffectationTypeSeed: IgvAffectationTypeSeed,
@@ -53,7 +53,7 @@ export class SeedService {
     // await this.dropAllTables();
     await this.debtConceptTypeSeed.run();
     await this.debtStatusSeed.run();
-    await this.feeFrequencySeed.run();
+    await this.chargeFrequencySeed.run();
     await this.paymentMethodSeed.run();
     await this.unitCodeSeed.run();
     await this.igvAffectationTypeSeed.run();

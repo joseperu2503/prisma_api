@@ -4,9 +4,9 @@ import { DataSource, Repository } from 'typeorm';
 import { BulkSaveMatrixDto } from '../dto/bulk-save-matrix.dto';
 import { CreateDebtDto } from '../dto/create-debt.dto';
 import { ListDebtDto } from '../dto/list-debt.dto';
+import { ChargeSchedule } from '../entities/charge-schedule.entity';
 import { Debt } from '../entities/debt.entity';
-import { FeeInstallment } from '../entities/fee_installment.entity';
-import { PersonFeeInstallment } from '../entities/person-fee-installment.entity';
+import { PersonChargeSchedule } from '../entities/person-charge-schedule.entity';
 import { DebtStatusId } from '../enums/debt-status-id.enum';
 
 @Injectable()
@@ -22,7 +22,6 @@ export class DebtService {
     const discount = dto.discount ?? 0;
     const debt = this.debtRepo.create({
       personId: dto.personId,
-      conceptId: dto.conceptId,
       baseAmount: dto.baseAmount,
       discount,
       amount: dto.baseAmount - discount,
@@ -33,8 +32,10 @@ export class DebtService {
     return this.debtRepo.save(debt);
   }
 
-  async bulkSave(dto: BulkSaveMatrixDto): Promise<{ updated: number; created: number }> {
-    const pfiRepo = this.dataSource.getRepository(PersonFeeInstallment);
+  async bulkSave(
+    dto: BulkSaveMatrixDto,
+  ): Promise<{ updated: number; created: number }> {
+    const pfiRepo = this.dataSource.getRepository(PersonChargeSchedule);
 
     // Update existing debt amounts
     let updated = 0;
@@ -50,24 +51,28 @@ export class DebtService {
       updated = dto.updates.length;
     }
 
-    // Toggle applies on existing PersonFeeInstallment records
+    // Toggle applies on existing PersonChargeInstallment records
     if (dto.toggles.length > 0) {
       for (const item of dto.toggles) {
         await pfiRepo.update(
-          { personId: item.personId, feeInstallmentId: item.installmentId },
+          { personId: item.personId, chargeScheduleId: item.installmentId },
           { applies: item.applies },
         );
       }
     }
 
-    // Create new PersonFeeInstallment records (+ Debt if applies=true)
+    // Create new PersonChargeSchedule records (+ Debt if applies=true)
     let created = 0;
     if (dto.creates.length > 0) {
-      const installmentIds = [...new Set(dto.creates.map((c) => c.installmentId))];
-      const installments = await this.dataSource.getRepository(FeeInstallment).find({
-        where: installmentIds.map((id) => ({ id })),
-        relations: { classFee: true },
-      });
+      const installmentIds = [
+        ...new Set(dto.creates.map((c) => c.installmentId)),
+      ];
+      const installments = await this.dataSource
+        .getRepository(ChargeSchedule)
+        .find({
+          where: installmentIds.map((id) => ({ id })),
+          relations: { classCharge: true },
+        });
       const installmentMap = new Map(installments.map((p) => [p.id, p]));
 
       const debtsToCreate: Debt[] = [];
@@ -77,8 +82,12 @@ export class DebtService {
         if (!installment) continue;
 
         await pfiRepo.upsert(
-          { personId: item.personId, feeInstallmentId: item.installmentId, applies: item.applies },
-          ['personId', 'feeInstallmentId'],
+          {
+            personId: item.personId,
+            chargeScheduleId: item.installmentId,
+            applies: item.applies,
+          },
+          ['personId', 'chargeScheduleId'],
         );
 
         if (item.applies) {
@@ -86,13 +95,14 @@ export class DebtService {
           debtsToCreate.push(
             this.debtRepo.create({
               personId: item.personId,
-              conceptId: installment.classFee.conceptId,
-              feeInstallmentId: item.installmentId,
+              chargeScheduleId: item.installmentId,
               baseAmount: item.baseAmount,
               discount,
               amount: item.baseAmount - discount,
               statusId: DebtStatusId.PENDING,
-              dueDate: installment.dueDate ? new Date(installment.dueDate) : null,
+              dueDate: installment.dueDate
+                ? new Date(installment.dueDate)
+                : null,
             }),
           );
         }
@@ -110,11 +120,11 @@ export class DebtService {
   async findAll(dto: ListDebtDto): Promise<Debt[]> {
     const qb = this.debtRepo
       .createQueryBuilder('debt')
-      .leftJoinAndSelect('debt.concept', 'concept')
+      .leftJoinAndSelect('debt.presentation', 'presentation')
       .leftJoinAndSelect('debt.status', 'status')
-      .leftJoinAndSelect('debt.feeInstallment', 'feeInstallment')
-      .leftJoinAndSelect('feeInstallment.classFee', 'classFee')
-      .leftJoinAndSelect('classFee.classAcademicYear', 'cay')
+      .leftJoinAndSelect('debt.chargeSchedule', 'chargeSchedule')
+      .leftJoinAndSelect('chargeSchedule.classCharge', 'classCharge')
+      .leftJoinAndSelect('classCharge.classAcademicYear', 'cay')
       .leftJoinAndSelect('cay.class', 'class')
       .leftJoinAndSelect('cay.academicYear', 'academicYear')
       .orderBy('debt.createdAt', 'DESC');
@@ -129,8 +139,10 @@ export class DebtService {
       });
     }
 
-    if (dto.conceptId) {
-      qb.andWhere('debt.conceptId = :conceptId', { conceptId: dto.conceptId });
+    if (dto.presentationId) {
+      qb.andWhere('debt.presentationId = :presentationId', {
+        presentationId: dto.presentationId,
+      });
     }
 
     if (dto.statusId) {

@@ -12,9 +12,9 @@ import { Attendance } from 'src/attendance/entities/attendance.entity';
 import { AttendanceStatusId } from 'src/attendance/enums/attenance-status-id.enum';
 import { AttendanceTypeId } from 'src/attendance/enums/attenance-type-id.enum';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
-import { ClassFee } from 'src/debt/entities/class-fee.entity';
+import { ClassCharge } from 'src/debt/entities/class-charge.entity';
 import { Debt } from 'src/debt/entities/debt.entity';
-import { PersonFeeInstallment } from 'src/debt/entities/person-fee-installment.entity';
+import { PersonChargeSchedule } from 'src/debt/entities/person-charge-schedule.entity';
 import { DebtStatusId } from 'src/debt/enums/debt-status-id.enum';
 import { StudentService } from 'src/student/services/student.service';
 import { DataSource, In, Repository } from 'typeorm';
@@ -69,31 +69,31 @@ export class EnrollmentService {
 
       await queryRunner.manager.save(enrollment);
 
-      // Register PersonFeeInstallments + Debts for existing class fees
+      // Register PersonChargeSchedules + Debts for existing class charges
       const cay = await queryRunner.manager.findOne(ClassAcademicYear, {
         where: { classId: dto.classId, academicYearId: dto.academicYearId },
       });
 
       if (cay) {
-        const fees = await queryRunner.manager.find(ClassFee, {
+        const charges = await queryRunner.manager.find(ClassCharge, {
           where: { classAcademicYearId: cay.id },
-          relations: { installments: true },
+          relations: { schedules: true },
         });
 
         const overrideMap = new Map(
-          (dto.feeOverrides ?? []).map((o) => [o.feeInstallmentId, o]),
+          (dto.chargeOverrides ?? []).map((o) => [o.chargeScheduleId, o]),
         );
 
-        for (const fee of fees) {
-          for (const installment of fee.installments) {
-            const override = overrideMap.get(installment.id);
+        for (const charge of charges) {
+          for (const schedule of charge.schedules) {
+            const override = overrideMap.get(schedule.id);
             const applies = override?.applies ?? true;
-            const amount = override?.amount ?? Number(installment.amount);
+            const amount = override?.amount ?? Number(schedule.amount);
 
             await queryRunner.manager.save(
-              queryRunner.manager.create(PersonFeeInstallment, {
+              queryRunner.manager.create(PersonChargeSchedule, {
                 personId: savedStudent.personId,
-                feeInstallmentId: installment.id,
+                chargeScheduleId: schedule.id,
                 applies,
               }),
             );
@@ -103,13 +103,12 @@ export class EnrollmentService {
               await debtRepo.save(
                 debtRepo.create({
                   personId: savedStudent.personId,
-                  conceptId: fee.conceptId,
-                  feeInstallmentId: installment.id,
+                  chargeScheduleId: schedule.id,
                   baseAmount: amount,
                   discount: 0,
                   amount,
                   statusId: DebtStatusId.PENDING,
-                  dueDate: installment.dueDate ? new Date(installment.dueDate) : null,
+                  dueDate: schedule.dueDate ? new Date(schedule.dueDate) : null,
                 }),
               );
             }

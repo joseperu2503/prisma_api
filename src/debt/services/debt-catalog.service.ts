@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DebtConceptType } from '../entities/debt-concept-type.entity';
 import { DebtStatus } from '../entities/debt-status.entity';
-import { FeeFrequency } from '../entities/fee-frequency.entity';
+import { ChargeFrequency } from '../entities/charge-frequency.entity';
 import { PaymentMethod } from '../entities/payment-method.entity';
 
 @Injectable()
@@ -15,8 +15,8 @@ export class DebtCatalogService {
     @InjectRepository(DebtStatus)
     private readonly statusRepo: Repository<DebtStatus>,
 
-    @InjectRepository(FeeFrequency)
-    private readonly frequencyRepo: Repository<FeeFrequency>,
+    @InjectRepository(ChargeFrequency)
+    private readonly frequencyRepo: Repository<ChargeFrequency>,
 
     @InjectRepository(PaymentMethod)
     private readonly methodRepo: Repository<PaymentMethod>,

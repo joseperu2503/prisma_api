@@ -11,7 +11,7 @@ export class ListDebtDto {
 
   @IsOptional()
   @IsUUID()
-  conceptId?: string;
+  presentationId?: string;
 
   @IsOptional()
   @IsString()

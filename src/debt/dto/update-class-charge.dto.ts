@@ -1,6 +1,6 @@
 import { IsBoolean, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
-export class UpdateClassFeeDto {
+export class UpdateClassChargeDto {
   @IsOptional()
   @IsNumber()
   @Min(0)

@@ -14,7 +14,7 @@ export class DebtCatalogController {
   @Get('debt-statuses')
   getStatuses() { return this.svc.getStatuses(); }
 
-  @Get('fee-frequencies')
+  @Get('charge-frequencies')
   getFrequencies() { return this.svc.getFrequencies(); }
 
   @Get('payment-methods')

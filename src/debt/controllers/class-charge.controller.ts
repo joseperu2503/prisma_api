@@ -10,17 +10,17 @@ import {
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { CreateClassFeeDto } from '../dto/create-class-fee.dto';
-import { UpdateClassFeeDto } from '../dto/update-class-fee.dto';
-import { ClassFeeService } from '../services/class-fee.service';
+import { CreateClassChargeDto } from '../dto/create-class-charge.dto';
+import { UpdateClassChargeDto } from '../dto/update-class-charge.dto';
+import { ClassChargeService } from '../services/class-charge.service';
 
 @Auth([RoleId.ADMIN])
-@Controller('class-fees')
-export class ClassFeeController {
-  constructor(private readonly svc: ClassFeeService) {}
+@Controller('class-charges')
+export class ClassChargeController {
+  constructor(private readonly svc: ClassChargeService) {}
 
   @Post()
-  async create(@Body() dto: CreateClassFeeDto) {
+  async create(@Body() dto: CreateClassChargeDto) {
     await this.svc.create(dto);
     return { success: true, message: 'Cuota registrada correctamente' };
   }
@@ -57,7 +57,7 @@ export class ClassFeeController {
   @Patch(':id')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateClassFeeDto,
+    @Body() dto: UpdateClassChargeDto,
   ) {
     await this.svc.update(id, dto);
     return { success: true, message: 'Cobro actualizado correctamente' };
