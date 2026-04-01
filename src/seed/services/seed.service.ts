@@ -5,22 +5,21 @@ import { AdminSeed } from './admin.seed';
 import { AppPlatformSeed } from './app-platform.seed';
 import { AttendanceStatusSeed } from './attendance-status.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
+import { ChargeFrequencySeed } from './charge-frequency.seed';
 import { ClassSeed } from './class.seed';
-import { DebtConceptTypeSeed } from './debt-concept-type.seed';
 import { DebtStatusSeed } from './debt-status.seed';
 import { DocumentTypeSeed } from './document-type.seed';
 import { EnrollmentSeed } from './enrollment.seed';
-import { ChargeFrequencySeed } from './charge-frequency.seed';
 import { GenderSeed } from './gender.seed';
-import { IgvAffectationTypeSeed } from './igv-affectation-type.seed';
-import { UnitCodeSeed } from './unit-code.seed';
 import { GradeSeed } from './grade.seed';
+import { IgvAffectationTypeSeed } from './igv-affectation-type.seed';
 import { LevelSeed } from './level.seed';
 import { PaymentMethodSeed } from './payment-method.seed';
 import { PermissionSeed } from './permission.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
 import { RoleSeed } from './role.seed';
 import { StudentSeed } from './student.seed';
+import { UnitCodeSeed } from './unit-code.seed';
 
 @Injectable()
 export class SeedService {
@@ -41,7 +40,6 @@ export class SeedService {
     private readonly adminSeed: AdminSeed,
     private readonly classSeed: ClassSeed,
     private readonly appPlatformSeed: AppPlatformSeed,
-    private readonly debtConceptTypeSeed: DebtConceptTypeSeed,
     private readonly debtStatusSeed: DebtStatusSeed,
     private readonly chargeFrequencySeed: ChargeFrequencySeed,
     private readonly paymentMethodSeed: PaymentMethodSeed,
@@ -51,7 +49,6 @@ export class SeedService {
 
   async runSeed() {
     // await this.dropAllTables();
-    await this.debtConceptTypeSeed.run();
     await this.debtStatusSeed.run();
     await this.chargeFrequencySeed.run();
     await this.paymentMethodSeed.run();

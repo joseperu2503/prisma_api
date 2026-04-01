@@ -8,15 +8,18 @@ import { DebtCatalogService } from '../services/debt-catalog.service';
 export class DebtCatalogController {
   constructor(private readonly svc: DebtCatalogService) {}
 
-  @Get('debt-concept-types')
-  getConceptTypes() { return this.svc.getConceptTypes(); }
-
   @Get('debt-statuses')
-  getStatuses() { return this.svc.getStatuses(); }
+  getStatuses() {
+    return this.svc.getStatuses();
+  }
 
   @Get('charge-frequencies')
-  getFrequencies() { return this.svc.getFrequencies(); }
+  getFrequencies() {
+    return this.svc.getFrequencies();
+  }
 
   @Get('payment-methods')
-  getPaymentMethods() { return this.svc.getPaymentMethods(); }
+  getPaymentMethods() {
+    return this.svc.getPaymentMethods();
+  }
 }

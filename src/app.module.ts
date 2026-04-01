@@ -30,6 +30,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { TeacherModule } from './teacher/teacher.module';
 import { DebtModule } from './debt/debt.module';
 import { ProductModule } from './product/product.module';
+import { SaleModule } from './sale/sale.module';
 
 @Module({
   controllers: [AppController],
@@ -66,6 +67,7 @@ import { ProductModule } from './product/product.module';
     NotificationsModule,
     DebtModule,
     ProductModule,
+    SaleModule,
   ],
   providers: [SeedCommand],
 })
