@@ -1,15 +1,13 @@
-import { Type } from 'class-transformer';
 import {
-  IsArray,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
-  ValidateNested,
+  Min,
 } from 'class-validator';
 import { IgvAffectationTypeId } from '../enums/igv-affectation-type-id.enum';
 import { UnitCodeId } from '../enums/unit-code-id.enum';
-import { CreatePresentationDto } from './create-presentation.dto';
 
 export class CreateProductDto {
   @IsString()
@@ -27,8 +25,7 @@ export class CreateProductDto {
   igvAffectationTypeId: IgvAffectationTypeId;
 
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreatePresentationDto)
-  presentations?: CreatePresentationDto[];
+  @IsNumber()
+  @Min(0)
+  price?: number;
 }

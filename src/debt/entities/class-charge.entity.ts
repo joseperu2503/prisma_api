@@ -1,5 +1,5 @@
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
-import { ProductPresentation } from 'src/product/entities/product-presentation.entity';
+import { ProductPrice } from 'src/product/entities/product-price.entity';
 import {
   Column,
   CreateDateColumn,
@@ -25,12 +25,12 @@ export class ClassCharge {
   @Column('uuid', { name: 'class_academic_year_id' })
   classAcademicYearId: string;
 
-  @ManyToOne(() => ProductPresentation)
+  @ManyToOne(() => ProductPrice)
   @JoinColumn({ name: 'presentation_id' })
-  productPresentation: ProductPresentation;
+  productPrice: ProductPrice;
 
   @Column('uuid', { name: 'presentation_id' })
-  productPresentationId: string;
+  productPriceId: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
@@ -39,7 +39,12 @@ export class ClassCharge {
   @JoinColumn({ name: 'frequency_id' })
   frequency: ChargeFrequency;
 
-  @Column({ type: 'varchar', length: 50, name: 'frequency_id', default: 'ONE_TIME' })
+  @Column({
+    type: 'varchar',
+    length: 50,
+    name: 'frequency_id',
+    default: 'ONE_TIME',
+  })
   frequencyId: string;
 
   @OneToMany(() => ChargeSchedule, (p) => p.classCharge)

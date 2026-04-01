@@ -8,18 +8,18 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { CreatePresentationDto } from '../dto/create-presentation.dto';
+import { Repository } from 'typeorm';
+import { CreateProductPriceDto } from '../dto/create-product-price.dto';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { ListProductDto } from '../dto/list-product.dto';
-import { UpdatePresentationDto } from '../dto/update-presentation.dto';
+import { UpdateProductPriceDto } from '../dto/update-product-price.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
-import { ProductService } from '../services/product.service';
-import { InjectRepository } from '@nestjs/typeorm';
 import { IgvAffectationType } from '../entities/igv-affectation-type.entity';
 import { UnitCode } from '../entities/unit-code.entity';
-import { Repository } from 'typeorm';
+import { ProductService } from '../services/product.service';
 
 @Auth([RoleId.ADMIN])
 @Controller('products')
@@ -70,38 +70,38 @@ export class ProductController {
     return this.service.remove(id);
   }
 
-  // Presentations
+  // Prices
 
-  @Post(':id/presentations')
-  addPresentation(
+  @Post(':id/prices')
+  addPrice(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: CreatePresentationDto,
+    @Body() dto: CreateProductPriceDto,
   ) {
-    return this.service.addPresentation(id, dto);
+    return this.service.addPrice(id, dto);
   }
 
-  @Patch(':id/presentations/:presentationId/toggle-active')
-  togglePresentationActive(
+  @Patch(':id/prices/:priceId/toggle-active')
+  togglePriceActive(
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('presentationId', ParseUUIDPipe) presentationId: string,
+    @Param('priceId', ParseUUIDPipe) priceId: string,
   ) {
-    return this.service.togglePresentationActive(id, presentationId);
+    return this.service.togglePriceActive(id, priceId);
   }
 
-  @Patch(':id/presentations/:presentationId')
-  updatePresentation(
+  @Patch(':id/prices/:priceId')
+  updatePrice(
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('presentationId', ParseUUIDPipe) presentationId: string,
-    @Body() dto: UpdatePresentationDto,
+    @Param('priceId', ParseUUIDPipe) priceId: string,
+    @Body() dto: UpdateProductPriceDto,
   ) {
-    return this.service.updatePresentation(id, presentationId, dto);
+    return this.service.updatePrice(id, priceId, dto);
   }
 
-  @Delete(':id/presentations/:presentationId')
-  removePresentation(
+  @Delete(':id/prices/:priceId')
+  removePrice(
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('presentationId', ParseUUIDPipe) presentationId: string,
+    @Param('priceId', ParseUUIDPipe) priceId: string,
   ) {
-    return this.service.removePresentation(id, presentationId);
+    return this.service.removePrice(id, priceId);
   }
 }

@@ -1,4 +1,4 @@
-import { ProductPresentation } from 'src/product/entities/product-presentation.entity';
+import { ProductPrice } from 'src/product/entities/product-price.entity';
 import {
   Column,
   Entity,
@@ -20,9 +20,9 @@ export class SaleItem {
   @Column('uuid', { name: 'sale_id' })
   saleId: string;
 
-  @ManyToOne(() => ProductPresentation, { eager: false })
+  @ManyToOne(() => ProductPrice, { eager: false })
   @JoinColumn({ name: 'product_presentation_id' })
-  productPresentation: ProductPresentation;
+  productPresentation: ProductPrice;
 
   @Column('uuid', { name: 'product_presentation_id' })
   productPresentationId: string;

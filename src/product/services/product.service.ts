@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreatePresentationDto } from '../dto/create-presentation.dto';
+import { CreateProductPriceDto } from '../dto/create-product-price.dto';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { ListProductDto } from '../dto/list-product.dto';
-import { UpdatePresentationDto } from '../dto/update-presentation.dto';
+import { UpdateProductPriceDto } from '../dto/update-product-price.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
-import { ProductPresentation } from '../entities/product-presentation.entity';
+import { ProductPrice } from '../entities/product-price.entity';
 import { Product } from '../entities/product.entity';
 
 @Injectable()
@@ -15,26 +15,25 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly repo: Repository<Product>,
 
-    @InjectRepository(ProductPresentation)
-    private readonly presentationRepo: Repository<ProductPresentation>,
+    @InjectRepository(ProductPrice)
+    private readonly priceRepo: Repository<ProductPrice>,
   ) {}
 
   async create(dto: CreateProductDto) {
-    const { presentations, ...productData } = dto;
+    const { price, ...productData } = dto;
     const product = this.repo.create({ isActive: true, ...productData });
     const saved = await this.repo.save(product);
 
-    if (presentations?.length) {
-      const rows = presentations.map((p) =>
-        this.presentationRepo.create({
-          ...p,
-          productId: saved.id,
-          isActive: true,
-          academicYearId: p.academicYearId ?? null,
-          classId: p.classId ?? null,
-        }),
-      );
-      await this.presentationRepo.save(rows);
+    if (price !== undefined && price !== null) {
+      const productPrice = this.priceRepo.create({
+        productId: saved.id,
+        price,
+        academicYearId: null,
+        classId: null,
+        enrollmentId: null,
+        isActive: true,
+      });
+      await this.priceRepo.save(productPrice);
     }
 
     return this.findOne(saved.id);
@@ -49,7 +48,7 @@ export class ProductService {
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.unitCode', 'uc')
       .leftJoinAndSelect('p.igvAffectationType', 'igv')
-      .leftJoinAndSelect('p.presentations', 'pr')
+      .leftJoinAndSelect('p.prices', 'pr')
       .orderBy('p.name', 'ASC');
 
     if (search) {
@@ -73,8 +72,12 @@ export class ProductService {
   async findOne(id: string) {
     const product = await this.repo.findOne({
       where: { id },
-      relations: { unitCode: true, igvAffectationType: true, presentations: { academicYear: true, class: true } },
-      order: { presentations: { createdAt: 'ASC' } },
+      relations: {
+        unitCode: true,
+        igvAffectationType: true,
+        prices: { academicYear: true, class: true, enrollment: true },
+      },
+      order: { prices: { createdAt: 'ASC' } },
     });
     if (!product) throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     return product;
@@ -82,7 +85,8 @@ export class ProductService {
 
   async update(id: string, dto: UpdateProductDto) {
     const product = await this.findOne(id);
-    Object.assign(product, dto);
+    const { price, ...productData } = dto;
+    Object.assign(product, productData);
     return this.repo.save(product);
   }
 
@@ -97,44 +101,45 @@ export class ProductService {
     return this.repo.save(product);
   }
 
-  // Presentations
+  // Prices
 
-  async addPresentation(productId: string, dto: CreatePresentationDto) {
+  async addPrice(productId: string, dto: CreateProductPriceDto) {
     await this.findOne(productId);
-    const presentation = this.presentationRepo.create({
+    const productPrice = this.priceRepo.create({
       ...dto,
       productId,
       isActive: true,
       academicYearId: dto.academicYearId ?? null,
       classId: dto.classId ?? null,
+      enrollmentId: dto.enrollmentId ?? null,
     });
-    return this.presentationRepo.save(presentation);
+    return this.priceRepo.save(productPrice);
   }
 
-  async updatePresentation(productId: string, presentationId: string, dto: UpdatePresentationDto) {
-    const presentation = await this.findPresentation(productId, presentationId);
-    Object.assign(presentation, dto);
-    return this.presentationRepo.save(presentation);
+  async updatePrice(productId: string, priceId: string, dto: UpdateProductPriceDto) {
+    const price = await this.findPrice(productId, priceId);
+    Object.assign(price, dto);
+    return this.priceRepo.save(price);
   }
 
-  async removePresentation(productId: string, presentationId: string) {
-    const presentation = await this.findPresentation(productId, presentationId);
-    return this.presentationRepo.remove(presentation);
+  async removePrice(productId: string, priceId: string) {
+    const price = await this.findPrice(productId, priceId);
+    return this.priceRepo.remove(price);
   }
 
-  async togglePresentationActive(productId: string, presentationId: string) {
-    const presentation = await this.findPresentation(productId, presentationId);
-    presentation.isActive = !presentation.isActive;
-    return this.presentationRepo.save(presentation);
+  async togglePriceActive(productId: string, priceId: string) {
+    const price = await this.findPrice(productId, priceId);
+    price.isActive = !price.isActive;
+    return this.priceRepo.save(price);
   }
 
-  private async findPresentation(productId: string, presentationId: string) {
-    const presentation = await this.presentationRepo.findOne({
-      where: { id: presentationId, productId },
+  private async findPrice(productId: string, priceId: string) {
+    const price = await this.priceRepo.findOne({
+      where: { id: priceId, productId },
     });
-    if (!presentation) {
-      throw new NotFoundException(`Presentación con ID ${presentationId} no encontrada`);
+    if (!price) {
+      throw new NotFoundException(`Precio con ID ${priceId} no encontrado`);
     }
-    return presentation;
+    return price;
   }
 }

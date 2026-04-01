@@ -1,3 +1,6 @@
+import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
+import { Class } from 'src/class/entities/class.entity';
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import {
   Column,
   CreateDateColumn,
@@ -7,36 +10,35 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AcademicYear } from 'src/academic-year/entities/academic-year.entity';
-import { Class } from 'src/class/entities/class.entity';
 import { Product } from './product.entity';
 
-@Entity('product_presentations')
-export class ProductPresentation {
+@Entity('product_prices')
+export class ProductPrice {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
-  @Column({ name: 'name', type: 'varchar', length: 200 })
-  name: string;
-
   @Column({ name: 'price', type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
-  /** null = global (aplica a todos los años) */
+  /** null = aplica a todos los años */
   @Column({ name: 'academic_year_id', type: 'uuid', nullable: true })
   academicYearId: string | null;
 
-  /** null = global (aplica a todas las clases) */
+  /** null = aplica a todas las clases */
   @Column({ name: 'class_id', type: 'uuid', nullable: true })
   classId: string | null;
+
+  /** null = no vinculado a matrícula específica */
+  @Column({ name: 'enrollment_id', type: 'uuid', nullable: true })
+  enrollmentId: string | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
-  @ManyToOne(() => Product, (p) => p.presentations, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Product, (p) => p.prices, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
@@ -47,6 +49,10 @@ export class ProductPresentation {
   @ManyToOne(() => Class, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'class_id' })
   class: Class | null;
+
+  @ManyToOne(() => Enrollment, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'enrollment_id' })
+  enrollment: Enrollment | null;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

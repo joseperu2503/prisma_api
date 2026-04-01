@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
 import { DebtStatusId } from 'src/debt/enums/debt-status-id.enum';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
-import { ProductPresentation } from 'src/product/entities/product-presentation.entity';
+import { ProductPrice } from 'src/product/entities/product-price.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateClassChargeDto } from '../dto/create-class-charge.dto';
@@ -51,7 +51,7 @@ export class ClassChargeService {
     const cay = await this.resolveClassAcademicYear(classId, academicYearId);
 
     const presentation = await this.dataSource
-      .getRepository(ProductPresentation)
+      .getRepository(ProductPrice)
       .findOne({ where: { id: presentationId } });
 
     if (!presentation)
@@ -60,7 +60,7 @@ export class ClassChargeService {
     const existing = await this.repo.findOne({
       where: {
         classAcademicYearId: cay.id,
-        productPresentationId: presentationId,
+        productPriceId: presentationId,
       },
     });
 
@@ -74,7 +74,7 @@ export class ClassChargeService {
       const savedCharge = await manager.save(
         manager.create(ClassCharge, {
           classAcademicYearId: cay.id,
-          productPresentationId: presentationId,
+          productPriceId: presentationId,
           ...rest,
         }),
       );
@@ -144,7 +144,7 @@ export class ClassChargeService {
     return this.repo.find({
       where: { classAcademicYearId: cay.id },
       relations: {
-        productPresentation: true,
+        productPrice: true,
         frequency: true,
         schedules: true,
       },
@@ -156,7 +156,7 @@ export class ClassChargeService {
     const charge = await this.repo.findOne({
       where: { id },
       relations: {
-        productPresentation: true,
+        productPrice: { product: true },
         frequency: true,
         schedules: true,
         classAcademicYear: { class: true, academicYear: true },
@@ -187,7 +187,7 @@ export class ClassChargeService {
 
     const charges = await this.repo.find({
       where: { classAcademicYearId: cay.id },
-      relations: { productPresentation: true, schedules: true },
+      relations: { productPrice: { product: true }, schedules: true },
       order: { createdAt: 'ASC' },
     });
 
@@ -201,7 +201,8 @@ export class ClassChargeService {
         return a.periodDate.localeCompare(b.periodDate);
       });
       for (const period of sortedPeriods) {
-        let label = charge.productPresentation.name;
+        const productName = charge.productPrice.product.name;
+      let label = productName;
         if (period.periodDate) {
           const [y, m] = period.periodDate.split('-').map(Number);
           const raw = new Date(y, m - 1, 1).toLocaleString('es', {
@@ -213,7 +214,7 @@ export class ClassChargeService {
         columns.push({
           installmentId: period.id,
           classChargeId: charge.id,
-          conceptName: charge.productPresentation.name,
+          conceptName: productName,
           label,
           periodDate: period.periodDate,
           dueDate: period.dueDate,

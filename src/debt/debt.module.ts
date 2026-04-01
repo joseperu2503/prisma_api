@@ -4,7 +4,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
-import { ProductPresentation } from 'src/product/entities/product-presentation.entity';
+import { ProductPrice } from 'src/product/entities/product-price.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { ClassChargeController } from './controllers/class-charge.controller';
 import { DebtCatalogController } from './controllers/debt-catalog.controller';
@@ -34,7 +34,7 @@ import { PaymentService } from './services/payment.service';
       ChargeSchedule,
       PersonChargeSchedule,
       ChargeFrequency,
-      ProductPresentation,
+      ProductPrice,
       Person,
       Student,
       ClassAcademicYear,
