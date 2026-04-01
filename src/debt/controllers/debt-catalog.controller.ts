@@ -13,11 +13,6 @@ export class DebtCatalogController {
     return this.svc.getStatuses();
   }
 
-  @Get('charge-frequencies')
-  getFrequencies() {
-    return this.svc.getFrequencies();
-  }
-
   @Get('payment-methods')
   getPaymentMethods() {
     return this.svc.getPaymentMethods();

@@ -10,7 +10,6 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ClassModule } from 'src/class/class.module';
 import { Class } from 'src/class/entities/class.entity';
 import { CommonModule } from 'src/common/common.module';
-import { ChargeFrequency } from 'src/debt/entities/charge-frequency.entity';
 import { DebtStatus } from 'src/debt/entities/debt-status.entity';
 import { PaymentMethod } from 'src/debt/entities/payment-method.entity';
 import { EmployeeModule } from 'src/employee/employee.module';
@@ -31,7 +30,6 @@ import { AppPlatformSeed } from './services/app-platform.seed';
 import { AttendanceStatusSeed } from './services/attendance-status.seed';
 import { AttendanceTypeSeed } from './services/attendance-type.seed';
 import { AttendanceSeed } from './services/attendance.seed';
-import { ChargeFrequencySeed } from './services/charge-frequency.seed';
 import { ClassSeed } from './services/class.seed';
 import { DebtStatusSeed } from './services/debt-status.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
@@ -68,7 +66,6 @@ import { UnitCodeSeed } from './services/unit-code.seed';
     AdminSeed,
     AppPlatformSeed,
     DebtStatusSeed,
-    ChargeFrequencySeed,
     PaymentMethodSeed,
     UnitCodeSeed,
     IgvAffectationTypeSeed,
@@ -96,7 +93,6 @@ import { UnitCodeSeed } from './services/unit-code.seed';
       Student,
       AppPlatform,
       DebtStatus,
-      ChargeFrequency,
       PaymentMethod,
       UnitCode,
       IgvAffectationType,

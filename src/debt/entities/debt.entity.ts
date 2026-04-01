@@ -10,7 +10,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { DebtStatus } from './debt-status.entity';
-import { ChargeSchedule } from './charge-schedule.entity';
 import { Payment } from './payment.entity';
 
 @Entity('debts')
@@ -24,10 +23,6 @@ export class Debt {
 
   @Column('uuid', { name: 'person_id' })
   personId: string;
-
-  @ManyToOne(() => ChargeSchedule, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'charge_schedule_id' })
-  chargeSchedule: ChargeSchedule | null;
 
   @Column('uuid', { name: 'charge_schedule_id', nullable: true })
   chargeScheduleId: string | null;
