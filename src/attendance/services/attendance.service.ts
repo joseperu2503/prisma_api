@@ -23,7 +23,7 @@ import {
   MoreThanOrEqual,
   Repository,
 } from 'typeorm';
-import { QueryAttendanceDayLogsDto } from '../dto/query-attendance-day-logs.dto';
+import { AttendanceLogsDto } from '../dto/attendance-logs.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
@@ -346,36 +346,6 @@ export class AttendanceService {
     );
   }
 
-  async getAttendanceByDocument(
-    documentNumber: string,
-    from?: string,
-    to?: string,
-  ) {
-    const person = await this.dataSource
-      .getRepository(Person)
-      .findOneBy({ documentNumber });
-
-    if (!person) {
-      throw new NotFoundException('Persona no encontrada');
-    }
-
-    const qb = this.dataSource
-      .getRepository(Attendance)
-      .createQueryBuilder('ad')
-      .leftJoinAndSelect('ad.logs', 'log')
-      .leftJoinAndSelect('log.type', 'type')
-      .leftJoinAndSelect('log.createdBy', 'createdBy')
-      .leftJoinAndSelect('createdBy.person', 'createdByPerson')
-      .where('ad.personId = :personId', { personId: person.id })
-      .orderBy('ad.date', 'ASC')
-      .addOrderBy('log.markedAt', 'ASC');
-
-    if (from) qb.andWhere('ad.date >= :from', { from });
-    if (to) qb.andWhere('ad.date <= :to', { to });
-
-    return qb.getMany();
-  }
-
   lastAttendancesDay() {
     //quiero retornar los ultimas 20 asistencias registradas, ordenadas por fecha de registro descendente
 
@@ -616,7 +586,7 @@ export class AttendanceService {
     return { total: logs.length, updated, skipped };
   }
 
-  async getAttendanceDayStudents(
+  async getStudentAttendances(
     academicYearId: string,
     date: string,
     classId?: string,
@@ -679,18 +649,31 @@ export class AttendanceService {
               markedAt: entryLog.markedAt,
             }
           : null,
-        exit: exitLog ? { markedAt: exitLog.markedAt } : null,
+        exit: exitLog
+          ? {
+              markedAt: exitLog.markedAt,
+              statusId: exitLog.statusId,
+              statusName: exitLog.status?.name ?? null,
+            }
+          : null,
       };
     });
   }
 
-  async getAttendanceDayLogs(dto: QueryAttendanceDayLogsDto) {
-    const { classId, studentId, academicYearId, date, page, limit } = dto;
+  async getAttendanceLogs(dto: AttendanceLogsDto) {
+    const {
+      classId,
+      studentId,
+      academicYearId,
+      date,
+      pagination: { page, limit },
+    } = dto;
 
     const enrollmentRepo = this.dataSource.getRepository(Enrollment);
-    const whereClause: any = { academicYearId, isActive: true };
+    const whereClause: any = { isActive: true };
     if (classId) whereClause.classId = classId;
     if (studentId) whereClause.studentId = studentId;
+    if (academicYearId) whereClause.academicYearId = academicYearId;
 
     const enrollments = await enrollmentRepo.find({
       where: whereClause,
@@ -729,15 +712,13 @@ export class AttendanceService {
       statusName: log.status?.name,
       markedAt: log.markedAt,
       date: log.attendance.date,
-      registeredBy: log.createdBy?.person
-        ? {
-            names: log.createdBy.person.names,
-            paternalLastName: log.createdBy.person.paternalLastName,
-            maternalLastName: log.createdBy.person.maternalLastName,
-          }
-        : null,
+      registeredBy: {
+        names: log.createdBy.person.names,
+        paternalLastName: log.createdBy.person.paternalLastName,
+        maternalLastName: log.createdBy.person.maternalLastName,
+      },
     }));
 
-    return { data, total, page, limit };
+    return { data, total, pagination: { page, limit } };
   }
 }
