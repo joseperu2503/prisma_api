@@ -31,6 +31,7 @@ import { TeacherModule } from './teacher/teacher.module';
 import { DebtModule } from './debt/debt.module';
 import { ProductModule } from './product/product.module';
 import { SaleModule } from './sale/sale.module';
+import { PlanModule } from './plan/plan.module';
 
 @Module({
   controllers: [AppController],
@@ -68,6 +69,7 @@ import { SaleModule } from './sale/sale.module';
     DebtModule,
     ProductModule,
     SaleModule,
+    PlanModule,
   ],
   providers: [SeedCommand],
 })

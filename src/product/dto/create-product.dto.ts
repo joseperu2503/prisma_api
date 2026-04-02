@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -28,4 +29,12 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   price?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  allowManualSale?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  allowSubscription?: boolean;
 }

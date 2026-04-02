@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { ChangeClassEnrollmentDto } from '../dto/change-class-enrollment.dto';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
 import { ListEnrollmentDto } from '../dto/list-enrollment.dto';
 import { UpdateEnrollmentDto } from '../dto/update-enrollment.dto';
+import { EnrollmentFormOptionsService } from '../services/enrollment-form-options.service';
 import { EnrollmentService } from '../services/enrollment.service';
 import { ImportService } from '../services/import.service';
 
@@ -25,6 +27,7 @@ import { ImportService } from '../services/import.service';
 export class EnrollmentController {
   constructor(
     private readonly enrollmentService: EnrollmentService,
+    private readonly enrollmentFormOptionsService: EnrollmentFormOptionsService,
     private readonly importService: ImportService,
   ) {}
 
@@ -36,6 +39,22 @@ export class EnrollmentController {
   @Post('list')
   findAll(@Body() body: ListEnrollmentDto) {
     return this.enrollmentService.findAll(body);
+  }
+
+  @Get('form-options/products')
+  getFormProducts(
+    @Query('classId', ParseUUIDPipe) classId: string,
+    @Query('academicYearId', ParseUUIDPipe) academicYearId: string,
+  ) {
+    return this.enrollmentFormOptionsService.getProducts(classId, academicYearId);
+  }
+
+  @Get('form-options/plans')
+  getFormPlans(
+    @Query('classId', ParseUUIDPipe) classId: string,
+    @Query('academicYearId', ParseUUIDPipe) academicYearId: string,
+  ) {
+    return this.enrollmentFormOptionsService.getPlans(classId, academicYearId);
   }
 
   @Get(':id')

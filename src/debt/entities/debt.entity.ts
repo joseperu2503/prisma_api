@@ -24,9 +24,6 @@ export class Debt {
   @Column('uuid', { name: 'person_id' })
   personId: string;
 
-  @Column('uuid', { name: 'charge_schedule_id', nullable: true })
-  chargeScheduleId: string | null;
-
   @ManyToOne(() => DebtStatus)
   @JoinColumn({ name: 'status_id' })
   status: DebtStatus;

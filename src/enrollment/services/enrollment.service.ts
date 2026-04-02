@@ -12,6 +12,10 @@ import { Attendance } from 'src/attendance/entities/attendance.entity';
 import { AttendanceStatusId } from 'src/attendance/enums/attenance-status-id.enum';
 import { AttendanceTypeId } from 'src/attendance/enums/attenance-type-id.enum';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
+import { Debt } from 'src/debt/entities/debt.entity';
+import { PlanConfiguration } from 'src/plan/entities/plan-configuration.entity';
+import { Subscription } from 'src/plan/entities/subscription.entity';
+import { ProductPrice } from 'src/product/entities/product-price.entity';
 import { StudentService } from 'src/student/services/student.service';
 import { DataSource, In, Repository } from 'typeorm';
 import { ChangeClassEnrollmentDto } from '../dto/change-class-enrollment.dto';
@@ -64,6 +68,75 @@ export class EnrollmentService {
       });
 
       await queryRunner.manager.save(enrollment);
+
+      if (dto.prices && dto.prices.length > 0) {
+        await queryRunner.manager.save(
+          ProductPrice,
+          dto.prices.map((p) =>
+            queryRunner.manager.create(ProductPrice, {
+              productId: p.productId,
+              price: p.price,
+              enrollmentId: enrollment.id,
+              academicYearId: null,
+              classId: null,
+              isActive: true,
+            }),
+          ),
+        );
+      }
+
+      const personId = savedStudent.personId;
+
+      if (dto.debts && dto.debts.length > 0) {
+        for (const d of dto.debts) {
+          const productPrice = await queryRunner.manager.findOne(ProductPrice, {
+            where: {
+              productId: d.productId,
+              isActive: true,
+            },
+          });
+          
+          if (!productPrice) {
+            throw new NotFoundException(
+              `No se encontró precio activo para el producto ${d.productId}`,
+            );
+          }
+          const baseAmount = Number(productPrice.price);
+          const debt = queryRunner.manager.create(Debt, {
+            personId,
+            baseAmount,
+            discount: 0,
+            amount: baseAmount,
+            dueDate: null,
+            notes: null,
+            statusId: 'PENDING',
+          });
+          await queryRunner.manager.save(Debt, debt);
+        }
+      }
+
+      if (dto.subscriptions && dto.subscriptions.length > 0) {
+        for (const s of dto.subscriptions) {
+          const config = await queryRunner.manager.findOne(PlanConfiguration, {
+            where: { id: s.planConfigurationId },
+          });
+          if (!config) {
+            throw new NotFoundException(
+              `PlanConfiguration with id ${s.planConfigurationId} not found`,
+            );
+          }
+          const subscription = queryRunner.manager.create(Subscription, {
+            personId,
+            planConfigurationId: s.planConfigurationId,
+            enrollmentId: enrollment.id,
+            startDate: config.startDate,
+            notes: null,
+            statusId: 'ACTIVE',
+          });
+          await queryRunner.manager.save(Subscription, subscription);
+        }
+      }
+
       await queryRunner.commitTransaction();
 
       return { success: true, message: 'Matrícula creada correctamente' };

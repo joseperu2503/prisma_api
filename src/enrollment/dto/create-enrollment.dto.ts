@@ -1,6 +1,33 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsOptional, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsUUID,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { CreateStudentDto } from 'src/student/dto/create-student.dto';
+
+export class CreateEnrollmentPriceDto {
+  @IsUUID()
+  productId: string;
+
+  @IsNumber()
+  @Min(0)
+  price: number;
+}
+
+export class CreateEnrollmentDebtDto {
+  @IsUUID()
+  productId: string;
+}
+
+export class CreateEnrollmentSubscriptionDto {
+  @IsUUID()
+  planConfigurationId: string;
+}
 
 export class CreateEnrollmentDto {
   @ValidateNested()
@@ -19,4 +46,22 @@ export class CreateEnrollmentDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEnrollmentPriceDto)
+  prices?: CreateEnrollmentPriceDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEnrollmentDebtDto)
+  debts?: CreateEnrollmentDebtDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEnrollmentSubscriptionDto)
+  subscriptions?: CreateEnrollmentSubscriptionDto[];
 }

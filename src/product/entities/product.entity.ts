@@ -34,6 +34,12 @@ export class Product {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ name: 'allow_manual_sale', type: 'boolean', default: true })
+  allowManualSale: boolean;
+
+  @Column({ name: 'allow_subscription', type: 'boolean', default: false })
+  allowSubscription: boolean;
+
   @ManyToOne(() => UnitCode, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'unit_code_id' })
   unitCode: UnitCode;
