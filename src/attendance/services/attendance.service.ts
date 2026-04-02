@@ -662,9 +662,14 @@ export class AttendanceService {
       );
       return {
         studentId: e.studentId,
-        names: person.names,
-        paternalLastName: person.paternalLastName,
-        maternalLastName: person.maternalLastName,
+        person: {
+          names: person.names,
+          paternalLastName: person.paternalLastName,
+          maternalLastName: person.maternalLastName,
+          documentNumber: person.documentNumber,
+          documentTypeId: person.documentTypeId,
+        },
+
         className: e.class.name,
         classId: e.classId,
         entry: entryLog
