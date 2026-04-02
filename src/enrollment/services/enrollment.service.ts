@@ -111,66 +111,104 @@ export class EnrollmentService {
         }
       }
 
-      if (dto.charges && dto.charges.length > 0) {
-        for (const chargeDto of dto.charges) {
-          const resolvedItems: { product: Product; price: number }[] = [];
+      // Charge por productos: un solo Charge con todos los productos como items
+      if (dto.chargeProducts && dto.chargeProducts.length > 0) {
+        const resolvedItems: { product: Product; price: number }[] = [];
 
-          for (const item of chargeDto.items) {
-            const product = await queryRunner.manager.findOne(Product, {
-              where: { id: item.productId },
-              relations: { prices: true },
-            });
-            if (!product) {
-              throw new NotFoundException(
-                `Product with id ${item.productId} not found`,
-              );
-            }
-
-            const specific = product.prices.find(
-              (p) =>
-                p.isActive &&
-                p.classId === dto.classId &&
-                p.academicYearId === dto.academicYearId,
-            );
-            const global = product.prices.find(
-              (p) =>
-                p.isActive &&
-                p.academicYearId === null &&
-                p.classId === null &&
-                p.enrollmentId === null,
-            );
-            const resolvedPrice = specific ?? global;
-            if (!resolvedPrice) {
-              throw new NotFoundException(
-                `No active price found for product ${product.name}`,
-              );
-            }
-
-            resolvedItems.push({ product, price: Number(resolvedPrice.price) });
-          }
-
-          const total = resolvedItems.reduce((sum, i) => sum + i.price, 0);
-
-          const charge = queryRunner.manager.create(Charge, {
-            personId: savedStudent.personId,
-            enrollmentId: enrollment.id,
-            statusId: 'PENDING',
-            total,
-            dueDate: null,
-            notes: null,
+        for (const cp of dto.chargeProducts) {
+          const product = await queryRunner.manager.findOne(Product, {
+            where: { id: cp.productId },
+            relations: { prices: true },
           });
-          await queryRunner.manager.save(Charge, charge);
+          if (!product) {
+            throw new NotFoundException(
+              `Product with id ${cp.productId} not found`,
+            );
+          }
+          const price = this.resolveProductPrice(product, dto.classId, dto.academicYearId);
+          if (price === null) {
+            throw new NotFoundException(
+              `No active price found for product ${product.name}`,
+            );
+          }
+          resolvedItems.push({ product, price });
+        }
 
-          for (const { product, price } of resolvedItems) {
-            const chargeItem = queryRunner.manager.create(ChargeItem, {
+        const total = resolvedItems.reduce((sum, i) => sum + i.price, 0);
+        const today = new Date().toISOString().split('T')[0];
+        const charge = queryRunner.manager.create(Charge, {
+          personId: savedStudent.personId,
+          enrollmentId: enrollment.id,
+          statusId: 'PENDING',
+          total,
+          startDate: today,
+          dueDate: today,
+          notes: null,
+        });
+        await queryRunner.manager.save(Charge, charge);
+
+        for (const { product, price } of resolvedItems) {
+          await queryRunner.manager.save(
+            ChargeItem,
+            queryRunner.manager.create(ChargeItem, {
               chargeId: charge.id,
               productId: product.id,
               description: product.name,
               unitPrice: price,
               quantity: 1,
               subtotal: price,
+            }),
+          );
+        }
+      }
+
+      // Charges por suscripción: un Charge por cada periodo que aplica
+      if (dto.chargeSubscriptions && dto.chargeSubscriptions.length > 0) {
+        for (const cs of dto.chargeSubscriptions) {
+          const config = await queryRunner.manager.findOne(PlanConfiguration, {
+            where: { id: cs.planConfigurationId },
+            relations: { plan: { product: { prices: true } } },
+          });
+          if (!config) {
+            throw new NotFoundException(
+              `PlanConfiguration with id ${cs.planConfigurationId} not found`,
+            );
+          }
+
+          const product = config.plan.product;
+          const price = this.resolveProductPrice(product, dto.classId, dto.academicYearId);
+          if (price === null) {
+            throw new NotFoundException(
+              `No active price found for product ${product.name}`,
+            );
+          }
+
+          for (const period of cs.periods) {
+            const dueDate = new Date(period.dueDate);
+            const startDate = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}-01`;
+
+            const charge = queryRunner.manager.create(Charge, {
+              personId: savedStudent.personId,
+              enrollmentId: enrollment.id,
+              statusId: 'PENDING',
+              total: price,
+              startDate,
+              dueDate: period.dueDate,
+              notes: null,
             });
-            await queryRunner.manager.save(ChargeItem, chargeItem);
+            await queryRunner.manager.save(Charge, charge);
+
+            await queryRunner.manager.save(
+              ChargeItem,
+              queryRunner.manager.create(ChargeItem, {
+                chargeId: charge.id,
+                productId: product.id,
+                description: product.name,
+                unitPrice: price,
+                quantity: 1,
+                subtotal: price,
+              }),
+            );
           }
         }
       }
@@ -180,6 +218,7 @@ export class EnrollmentService {
       return { success: true, message: 'Matrícula creada correctamente' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
+
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         {
@@ -192,6 +231,26 @@ export class EnrollmentService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  private resolveProductPrice(
+    product: Product,
+    classId: string,
+    academicYearId: string,
+  ): number | null {
+    const specific = product.prices.find(
+      (p) => p.isActive && p.classId === classId && p.academicYearId === academicYearId,
+    );
+    if (specific) return Number(specific.price);
+
+    const global = product.prices.find(
+      (p) =>
+        p.isActive &&
+        p.academicYearId === null &&
+        p.classId === null &&
+        p.enrollmentId === null,
+    );
+    return global ? Number(global.price) : null;
   }
 
   async findAll(params: ListEnrollmentDto) {

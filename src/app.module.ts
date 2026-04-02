@@ -17,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
 import { ClassModule } from './class/class.module';
 import { CommonModule } from './common/common.module';
 import { EmployeeModule } from './employee/employee.module';
+import { EnrollmentDefaultModule } from './enrollment-default/enrollment-default.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
 import { GradeModule } from './grade/grade.module';
 import { GuardianModule } from './guardian/guardian.module';
@@ -63,6 +64,7 @@ import { PlanModule } from './plan/plan.module';
     ClassModule,
     SubjectModule,
     EnrollmentModule,
+    EnrollmentDefaultModule,
     AppVersionModule,
     NotificationsModule,
     ProductModule,

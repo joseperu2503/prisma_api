@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsDateString,
   IsNumber,
   IsOptional,
   IsUUID,
@@ -24,16 +25,24 @@ export class CreateEnrollmentSubscriptionDto {
   planConfigurationId: string;
 }
 
-export class CreateEnrollmentChargeItemDto {
+export class CreateEnrollmentChargeProductDto {
   @IsUUID()
   productId: string;
 }
 
-export class CreateEnrollmentChargeDto {
+export class CreateEnrollmentChargeSubscriptionPeriodDto {
+  @IsDateString()
+  dueDate: string;
+}
+
+export class CreateEnrollmentChargeSubscriptionDto {
+  @IsUUID()
+  planConfigurationId: string;
+
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateEnrollmentChargeItemDto)
-  items: CreateEnrollmentChargeItemDto[];
+  @Type(() => CreateEnrollmentChargeSubscriptionPeriodDto)
+  periods: CreateEnrollmentChargeSubscriptionPeriodDto[];
 }
 
 export class CreateEnrollmentDto {
@@ -69,6 +78,12 @@ export class CreateEnrollmentDto {
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateEnrollmentChargeDto)
-  charges?: CreateEnrollmentChargeDto[];
+  @Type(() => CreateEnrollmentChargeProductDto)
+  chargeProducts?: CreateEnrollmentChargeProductDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEnrollmentChargeSubscriptionDto)
+  chargeSubscriptions?: CreateEnrollmentChargeSubscriptionDto[];
 }

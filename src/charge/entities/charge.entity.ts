@@ -37,6 +37,9 @@ export class Charge {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total: number;
 
+  @Column({ type: 'date', name: 'start_date', nullable: true })
+  startDate: string | null;
+
   @Column({ type: 'date', name: 'due_date', nullable: true })
   dueDate: string | null;
 

@@ -27,8 +27,6 @@ export class PlanConfiguration {
 
   @Column({ type: 'date', name: 'end_date' }) endDate: string;
 
-  @Column({ type: 'int', name: 'iterations_count' }) iterationsCount: number;
-
   @ManyToOne(() => Class, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'class_id' })
   class: Class | null;

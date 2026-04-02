@@ -1,4 +1,4 @@
-import { IsBoolean, IsDateString, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsBoolean, IsDateString, IsOptional, IsUUID } from 'class-validator';
 
 export class CreatePlanConfigurationDto {
   @IsDateString()
@@ -6,10 +6,6 @@ export class CreatePlanConfigurationDto {
 
   @IsDateString()
   endDate: string;
-
-  @IsInt()
-  @Min(1)
-  iterationsCount: number;
 
   @IsOptional()
   @IsUUID()
