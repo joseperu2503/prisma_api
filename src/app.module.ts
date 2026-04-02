@@ -28,7 +28,6 @@ import { StudentModule } from './student/student.module';
 import { SubjectModule } from './subject/subject.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TeacherModule } from './teacher/teacher.module';
-import { DebtModule } from './debt/debt.module';
 import { ProductModule } from './product/product.module';
 import { SaleModule } from './sale/sale.module';
 import { PlanModule } from './plan/plan.module';
@@ -66,7 +65,6 @@ import { PlanModule } from './plan/plan.module';
     EnrollmentModule,
     AppVersionModule,
     NotificationsModule,
-    DebtModule,
     ProductModule,
     SaleModule,
     PlanModule,

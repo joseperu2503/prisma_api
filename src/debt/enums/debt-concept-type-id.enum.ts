@@ -1,7 +1,0 @@
-export enum DebtConceptTypeId {
-  ENROLLMENT = 'ENROLLMENT',
-  TUITION = 'TUITION',
-  PRODUCT = 'PRODUCT',
-  SERVICE = 'SERVICE',
-  OTHER = 'OTHER',
-}

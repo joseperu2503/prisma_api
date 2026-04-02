@@ -1,3 +1,4 @@
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Person } from 'src/person/entities/person.entity';
 import {
   Column,
@@ -9,11 +10,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { DebtStatus } from './debt-status.entity';
-import { Payment } from './payment.entity';
+import { ChargeItem } from './charge-item.entity';
 
-@Entity('debts')
-export class Debt {
+@Entity('charges')
+export class Charge {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -24,35 +24,27 @@ export class Debt {
   @Column('uuid', { name: 'person_id' })
   personId: string;
 
-  @ManyToOne(() => DebtStatus)
-  @JoinColumn({ name: 'status_id' })
-  status: DebtStatus;
+  @ManyToOne(() => Enrollment, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'enrollment_id' })
+  enrollment: Enrollment | null;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    name: 'status_id',
-    default: 'PENDING',
-  })
+  @Column('uuid', { name: 'enrollment_id', nullable: true })
+  enrollmentId: string | null;
+
+  @Column({ type: 'varchar', length: 50, name: 'status_id', default: 'PENDING' })
   statusId: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, name: 'base_amount' })
-  baseAmount: number;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  discount: number;
-
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  amount: number;
+  total: number;
 
-  @Column({ type: 'date', nullable: true, name: 'due_date' })
-  dueDate: Date | null;
+  @Column({ type: 'date', name: 'due_date', nullable: true })
+  dueDate: string | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
-  @OneToMany(() => Payment, (payment) => payment.debt)
-  payments: Payment[];
+  @OneToMany(() => ChargeItem, (item) => item.charge)
+  items: ChargeItem[];
 
   @CreateDateColumn({
     type: 'timestamptz',

@@ -6,20 +6,12 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Debt } from './debt.entity';
 import { PaymentMethod } from './payment-method.entity';
 
 @Entity('payments')
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @ManyToOne(() => Debt, (debt) => debt.payments)
-  @JoinColumn({ name: 'debt_id' })
-  debt: Debt;
-
-  @Column('uuid', { name: 'debt_id' })
-  debtId: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;

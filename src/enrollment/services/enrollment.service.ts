@@ -12,7 +12,6 @@ import { Attendance } from 'src/attendance/entities/attendance.entity';
 import { AttendanceStatusId } from 'src/attendance/enums/attenance-status-id.enum';
 import { AttendanceTypeId } from 'src/attendance/enums/attenance-type-id.enum';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
-import { Debt } from 'src/debt/entities/debt.entity';
 import { PlanConfiguration } from 'src/plan/entities/plan-configuration.entity';
 import { Subscription } from 'src/plan/entities/subscription.entity';
 import { ProductPrice } from 'src/product/entities/product-price.entity';
@@ -86,34 +85,6 @@ export class EnrollmentService {
       }
 
       const personId = savedStudent.personId;
-
-      if (dto.debts && dto.debts.length > 0) {
-        for (const d of dto.debts) {
-          const productPrice = await queryRunner.manager.findOne(ProductPrice, {
-            where: {
-              productId: d.productId,
-              isActive: true,
-            },
-          });
-          
-          if (!productPrice) {
-            throw new NotFoundException(
-              `No se encontró precio activo para el producto ${d.productId}`,
-            );
-          }
-          const baseAmount = Number(productPrice.price);
-          const debt = queryRunner.manager.create(Debt, {
-            personId,
-            baseAmount,
-            discount: 0,
-            amount: baseAmount,
-            dueDate: null,
-            notes: null,
-            statusId: 'PENDING',
-          });
-          await queryRunner.manager.save(Debt, debt);
-        }
-      }
 
       if (dto.subscriptions && dto.subscriptions.length > 0) {
         for (const s of dto.subscriptions) {

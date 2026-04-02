@@ -19,11 +19,6 @@ export class CreateEnrollmentPriceDto {
   price: number;
 }
 
-export class CreateEnrollmentDebtDto {
-  @IsUUID()
-  productId: string;
-}
-
 export class CreateEnrollmentSubscriptionDto {
   @IsUUID()
   planConfigurationId: string;
@@ -52,12 +47,6 @@ export class CreateEnrollmentDto {
   @ValidateNested({ each: true })
   @Type(() => CreateEnrollmentPriceDto)
   prices?: CreateEnrollmentPriceDto[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateEnrollmentDebtDto)
-  debts?: CreateEnrollmentDebtDto[];
 
   @IsOptional()
   @IsArray()

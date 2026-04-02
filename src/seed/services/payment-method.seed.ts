@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaymentMethod } from 'src/debt/entities/payment-method.entity';
-import { PaymentMethodId } from 'src/debt/enums/payment-method-id.enum';
+import { PaymentMethod } from 'src/payment/entities/payment-method.entity';
+import { PaymentMethodId } from 'src/payment/enums/payment-method-id.enum';
 import { Repository } from 'typeorm';
 
 @Injectable()

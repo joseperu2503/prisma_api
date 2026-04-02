@@ -6,7 +6,6 @@ import { AppPlatformSeed } from './app-platform.seed';
 import { AttendanceStatusSeed } from './attendance-status.seed';
 import { AttendanceTypeSeed } from './attendance-type.seed';
 import { ClassSeed } from './class.seed';
-import { DebtStatusSeed } from './debt-status.seed';
 import { DocumentTypeSeed } from './document-type.seed';
 import { EnrollmentSeed } from './enrollment.seed';
 import { GenderSeed } from './gender.seed';
@@ -39,7 +38,6 @@ export class SeedService {
     private readonly adminSeed: AdminSeed,
     private readonly classSeed: ClassSeed,
     private readonly appPlatformSeed: AppPlatformSeed,
-    private readonly debtStatusSeed: DebtStatusSeed,
     private readonly paymentMethodSeed: PaymentMethodSeed,
     private readonly unitCodeSeed: UnitCodeSeed,
     private readonly igvAffectationTypeSeed: IgvAffectationTypeSeed,
@@ -47,7 +45,6 @@ export class SeedService {
 
   async runSeed() {
     // await this.dropAllTables();
-    await this.debtStatusSeed.run();
     await this.paymentMethodSeed.run();
     await this.unitCodeSeed.run();
     await this.igvAffectationTypeSeed.run();

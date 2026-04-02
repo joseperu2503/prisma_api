@@ -10,8 +10,6 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ClassModule } from 'src/class/class.module';
 import { Class } from 'src/class/entities/class.entity';
 import { CommonModule } from 'src/common/common.module';
-import { DebtStatus } from 'src/debt/entities/debt-status.entity';
-import { PaymentMethod } from 'src/debt/entities/payment-method.entity';
 import { EmployeeModule } from 'src/employee/employee.module';
 import { EnrollmentModule } from 'src/enrollment/enrollment.module';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
@@ -19,6 +17,7 @@ import { Grade } from 'src/grade/entities/grade.entity';
 import { GradeModule } from 'src/grade/grade.module';
 import { Level } from 'src/level/entities/level.entity';
 import { LevelModule } from 'src/level/level.module';
+import { PaymentModule } from 'src/payment/payment.module';
 import { Person } from 'src/person/entities/person.entity';
 import { IgvAffectationType } from 'src/product/entities/igv-affectation-type.entity';
 import { UnitCode } from 'src/product/entities/unit-code.entity';
@@ -31,7 +30,6 @@ import { AttendanceStatusSeed } from './services/attendance-status.seed';
 import { AttendanceTypeSeed } from './services/attendance-type.seed';
 import { AttendanceSeed } from './services/attendance.seed';
 import { ClassSeed } from './services/class.seed';
-import { DebtStatusSeed } from './services/debt-status.seed';
 import { DocumentTypeSeed } from './services/document-type.seed';
 import { EnrollmentSeed } from './services/enrollment.seed';
 import { GenderSeed } from './services/gender.seed';
@@ -65,10 +63,9 @@ import { UnitCodeSeed } from './services/unit-code.seed';
     AttendanceSeed,
     AdminSeed,
     AppPlatformSeed,
-    DebtStatusSeed,
-    PaymentMethodSeed,
     UnitCodeSeed,
     IgvAffectationTypeSeed,
+    PaymentMethodSeed,
   ],
   imports: [
     AuthModule,
@@ -83,6 +80,7 @@ import { UnitCodeSeed } from './services/unit-code.seed';
     EnrollmentModule,
     AdminModule,
     AppVersionModule,
+    PaymentModule,
     TypeOrmModule.forFeature([
       AcademicYear,
       Class,
@@ -92,8 +90,6 @@ import { UnitCodeSeed } from './services/unit-code.seed';
       Person,
       Student,
       AppPlatform,
-      DebtStatus,
-      PaymentMethod,
       UnitCode,
       IgvAffectationType,
     ]),
