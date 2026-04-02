@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AcademicYearModule } from 'src/academic-year/academic-year.module';
+import { ChargeItem } from 'src/charge/entities/charge-item.entity';
+import { Charge } from 'src/charge/entities/charge.entity';
 import { ClassModule } from 'src/class/class.module';
 import { GradeModule } from 'src/grade/grade.module';
 import { LevelModule } from 'src/level/level.module';
@@ -23,6 +25,8 @@ import { ImportService } from './services/import.service';
       Product,
       PlanConfiguration,
       Subscription,
+      Charge,
+      ChargeItem,
     ]),
     StudentModule,
     AcademicYearModule,

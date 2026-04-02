@@ -24,6 +24,18 @@ export class CreateEnrollmentSubscriptionDto {
   planConfigurationId: string;
 }
 
+export class CreateEnrollmentChargeItemDto {
+  @IsUUID()
+  productId: string;
+}
+
+export class CreateEnrollmentChargeDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEnrollmentChargeItemDto)
+  items: CreateEnrollmentChargeItemDto[];
+}
+
 export class CreateEnrollmentDto {
   @ValidateNested()
   @Type(() => CreateStudentDto)
@@ -53,4 +65,10 @@ export class CreateEnrollmentDto {
   @ValidateNested({ each: true })
   @Type(() => CreateEnrollmentSubscriptionDto)
   subscriptions?: CreateEnrollmentSubscriptionDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEnrollmentChargeDto)
+  charges?: CreateEnrollmentChargeDto[];
 }
