@@ -11,11 +11,11 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { QueryAttendanceDayLogsDto } from '../dto/query-attendance-day-logs.dto';
-import { QueryAttendanceDayStudentsDto } from '../dto/query-attendance-day-students.dto';
+import { AttendanceLogsDto } from '../dto/attendance-logs.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { QueryStudentsAttendanceDto } from '../dto/query-students-attendance.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
+import { StudentAttendancesDto } from '../dto/student-attendances.dto';
 import { AttendanceService } from '../services/attendance.service';
 
 @Auth([RoleId.ADMIN, RoleId.STUDENT])
@@ -33,14 +33,14 @@ export class AttendanceController {
     return this.attendanceService.getAttendanceHistory(dto);
   }
 
-  @Post('day-logs')
-  getDayLogs(@Body() dto: QueryAttendanceDayLogsDto) {
-    return this.attendanceService.getAttendanceDayLogs(dto);
+  @Post('logs')
+  getDayLogs(@Body() dto: AttendanceLogsDto) {
+    return this.attendanceService.getAttendanceLogs(dto);
   }
 
-  @Post('day-students')
-  getDayStudents(@Body() dto: QueryAttendanceDayStudentsDto) {
-    return this.attendanceService.getAttendanceDayStudents(
+  @Post('students')
+  getStudentAttendances(@Body() dto: StudentAttendancesDto) {
+    return this.attendanceService.getStudentAttendances(
       dto.academicYearId,
       dto.date,
       dto.classId,
@@ -50,19 +50,6 @@ export class AttendanceController {
   @Get('last-attendances-day')
   lastAttendancesDay() {
     return this.attendanceService.lastAttendancesDay();
-  }
-
-  @Get('by-document/:documentNumber')
-  getByDocument(
-    @Param('documentNumber') documentNumber: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
-    return this.attendanceService.getAttendanceByDocument(
-      documentNumber,
-      from,
-      to,
-    );
   }
 
   @Post('recalculate-statuses')
