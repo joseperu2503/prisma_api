@@ -8,40 +8,49 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { Plan } from './plan.entity';
 import { Subscription } from './subscription.entity';
 
 @Entity('plan_configurations')
+@Unique(['planId', 'classId', 'academicYearId'])
 export class PlanConfiguration {
   @PrimaryGeneratedColumn('uuid') id: string;
 
-  @ManyToOne(() => Plan, (p) => p.configurations, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Plan, (p) => p.configurations)
   @JoinColumn({ name: 'plan_id' })
   plan: Plan;
 
-  @Column('uuid', { name: 'plan_id' }) planId: string;
+  @Column('uuid', { name: 'plan_id' })
+  planId: string;
 
-  @Column({ type: 'date', name: 'start_date' }) startDate: string;
+  @Column({ type: 'date', name: 'start_date' })
+  startDate: string;
 
-  @Column({ type: 'date', name: 'end_date' }) endDate: string;
+  @Column({ type: 'date', name: 'end_date' })
+  endDate: string;
 
-  @ManyToOne(() => Class, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => Class, { nullable: true })
   @JoinColumn({ name: 'class_id' })
   class: Class | null;
 
-  @Column('uuid', { name: 'class_id', nullable: true }) classId: string | null;
+  @Column('uuid', { name: 'class_id', nullable: true })
+  classId: string | null;
 
-  @ManyToOne(() => AcademicYear, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => AcademicYear, { nullable: true })
   @JoinColumn({ name: 'academic_year_id' })
   academicYear: AcademicYear | null;
 
-  @Column('uuid', { name: 'academic_year_id', nullable: true }) academicYearId: string | null;
+  @Column('uuid', { name: 'academic_year_id', nullable: true })
+  academicYearId: string | null;
 
-  @Column({ type: 'boolean', default: true, name: 'is_active' }) isActive: boolean;
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
+  isActive: boolean;
 
-  @OneToMany(() => Subscription, (s) => s.planConfiguration) subscriptions: Subscription[];
+  @OneToMany(() => Subscription, (s) => s.planConfiguration)
+  subscriptions: Subscription[];
 
   @CreateDateColumn({
     type: 'timestamptz',

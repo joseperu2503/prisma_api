@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PlanConfiguration } from 'src/plan/entities/plan-configuration.entity';
 import { ProductPrice } from 'src/product/entities/product-price.entity';
 import { Product } from 'src/product/entities/product.entity';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 export interface EnrollmentFormProduct {
   id: string;
@@ -33,9 +33,16 @@ export class EnrollmentFormOptionsService {
     private readonly configRepo: Repository<PlanConfiguration>,
   ) {}
 
-  async getProducts(classId: string, academicYearId: string): Promise<EnrollmentFormProduct[]> {
+  async getProducts(
+    classId: string,
+    academicYearId: string,
+  ): Promise<EnrollmentFormProduct[]> {
     const products = await this.productRepo.find({
-      where: { isActive: true, allowManualSale: true, allowSubscription: false },
+      where: {
+        isActive: true,
+        allowManualSale: true,
+        allowSubscription: false,
+      },
       relations: { prices: true },
     });
 
@@ -50,12 +57,20 @@ export class EnrollmentFormOptionsService {
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  async getPlans(classId: string, academicYearId: string): Promise<EnrollmentFormPlan[]> {
-    const configs = await this.configRepo.find({
-      where: { classId, academicYearId, isActive: true },
-      relations: { plan: { product: { prices: true } } },
-      order: { startDate: 'ASC' },
-    });
+  async getPlans(
+    classId: string,
+    academicYearId: string,
+  ): Promise<EnrollmentFormPlan[]> {
+    const configs = await this.configRepo
+      .createQueryBuilder('config')
+      .innerJoinAndSelect('config.plan', 'plan')
+      .innerJoinAndSelect('plan.product', 'product')
+      .leftJoinAndSelect('product.prices', 'price')
+      .where('config.classId = :classId', { classId })
+      .andWhere('config.academicYearId = :academicYearId', { academicYearId })
+      .andWhere('config.isActive = true')
+      .orderBy('config.startDate', 'ASC')
+      .getMany();
 
     const result: EnrollmentFormPlan[] = [];
 
@@ -88,7 +103,10 @@ export class EnrollmentFormOptionsService {
     academicYearId: string,
   ): number | null {
     const specific = prices.find(
-      (p) => p.isActive && p.classId === classId && p.academicYearId === academicYearId,
+      (p) =>
+        p.isActive &&
+        p.classId === classId &&
+        p.academicYearId === academicYearId,
     );
     if (specific) return Number(specific.price);
 

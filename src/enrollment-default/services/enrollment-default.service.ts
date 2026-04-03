@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateDefaultPlanDto } from '../dto/create-default-plan.dto';
@@ -18,19 +22,32 @@ export class EnrollmentDefaultService {
 
   // ── Default Products ──────────────────────────────────────────────────────
 
-  async findProductsByClass(classId: string, academicYearId: string): Promise<DefaultProduct[]> {
-    return this.defaultProductRepo.find({
+  async findProductsByClass(classId: string, academicYearId: string) {
+    const data = await this.defaultProductRepo.find({
       where: { classId, academicYearId },
       relations: { product: true },
       order: { createdAt: 'ASC' },
     });
+
+    return data.map((d) => ({
+      id: d.product.id,
+      name: d.product.name,
+      defaultProductId: d.id,
+    }));
   }
 
-  async createDefaultProduct(dto: CreateDefaultProductDto): Promise<DefaultProduct> {
+  async createDefaultProduct(
+    dto: CreateDefaultProductDto,
+  ): Promise<DefaultProduct> {
     const existing = await this.defaultProductRepo.findOne({
-      where: { classId: dto.classId, academicYearId: dto.academicYearId, productId: dto.productId },
+      where: {
+        classId: dto.classId,
+        academicYearId: dto.academicYearId,
+        productId: dto.productId,
+      },
     });
-    if (existing) throw new ConflictException('Este producto ya está en los defaults');
+    if (existing)
+      throw new ConflictException('Este producto ya está en los defaults');
 
     const entity = this.defaultProductRepo.create(dto);
     return this.defaultProductRepo.save(entity);
@@ -38,13 +55,17 @@ export class EnrollmentDefaultService {
 
   async removeDefaultProduct(id: string): Promise<void> {
     const entity = await this.defaultProductRepo.findOne({ where: { id } });
-    if (!entity) throw new NotFoundException(`DefaultProduct with id ${id} not found`);
+    if (!entity)
+      throw new NotFoundException(`DefaultProduct with id ${id} not found`);
     await this.defaultProductRepo.remove(entity);
   }
 
   // ── Default Plans ─────────────────────────────────────────────────────────
 
-  async findPlansByClass(classId: string, academicYearId: string): Promise<DefaultPlan[]> {
+  async findPlansByClass(
+    classId: string,
+    academicYearId: string,
+  ): Promise<DefaultPlan[]> {
     return this.defaultPlanRepo.find({
       where: { classId, academicYearId },
       relations: { planConfiguration: { plan: true } },
@@ -60,7 +81,8 @@ export class EnrollmentDefaultService {
         planConfigurationId: dto.planConfigurationId,
       },
     });
-    if (existing) throw new ConflictException('Este plan ya está en los defaults');
+    if (existing)
+      throw new ConflictException('Este plan ya está en los defaults');
 
     const entity = this.defaultPlanRepo.create(dto);
     return this.defaultPlanRepo.save(entity);
@@ -68,7 +90,8 @@ export class EnrollmentDefaultService {
 
   async removeDefaultPlan(id: string): Promise<void> {
     const entity = await this.defaultPlanRepo.findOne({ where: { id } });
-    if (!entity) throw new NotFoundException(`DefaultPlan with id ${id} not found`);
+    if (!entity)
+      throw new NotFoundException(`DefaultPlan with id ${id} not found`);
     await this.defaultPlanRepo.remove(entity);
   }
 }

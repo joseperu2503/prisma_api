@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { CreatePlanConfigurationDto } from '../dto/create-plan-configuration.dto';
 import { UpdatePlanConfigurationDto } from '../dto/update-plan-configuration.dto';
 import { PlanConfiguration } from '../entities/plan-configuration.entity';
@@ -12,7 +16,23 @@ export class PlanConfigurationService {
     private readonly configRepo: Repository<PlanConfiguration>,
   ) {}
 
-  async create(planId: string, dto: CreatePlanConfigurationDto): Promise<PlanConfiguration> {
+  async create(
+    planId: string,
+    dto: CreatePlanConfigurationDto,
+  ): Promise<PlanConfiguration> {
+    const exists = await this.configRepo.findOne({
+      where: {
+        planId,
+        classId: dto.classId ?? IsNull(),
+        academicYearId: dto.academicYearId ?? IsNull(),
+      },
+    });
+
+    if (exists) {
+      throw new ConflictException(
+        'Ya existe una configuración para este plan, clase y año académico',
+      );
+    }
     const config = this.configRepo.create({ ...dto, planId });
     return this.configRepo.save(config);
   }
@@ -28,7 +48,10 @@ export class PlanConfigurationService {
     });
   }
 
-  async findByClass(classId: string, academicYearId?: string): Promise<PlanConfiguration[]> {
+  async findByClass(
+    classId: string,
+    academicYearId?: string,
+  ): Promise<PlanConfiguration[]> {
     const where: any = { classId };
     if (academicYearId) where.academicYearId = academicYearId;
     return this.configRepo.find({
@@ -59,7 +82,10 @@ export class PlanConfigurationService {
     return config;
   }
 
-  async update(id: string, dto: UpdatePlanConfigurationDto): Promise<PlanConfiguration> {
+  async update(
+    id: string,
+    dto: UpdatePlanConfigurationDto,
+  ): Promise<PlanConfiguration> {
     const config = await this.findOne(id);
     Object.assign(config, dto);
     return this.configRepo.save(config);
