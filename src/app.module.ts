@@ -29,6 +29,7 @@ import { StudentModule } from './student/student.module';
 import { SubjectModule } from './subject/subject.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TeacherModule } from './teacher/teacher.module';
+import { ChargeModule } from './charge/charge.module';
 import { ProductModule } from './product/product.module';
 import { SaleModule } from './sale/sale.module';
 import { PlanModule } from './plan/plan.module';
@@ -70,6 +71,7 @@ import { PlanModule } from './plan/plan.module';
     ProductModule,
     SaleModule,
     PlanModule,
+    ChargeModule,
   ],
   providers: [SeedCommand],
 })

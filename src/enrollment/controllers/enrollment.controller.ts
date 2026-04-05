@@ -14,6 +14,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
+import { BulkChargeDto } from '../dto/bulk-charge.dto';
 import { ChangeClassEnrollmentDto } from '../dto/change-class-enrollment.dto';
 import { CreateEnrollmentDto } from '../dto/create-enrollment.dto';
 import { ListEnrollmentDto } from '../dto/list-enrollment.dto';
@@ -55,6 +56,19 @@ export class EnrollmentController {
     @Query('academicYearId', ParseUUIDPipe) academicYearId: string,
   ) {
     return this.enrollmentFormOptionsService.getPlans(classId, academicYearId);
+  }
+
+  @Get('by-class')
+  findByClass(
+    @Query('classId', ParseUUIDPipe) classId: string,
+    @Query('academicYearId', ParseUUIDPipe) academicYearId: string,
+  ) {
+    return this.enrollmentService.findByClass(classId, academicYearId);
+  }
+
+  @Post('bulk-charge')
+  bulkCharge(@Body() dto: BulkChargeDto) {
+    return this.enrollmentService.bulkCharge(dto);
   }
 
   @Get(':id')
