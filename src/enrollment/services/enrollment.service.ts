@@ -52,8 +52,6 @@ export class EnrollmentService {
         queryRunner,
       );
 
-      console.log({ savedStudent });
-
       const existing = await queryRunner.manager.findOne(Enrollment, {
         where: {
           studentId: savedStudent.id,
