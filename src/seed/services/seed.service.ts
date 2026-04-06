@@ -14,6 +14,7 @@ import { IgvAffectationTypeSeed } from './igv-affectation-type.seed';
 import { LevelSeed } from './level.seed';
 import { PaymentMethodSeed } from './payment-method.seed';
 import { PermissionSeed } from './permission.seed';
+import { ProductPriceTypeSeed } from './product-price-type.seed';
 import { RelationshipTypeSeed } from './relationship-type.seed';
 import { RoleSeed } from './role.seed';
 import { StudentSeed } from './student.seed';
@@ -41,6 +42,7 @@ export class SeedService {
     private readonly paymentMethodSeed: PaymentMethodSeed,
     private readonly unitCodeSeed: UnitCodeSeed,
     private readonly igvAffectationTypeSeed: IgvAffectationTypeSeed,
+    private readonly productPriceTypeSeed: ProductPriceTypeSeed,
   ) {}
 
   async runSeed() {
@@ -48,6 +50,7 @@ export class SeedService {
     await this.paymentMethodSeed.run();
     await this.unitCodeSeed.run();
     await this.igvAffectationTypeSeed.run();
+    await this.productPriceTypeSeed.run();
     await this.documentTypeSeed.run();
     await this.genderSeed.run();
     await this.attendanceTypeSeed.run();

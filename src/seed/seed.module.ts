@@ -20,6 +20,7 @@ import { LevelModule } from 'src/level/level.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { Person } from 'src/person/entities/person.entity';
 import { IgvAffectationType } from 'src/product/entities/igv-affectation-type.entity';
+import { ProductPriceType } from 'src/product/entities/product-price-type.entity';
 import { UnitCode } from 'src/product/entities/unit-code.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { StudentModule } from 'src/student/student.module';
@@ -38,6 +39,7 @@ import { IgvAffectationTypeSeed } from './services/igv-affectation-type.seed';
 import { LevelSeed } from './services/level.seed';
 import { PaymentMethodSeed } from './services/payment-method.seed';
 import { PermissionSeed } from './services/permission.seed';
+import { ProductPriceTypeSeed } from './services/product-price-type.seed';
 import { RelationshipTypeSeed } from './services/relationship-type.seed';
 import { RoleSeed } from './services/role.seed';
 import { SeedService } from './services/seed.service';
@@ -66,6 +68,7 @@ import { UnitCodeSeed } from './services/unit-code.seed';
     UnitCodeSeed,
     IgvAffectationTypeSeed,
     PaymentMethodSeed,
+    ProductPriceTypeSeed,
   ],
   imports: [
     AuthModule,
@@ -92,6 +95,7 @@ import { UnitCodeSeed } from './services/unit-code.seed';
       AppPlatform,
       UnitCode,
       IgvAffectationType,
+      ProductPriceType,
     ]),
   ],
   exports: [SeedService],

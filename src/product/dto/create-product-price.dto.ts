@@ -16,4 +16,8 @@ export class CreateProductPriceDto {
   @IsOptional()
   @IsUUID()
   enrollmentId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  personId?: string | null;
 }

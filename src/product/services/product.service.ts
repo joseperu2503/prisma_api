@@ -8,6 +8,7 @@ import { UpdateProductPriceDto } from '../dto/update-product-price.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { ProductPrice } from '../entities/product-price.entity';
 import { Product } from '../entities/product.entity';
+import { ProductPriceTypeId } from '../enums/product-price-type-id.enum';
 
 @Injectable()
 export class ProductService {
@@ -52,7 +53,9 @@ export class ProductService {
       .orderBy('p.name', 'ASC');
 
     if (search) {
-      qb.where('LOWER(p.name) LIKE :search', { search: `%${search.toLowerCase()}%` });
+      qb.where('LOWER(p.name) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
     }
 
     let data: Product[];
@@ -60,13 +63,20 @@ export class ProductService {
 
     if (page && limit) {
       total = await qb.getCount();
-      data = await qb.skip((page - 1) * limit).take(limit).getMany();
+      data = await qb
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany();
     } else {
       data = await qb.getMany();
       total = data.length;
     }
 
-    return { data, total, pagination: page && limit ? { page, limit } : undefined };
+    return {
+      data,
+      total,
+      pagination: page && limit ? { page, limit } : undefined,
+    };
   }
 
   async findOne(id: string) {
@@ -79,7 +89,8 @@ export class ProductService {
       },
       order: { prices: { createdAt: 'ASC' } },
     });
-    if (!product) throw new NotFoundException(`Producto con ID ${id} no encontrado`);
+    if (!product)
+      throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     return product;
   }
 
@@ -104,6 +115,16 @@ export class ProductService {
   // Prices
 
   async addPrice(productId: string, dto: CreateProductPriceDto) {
+    let typeId = ProductPriceTypeId.GLOBAL;
+
+    if (dto.academicYearId && dto.classId) {
+      typeId = ProductPriceTypeId.CLASS_ACADEMIC_YEAR;
+    }
+
+    if (dto.enrollmentId) {
+      typeId = ProductPriceTypeId.ENROLLMENT;
+    }
+
     await this.findOne(productId);
     const productPrice = this.priceRepo.create({
       ...dto,
@@ -112,11 +133,17 @@ export class ProductService {
       academicYearId: dto.academicYearId ?? null,
       classId: dto.classId ?? null,
       enrollmentId: dto.enrollmentId ?? null,
+      priceTypeId: typeId,
+      personId: dto.personId ?? null,
     });
     return this.priceRepo.save(productPrice);
   }
 
-  async updatePrice(productId: string, priceId: string, dto: UpdateProductPriceDto) {
+  async updatePrice(
+    productId: string,
+    priceId: string,
+    dto: UpdateProductPriceDto,
+  ) {
     const price = await this.findPrice(productId, priceId);
     Object.assign(price, dto);
     return this.priceRepo.save(price);

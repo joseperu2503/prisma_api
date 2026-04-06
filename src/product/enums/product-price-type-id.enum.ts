@@ -1,0 +1,5 @@
+export enum ProductPriceTypeId {
+  GLOBAL = 'GLOBAL',
+  ENROLLMENT = 'ENROLLMENT',
+  CLASS_ACADEMIC_YEAR = 'CLASS_ACADEMIC_YEAR',
+}
