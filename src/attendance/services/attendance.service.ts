@@ -24,6 +24,7 @@ import {
   Repository,
 } from 'typeorm';
 import { AttendanceLogsDto } from '../dto/attendance-logs.dto';
+import { AttendanceRankingsDto, RankingType } from '../dto/attendance-rankings.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
@@ -658,6 +659,150 @@ export class AttendanceService {
           : null,
       };
     });
+  }
+
+  async getAttendanceRankings(dto: AttendanceRankingsDto) {
+    const { academicYearId, classId, from, to } = dto;
+    const enrollmentRepo = this.dataSource.getRepository(Enrollment);
+
+    const whereClause: any = { academicYearId, isActive: true };
+    if (classId) whereClause.classId = classId;
+
+    const enrollments = await enrollmentRepo.find({
+      where: whereClause,
+      relations: { student: { person: true }, class: true },
+    });
+
+    if (enrollments.length === 0) {
+      return { punctuality: [], tardiness: [], absences: [] };
+    }
+
+    const personIds = enrollments.map((e) => e.student.personId);
+
+    // Fetch all entry logs in the date range (join schedule for early-arrival calc)
+    const qb = this.dataSource
+      .getRepository(AttendanceLog)
+      .createQueryBuilder('log')
+      .innerJoinAndSelect('log.attendance', 'att')
+      .leftJoinAndSelect('att.attendanceSchedule', 'schedule')
+      .where('att.personId IN (:...personIds)', { personIds })
+      .andWhere('log.typeId = :typeId', { typeId: AttendanceTypeId.ENTRY });
+
+    if (from) qb.andWhere('att.date >= :from', { from });
+    if (to) qb.andWhere('att.date <= :to', { to });
+
+    const logs = await qb.getMany();
+
+    // Group logs by personId
+    const logsByPerson = new Map<string, AttendanceLog[]>();
+    for (const log of logs) {
+      const pid = log.attendance.personId;
+      if (!logsByPerson.has(pid)) logsByPerson.set(pid, []);
+      logsByPerson.get(pid)!.push(log);
+    }
+
+    // Determine which dates had at least one attendance (per class)
+    // A date is "active" for a classId if any student from that class attended
+    const activeDatesByClass = new Map<string, Set<string>>();
+    for (const log of logs) {
+      const enrollment = enrollments.find(
+        (e) => e.student.personId === log.attendance.personId,
+      );
+      if (!enrollment) continue;
+      const cid = enrollment.classId;
+      const dateStr = new Date(log.attendance.date).toISOString().split('T')[0];
+      if (!activeDatesByClass.has(cid)) activeDatesByClass.set(cid, new Set());
+      activeDatesByClass.get(cid)!.add(dateStr);
+    }
+
+    // Build per-student stats
+    const stats = enrollments.map((e) => {
+      const personId = e.student.personId;
+      const person = e.student.person;
+      const studentLogs = logsByPerson.get(personId) ?? [];
+      const activeDates = activeDatesByClass.get(e.classId) ?? new Set();
+
+      // Days the student attended (only entry logs)
+      const attendedDates = new Set(
+        studentLogs.map(
+          (l) => new Date(l.attendance.date).toISOString().split('T')[0],
+        ),
+      );
+
+      // Tardiness: count of LATE entry logs
+      const tardinessCount = studentLogs.filter(
+        (l) => l.statusId === AttendanceStatusId.LATE,
+      ).length;
+
+      const onTimeLogs = studentLogs.filter(
+        (l) => l.statusId === AttendanceStatusId.ON_TIME,
+      );
+      const onTimeCount = onTimeLogs.length;
+
+      // Early-arrival minutes: sum of (entryEnd - markedAt) in minutes per on-time log.
+      // Used as tiebreaker: same onTimeCount → more accumulated early minutes wins.
+      const earlyMinutes = onTimeLogs.reduce((sum, log) => {
+        const schedule = log.attendance?.attendanceSchedule;
+        if (!schedule?.entryEnd) return sum;
+        const [eh, em, es] = schedule.entryEnd.split(':').map(Number);
+        const entryEndMinutes = eh * 60 + em + (es ?? 0) / 60;
+        const marked = new Date(log.markedAt);
+        const markedMinutes = marked.getHours() * 60 + marked.getMinutes() + marked.getSeconds() / 60;
+        const diff = entryEndMinutes - markedMinutes;
+        return sum + (diff > 0 ? diff : 0);
+      }, 0);
+
+      // Absences: active class dates where student did NOT attend
+      let absenceCount = 0;
+      for (const date of activeDates) {
+        if (!attendedDates.has(date)) absenceCount++;
+      }
+
+      return {
+        studentId: e.studentId,
+        person: {
+          names: person.names,
+          paternalLastName: person.paternalLastName,
+          maternalLastName: person.maternalLastName,
+        },
+        className: e.class.name,
+        onTimeCount,
+        tardinessCount,
+        absenceCount,
+        earlyMinutes,
+      };
+    });
+
+    const sorted = {
+      [RankingType.PUNCTUALITY]: [...stats].sort((a, b) => {
+        if (b.onTimeCount !== a.onTimeCount) return b.onTimeCount - a.onTimeCount;
+        return b.earlyMinutes - a.earlyMinutes;
+      }),
+      [RankingType.TARDINESS]: [...stats]
+        .filter((s) => s.tardinessCount > 0)
+        .sort((a, b) => b.tardinessCount - a.tardinessCount),
+      [RankingType.ABSENCES]: [...stats]
+        .filter((s) => s.absenceCount > 0)
+        .sort((a, b) => b.absenceCount - a.absenceCount),
+    };
+
+    // Summary mode: top 3 of each type (no pagination)
+    if (!dto.type) {
+      return {
+        punctuality: sorted[RankingType.PUNCTUALITY].slice(0, 3),
+        tardiness: sorted[RankingType.TARDINESS].slice(0, 3),
+        absences: sorted[RankingType.ABSENCES].slice(0, 3),
+      };
+    }
+
+    // Paginated mode: single type
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 20;
+    const list = sorted[dto.type];
+    const total = list.length;
+    const data = list.slice((page - 1) * limit, page * limit);
+
+    return { data, total, page, limit };
   }
 
   async getAttendanceLogs(dto: AttendanceLogsDto) {

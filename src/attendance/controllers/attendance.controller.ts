@@ -12,6 +12,7 @@ import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { AttendanceLogsDto } from '../dto/attendance-logs.dto';
+import { AttendanceRankingsDto } from '../dto/attendance-rankings.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { QueryStudentsAttendanceDto } from '../dto/query-students-attendance.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
@@ -50,6 +51,11 @@ export class AttendanceController {
   @Get('last-attendances-day')
   lastAttendancesDay() {
     return this.attendanceService.lastAttendancesDay();
+  }
+
+  @Post('rankings')
+  getRankings(@Body() dto: AttendanceRankingsDto) {
+    return this.attendanceService.getAttendanceRankings(dto);
   }
 
   @Post('recalculate-statuses')
