@@ -661,6 +661,21 @@ export class AttendanceService {
     });
   }
 
+  /**
+   * Ranking de puntualidad.
+   *
+   * Criterios de ordenamiento:
+   *   1. `punctualityRate` DESC  — porcentaje de días asistidos a tiempo
+   *      sobre el total de días requeridos de la clase:
+   *      `(onTimeCount / totalDays) * 100`
+   *   2. `earlyMinutes` DESC  — minutos acumulados de anticipación
+   *      (suma de cuántos minutos antes del límite de entrada llegó el alumno),
+   *      usado como desempate cuando dos alumnos tienen el mismo rate.
+   *
+   * Solo incluye alumnos con matrícula activa en el año académico dado.
+   * `totalDays` se calcula como los días distintos en que al menos un alumno
+   * de la clase registró entrada (días "activos" de la clase).
+   */
   async getPunctualityRanking(dto: BaseRankingDto) {
     const { academicYearId, classId, from, to } = dto;
     const page = dto.page ?? 1;
@@ -781,6 +796,19 @@ export class AttendanceService {
     return { data, total, page, limit };
   }
 
+  /**
+   * Ranking de tardanzas.
+   *
+   * Criterios de ordenamiento:
+   *   1. `tardinessRate` DESC  — porcentaje de días con tardanza
+   *      sobre el total de días requeridos de la clase:
+   *      `(tardinessCount / totalDays) * 100`
+   *   2. `tardinessCount` DESC  — cantidad absoluta de tardanzas,
+   *      usado como desempate cuando dos alumnos tienen el mismo rate.
+   *
+   * Solo aparecen alumnos con al menos 1 tardanza (`HAVING tardinessCount > 0`).
+   * `totalDays` se calcula igual que en puntualidad: días activos de la clase.
+   */
   async getTardinessRanking(dto: BaseRankingDto) {
     const { academicYearId, classId, from, to } = dto;
     const page = dto.page ?? 1;
@@ -886,6 +914,20 @@ export class AttendanceService {
     return { data, total, page, limit };
   }
 
+  /**
+   * Ranking de ausencias.
+   *
+   * Criterios de ordenamiento:
+   *   1. `absenceRate` DESC  — porcentaje de días ausente
+   *      sobre el total de días requeridos de la clase:
+   *      `(absenceCount / totalDays) * 100`
+   *   2. `absenceCount` DESC  — cantidad absoluta de ausencias,
+   *      usado como desempate cuando dos alumnos tienen el mismo rate.
+   *
+   * Una ausencia se contabiliza por cada día activo de la clase en que el alumno
+   * no registró ningún log de entrada. Solo aparecen alumnos con al menos 1 ausencia.
+   * `totalDays` se calcula igual que en puntualidad: días activos de la clase.
+   */
   async getAbsencesRanking(dto: BaseRankingDto) {
     const { academicYearId, classId, from, to } = dto;
     const page = dto.page ?? 1;
