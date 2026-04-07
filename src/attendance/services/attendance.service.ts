@@ -24,7 +24,7 @@ import {
   Repository,
 } from 'typeorm';
 import { AttendanceLogsDto } from '../dto/attendance-logs.dto';
-import { AttendanceRankingsDto, RankingType } from '../dto/attendance-rankings.dto';
+import { BaseRankingDto } from '../dto/attendance-rankings.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
 import { AttendanceLog } from '../entities/attendance-log.entity';
@@ -661,146 +661,351 @@ export class AttendanceService {
     });
   }
 
-  async getAttendanceRankings(dto: AttendanceRankingsDto) {
+  async getPunctualityRanking(dto: BaseRankingDto) {
     const { academicYearId, classId, from, to } = dto;
-    const enrollmentRepo = this.dataSource.getRepository(Enrollment);
-
-    const whereClause: any = { academicYearId, isActive: true };
-    if (classId) whereClause.classId = classId;
-
-    const enrollments = await enrollmentRepo.find({
-      where: whereClause,
-      relations: { student: { person: true }, class: true },
-    });
-
-    if (enrollments.length === 0) {
-      return { punctuality: [], tardiness: [], absences: [] };
-    }
-
-    const personIds = enrollments.map((e) => e.student.personId);
-
-    // Fetch all entry logs in the date range (join schedule for early-arrival calc)
-    const qb = this.dataSource
-      .getRepository(AttendanceLog)
-      .createQueryBuilder('log')
-      .innerJoinAndSelect('log.attendance', 'att')
-      .leftJoinAndSelect('att.attendanceSchedule', 'schedule')
-      .where('att.personId IN (:...personIds)', { personIds })
-      .andWhere('log.typeId = :typeId', { typeId: AttendanceTypeId.ENTRY });
-
-    if (from) qb.andWhere('att.date >= :from', { from });
-    if (to) qb.andWhere('att.date <= :to', { to });
-
-    const logs = await qb.getMany();
-
-    // Group logs by personId
-    const logsByPerson = new Map<string, AttendanceLog[]>();
-    for (const log of logs) {
-      const pid = log.attendance.personId;
-      if (!logsByPerson.has(pid)) logsByPerson.set(pid, []);
-      logsByPerson.get(pid)!.push(log);
-    }
-
-    // Determine which dates had at least one attendance (per class)
-    // A date is "active" for a classId if any student from that class attended
-    const activeDatesByClass = new Map<string, Set<string>>();
-    for (const log of logs) {
-      const enrollment = enrollments.find(
-        (e) => e.student.personId === log.attendance.personId,
-      );
-      if (!enrollment) continue;
-      const cid = enrollment.classId;
-      const dateStr = new Date(log.attendance.date).toISOString().split('T')[0];
-      if (!activeDatesByClass.has(cid)) activeDatesByClass.set(cid, new Set());
-      activeDatesByClass.get(cid)!.add(dateStr);
-    }
-
-    // Build per-student stats
-    const stats = enrollments.map((e) => {
-      const personId = e.student.personId;
-      const person = e.student.person;
-      const studentLogs = logsByPerson.get(personId) ?? [];
-      const activeDates = activeDatesByClass.get(e.classId) ?? new Set();
-
-      // Days the student attended (only entry logs)
-      const attendedDates = new Set(
-        studentLogs.map(
-          (l) => new Date(l.attendance.date).toISOString().split('T')[0],
-        ),
-      );
-
-      // Tardiness: count of LATE entry logs
-      const tardinessCount = studentLogs.filter(
-        (l) => l.statusId === AttendanceStatusId.LATE,
-      ).length;
-
-      const onTimeLogs = studentLogs.filter(
-        (l) => l.statusId === AttendanceStatusId.ON_TIME,
-      );
-      const onTimeCount = onTimeLogs.length;
-
-      // Early-arrival minutes: sum of (entryEnd - markedAt) in minutes per on-time log.
-      // Used as tiebreaker: same onTimeCount → more accumulated early minutes wins.
-      const earlyMinutes = onTimeLogs.reduce((sum, log) => {
-        const schedule = log.attendance?.attendanceSchedule;
-        if (!schedule?.entryEnd) return sum;
-        const [eh, em, es] = schedule.entryEnd.split(':').map(Number);
-        const entryEndMinutes = eh * 60 + em + (es ?? 0) / 60;
-        const marked = new Date(log.markedAt);
-        const markedMinutes = marked.getHours() * 60 + marked.getMinutes() + marked.getSeconds() / 60;
-        const diff = entryEndMinutes - markedMinutes;
-        return sum + (diff > 0 ? diff : 0);
-      }, 0);
-
-      // Absences: active class dates where student did NOT attend
-      let absenceCount = 0;
-      for (const date of activeDates) {
-        if (!attendedDates.has(date)) absenceCount++;
-      }
-
-      return {
-        studentId: e.studentId,
-        person: {
-          names: person.names,
-          paternalLastName: person.paternalLastName,
-          maternalLastName: person.maternalLastName,
-        },
-        className: e.class.name,
-        onTimeCount,
-        tardinessCount,
-        absenceCount,
-        earlyMinutes,
-      };
-    });
-
-    const sorted = {
-      [RankingType.PUNCTUALITY]: [...stats].sort((a, b) => {
-        if (b.onTimeCount !== a.onTimeCount) return b.onTimeCount - a.onTimeCount;
-        return b.earlyMinutes - a.earlyMinutes;
-      }),
-      [RankingType.TARDINESS]: [...stats]
-        .filter((s) => s.tardinessCount > 0)
-        .sort((a, b) => b.tardinessCount - a.tardinessCount),
-      [RankingType.ABSENCES]: [...stats]
-        .filter((s) => s.absenceCount > 0)
-        .sort((a, b) => b.absenceCount - a.absenceCount),
-    };
-
-    // Summary mode: top 3 of each type (no pagination)
-    if (!dto.type) {
-      return {
-        punctuality: sorted[RankingType.PUNCTUALITY].slice(0, 3),
-        tardiness: sorted[RankingType.TARDINESS].slice(0, 3),
-        absences: sorted[RankingType.ABSENCES].slice(0, 3),
-      };
-    }
-
-    // Paginated mode: single type
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 20;
-    const list = sorted[dto.type];
-    const total = list.length;
-    const data = list.slice((page - 1) * limit, page * limit);
+    const offset = (page - 1) * limit;
+
+    const params: any[] = [academicYearId];
+    let idx = 2;
+
+    const classFilter = classId ? `AND e.class_id = $${idx++}` : '';
+    if (classId) params.push(classId);
+
+    const fromIdx = from ? idx++ : null;
+    if (from) params.push(from);
+    const toIdx = to ? idx++ : null;
+    if (to) params.push(to);
+
+    // Two alias variants for the same $n params
+    const fromFilterCte = fromIdx ? `AND a2.date >= $${fromIdx}` : '';
+    const toFilterCte = toIdx ? `AND a2.date <= $${toIdx}` : '';
+    const fromFilter = fromIdx ? `AND a.date >= $${fromIdx}` : '';
+    const toFilter = toIdx ? `AND a.date <= $${toIdx}` : '';
+
+    params.push(limit, offset);
+    const limitIdx = idx++;
+    const offsetIdx = idx++;
+
+    const rows = await this.dataSource.query(
+      `
+      WITH active_days AS (
+        -- Days where at least one student of the class registered an entry
+        SELECT e2.class_id, a2.date
+        FROM enrollments e2
+        JOIN students s2       ON s2.id = e2.student_id
+        JOIN attendances a2    ON a2.person_id = s2.person_id
+        JOIN attendance_logs l2
+          ON l2.attendance_id = a2.id
+          AND l2.type_id = 'entry'
+        WHERE e2.academic_year_id = $1
+          AND e2.is_active = true
+          ${fromFilterCte}
+          ${toFilterCte}
+        GROUP BY e2.class_id, a2.date
+      ),
+      required_days AS (
+        -- Count of active days per class
+        SELECT class_id, COUNT(*)::int AS total_days
+        FROM active_days
+        GROUP BY class_id
+      )
+      SELECT
+        e.student_id                          AS "studentId",
+        p.names                               AS names,
+        p.paternal_last_name                  AS "paternalLastName",
+        p.maternal_last_name                  AS "maternalLastName",
+        c.name                                AS "className",
+        COUNT(*) FILTER (
+          WHERE l.status_id = 'on_time'
+        )::int                                AS "onTimeCount",
+        COALESCE(rd.total_days, 0)            AS "totalDays",
+        CASE WHEN COALESCE(rd.total_days, 0) > 0
+          THEN ROUND(
+            COUNT(*) FILTER (WHERE l.status_id = 'on_time')::numeric
+            / rd.total_days * 100,
+            2
+          )
+          ELSE 0
+        END                                   AS "punctualityRate",
+        COALESCE(SUM(
+          CASE WHEN l.status_id = 'on_time' THEN
+            GREATEST(
+              EXTRACT(EPOCH FROM (
+                sch.entry_end::time - (l.marked_at AT TIME ZONE 'America/Lima')::time
+              )) / 60,
+              0
+            )
+          ELSE 0 END
+        ), 0)                                 AS "earlyMinutes",
+        COUNT(*) OVER ()::int                 AS total
+      FROM enrollments e
+      JOIN students s         ON s.id = e.student_id
+      JOIN people p           ON p.id = s.person_id
+      JOIN classes c          ON c.id = e.class_id
+      LEFT JOIN required_days rd ON rd.class_id = e.class_id
+      LEFT JOIN attendances a ON a.person_id = p.id
+        ${fromFilter}
+        ${toFilter}
+      LEFT JOIN attendance_logs l
+        ON l.attendance_id = a.id
+        AND l.type_id = 'entry'
+      LEFT JOIN attendance_schedules sch
+        ON sch.id = a.attendance_schedule_id
+      WHERE e.academic_year_id = $1
+        AND e.is_active = true
+        ${classFilter}
+      GROUP BY e.student_id, p.id, c.name, rd.total_days
+      ORDER BY "punctualityRate" DESC, "earlyMinutes" DESC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
+      `,
+      params,
+    );
+
+    const total: number = rows[0]?.total ?? 0;
+    const data = rows.map((r: any) => ({
+      studentId: r.studentId,
+      person: {
+        names: r.names,
+        paternalLastName: r.paternalLastName,
+        maternalLastName: r.maternalLastName,
+      },
+      className: r.className,
+      onTimeCount: r.onTimeCount,
+      totalDays: r.totalDays,
+      punctualityRate: parseFloat(r.punctualityRate),
+      earlyMinutes: parseFloat(r.earlyMinutes),
+    }));
+
+    return { data, total, page, limit };
+  }
+
+  async getTardinessRanking(dto: BaseRankingDto) {
+    const { academicYearId, classId, from, to } = dto;
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 20;
+    const offset = (page - 1) * limit;
+
+    const params: any[] = [academicYearId];
+    let idx = 2;
+
+    const classFilter = classId ? `AND e.class_id = $${idx++}` : '';
+    if (classId) params.push(classId);
+
+    const fromIdx = from ? idx++ : null;
+    if (from) params.push(from);
+    const toIdx = to ? idx++ : null;
+    if (to) params.push(to);
+
+    const fromFilterCte = fromIdx ? `AND a2.date >= $${fromIdx}` : '';
+    const toFilterCte = toIdx ? `AND a2.date <= $${toIdx}` : '';
+    const fromFilter = fromIdx ? `AND a.date >= $${fromIdx}` : '';
+    const toFilter = toIdx ? `AND a.date <= $${toIdx}` : '';
+
+    params.push(limit, offset);
+    const limitIdx = idx++;
+    const offsetIdx = idx++;
+
+    const rows = await this.dataSource.query(
+      `
+      WITH active_days AS (
+        SELECT e2.class_id, a2.date
+        FROM enrollments e2
+        JOIN students s2       ON s2.id = e2.student_id
+        JOIN attendances a2    ON a2.person_id = s2.person_id
+        JOIN attendance_logs l2
+          ON l2.attendance_id = a2.id
+          AND l2.type_id = 'entry'
+        WHERE e2.academic_year_id = $1
+          AND e2.is_active = true
+          ${fromFilterCte}
+          ${toFilterCte}
+        GROUP BY e2.class_id, a2.date
+      ),
+      required_days AS (
+        SELECT class_id, COUNT(*)::int AS total_days
+        FROM active_days
+        GROUP BY class_id
+      )
+      SELECT
+        e.student_id                          AS "studentId",
+        p.names                               AS names,
+        p.paternal_last_name                  AS "paternalLastName",
+        p.maternal_last_name                  AS "maternalLastName",
+        c.name                                AS "className",
+        COUNT(*) FILTER (
+          WHERE l.status_id = 'late'
+        )::int                                AS "tardinessCount",
+        COALESCE(rd.total_days, 0)            AS "totalDays",
+        CASE WHEN COALESCE(rd.total_days, 0) > 0
+          THEN ROUND(
+            COUNT(*) FILTER (WHERE l.status_id = 'late')::numeric
+            / rd.total_days * 100,
+            2
+          )
+          ELSE 0
+        END                                   AS "tardinessRate",
+        COUNT(*) OVER ()::int                 AS total
+      FROM enrollments e
+      JOIN students s         ON s.id = e.student_id
+      JOIN people p           ON p.id = s.person_id
+      JOIN classes c          ON c.id = e.class_id
+      LEFT JOIN required_days rd ON rd.class_id = e.class_id
+      LEFT JOIN attendances a ON a.person_id = p.id
+        ${fromFilter}
+        ${toFilter}
+      LEFT JOIN attendance_logs l
+        ON l.attendance_id = a.id
+        AND l.type_id = 'entry'
+      WHERE e.academic_year_id = $1
+        AND e.is_active = true
+        ${classFilter}
+      GROUP BY e.student_id, p.id, c.name, rd.total_days
+      HAVING COUNT(*) FILTER (WHERE l.status_id = 'late') > 0
+      ORDER BY "tardinessRate" DESC, "tardinessCount" DESC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
+      `,
+      params,
+    );
+
+    const total: number = rows[0]?.total ?? 0;
+    const data = rows.map((r: any) => ({
+      studentId: r.studentId,
+      person: {
+        names: r.names,
+        paternalLastName: r.paternalLastName,
+        maternalLastName: r.maternalLastName,
+      },
+      className: r.className,
+      tardinessCount: r.tardinessCount,
+      totalDays: r.totalDays,
+      tardinessRate: parseFloat(r.tardinessRate),
+    }));
+
+    return { data, total, page, limit };
+  }
+
+  async getAbsencesRanking(dto: BaseRankingDto) {
+    const { academicYearId, classId, from, to } = dto;
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 20;
+    const offset = (page - 1) * limit;
+
+    const params: any[] = [academicYearId];
+    let idx = 2;
+
+    const classFilter = classId ? `AND e.class_id = $${idx++}` : '';
+    if (classId) params.push(classId);
+
+    const fromIdx = from ? idx++ : null;
+    if (from) params.push(from);
+    const toIdx = to ? idx++ : null;
+    if (to) params.push(to);
+
+    const fromFilterCte = fromIdx ? `AND a2.date >= $${fromIdx}` : '';
+    const toFilterCte = toIdx ? `AND a2.date <= $${toIdx}` : '';
+
+    params.push(limit, offset);
+    const limitIdx = idx++;
+    const offsetIdx = idx++;
+
+    const rows = await this.dataSource.query(
+      `
+      WITH active_days AS (
+        SELECT e2.class_id, a2.date
+        FROM enrollments e2
+        JOIN students s2       ON s2.id = e2.student_id
+        JOIN attendances a2    ON a2.person_id = s2.person_id
+        JOIN attendance_logs l2
+          ON l2.attendance_id = a2.id
+          AND l2.type_id = 'entry'
+        WHERE e2.academic_year_id = $1
+          AND e2.is_active = true
+          ${fromFilterCte}
+          ${toFilterCte}
+        GROUP BY e2.class_id, a2.date
+      ),
+      required_days AS (
+        SELECT class_id, COUNT(*)::int AS total_days
+        FROM active_days
+        GROUP BY class_id
+      ),
+      attended_days AS (
+        -- Days each student actually registered an entry log
+        SELECT e2.student_id, a2.date
+        FROM enrollments e2
+        JOIN students s2    ON s2.id = e2.student_id
+        JOIN attendances a2 ON a2.person_id = s2.person_id
+        JOIN attendance_logs l2
+          ON l2.attendance_id = a2.id
+          AND l2.type_id = 'entry'
+        WHERE e2.academic_year_id = $1
+          AND e2.is_active = true
+          ${fromFilterCte}
+          ${toFilterCte}
+        GROUP BY e2.student_id, a2.date
+      ),
+      absence_counts AS (
+        -- Active days the student did NOT attend
+        SELECT e.student_id, COUNT(*)::int AS absence_count
+        FROM enrollments e
+        JOIN required_days rd ON rd.class_id = e.class_id
+        JOIN active_days ad   ON ad.class_id = e.class_id
+        LEFT JOIN attended_days atd
+          ON atd.student_id = e.student_id
+          AND atd.date = ad.date
+        WHERE e.academic_year_id = $1
+          AND e.is_active = true
+          AND atd.student_id IS NULL  -- no attendance on that active day
+        GROUP BY e.student_id
+      )
+      SELECT
+        e.student_id                          AS "studentId",
+        p.names                               AS names,
+        p.paternal_last_name                  AS "paternalLastName",
+        p.maternal_last_name                  AS "maternalLastName",
+        c.name                                AS "className",
+        COALESCE(ac.absence_count, 0)         AS "absenceCount",
+        COALESCE(rd.total_days, 0)            AS "totalDays",
+        CASE WHEN COALESCE(rd.total_days, 0) > 0
+          THEN ROUND(
+            COALESCE(ac.absence_count, 0)::numeric
+            / rd.total_days * 100,
+            2
+          )
+          ELSE 0
+        END                                   AS "absenceRate",
+        COUNT(*) OVER ()::int                 AS total
+      FROM enrollments e
+      JOIN students s         ON s.id = e.student_id
+      JOIN people p           ON p.id = s.person_id
+      JOIN classes c          ON c.id = e.class_id
+      LEFT JOIN required_days rd ON rd.class_id = e.class_id
+      LEFT JOIN absence_counts ac ON ac.student_id = e.student_id
+      WHERE e.academic_year_id = $1
+        AND e.is_active = true
+        ${classFilter}
+        AND COALESCE(ac.absence_count, 0) > 0
+      ORDER BY "absenceRate" DESC, "absenceCount" DESC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
+      `,
+      params,
+    );
+
+    const total: number = rows[0]?.total ?? 0;
+    const data = rows.map((r: any) => ({
+      studentId: r.studentId,
+      person: {
+        names: r.names,
+        paternalLastName: r.paternalLastName,
+        maternalLastName: r.maternalLastName,
+      },
+      className: r.className,
+      absenceCount: r.absenceCount,
+      totalDays: r.totalDays,
+      absenceRate: parseFloat(r.absenceRate),
+    }));
 
     return { data, total, page, limit };
   }

@@ -12,7 +12,9 @@ import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { RoleId } from 'src/auth/enums/role-id.enum';
 import { AttendanceLogsDto } from '../dto/attendance-logs.dto';
-import { AttendanceRankingsDto } from '../dto/attendance-rankings.dto';
+import {
+  BaseRankingDto
+} from '../dto/attendance-rankings.dto';
 import { QueryAttendanceHistoryDto } from '../dto/query-attendance-history.dto';
 import { QueryStudentsAttendanceDto } from '../dto/query-students-attendance.dto';
 import { RegisterAttendanceDto } from '../dto/register-attendance.dto';
@@ -53,9 +55,19 @@ export class AttendanceController {
     return this.attendanceService.lastAttendancesDay();
   }
 
-  @Post('rankings')
-  getRankings(@Body() dto: AttendanceRankingsDto) {
-    return this.attendanceService.getAttendanceRankings(dto);
+  @Post('rankings/punctuality')
+  getPunctualityRanking(@Body() dto: BaseRankingDto) {
+    return this.attendanceService.getPunctualityRanking(dto);
+  }
+
+  @Post('rankings/tardiness')
+  getTardinessRanking(@Body() dto: BaseRankingDto) {
+    return this.attendanceService.getTardinessRanking(dto);
+  }
+
+  @Post('rankings/absences')
+  getAbsencesRanking(@Body() dto: BaseRankingDto) {
+    return this.attendanceService.getAbsencesRanking(dto);
   }
 
   @Post('recalculate-statuses')

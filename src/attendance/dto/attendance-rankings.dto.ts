@@ -7,7 +7,7 @@ export enum RankingType {
   ABSENCES = 'absences',
 }
 
-export class AttendanceRankingsDto {
+export class BaseRankingDto {
   @IsUUID()
   academicYearId: string;
 
@@ -23,11 +23,6 @@ export class AttendanceRankingsDto {
   @IsString()
   to?: string; // yyyy-MM-dd
 
-  /** Si se omite, devuelve top 3 de cada tipo (vista resumen). */
-  @IsOptional()
-  @IsEnum(RankingType)
-  type?: RankingType;
-
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -39,4 +34,11 @@ export class AttendanceRankingsDto {
   @IsInt()
   @Min(1)
   limit?: number;
+}
+
+/** @deprecated use BaseRankingDto + separate endpoints */
+export class AttendanceRankingsDto extends BaseRankingDto {
+  @IsOptional()
+  @IsEnum(RankingType)
+  type?: RankingType;
 }
