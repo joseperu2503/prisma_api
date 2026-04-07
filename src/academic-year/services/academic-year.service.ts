@@ -167,6 +167,15 @@ export class AcademicYearService {
     return await this.academicYearRepository.save(academicYear);
   }
 
+  async findAllByRoleAndUser(_roleId: string, _userId: string) {
+    return this.academicYearRepository
+      .createQueryBuilder('ay')
+      .select(['ay.id', 'ay.name', 'ay.startDate', 'ay.endDate', 'ay.isActive'])
+      .where('ay.isActive = true')
+      .orderBy('ay.startDate', 'DESC')
+      .getMany();
+  }
+
   async findActive() {
     return this.academicYearRepository.findOne({
       where: { isActive: true },

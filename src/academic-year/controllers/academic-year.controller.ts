@@ -9,8 +9,11 @@ import {
   Post,
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
+import { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
 import { CreateAcademicYearDto } from '../dto/create-academic-year.dto';
+import { ListAcademicYearsByRoleDto } from '../dto/list-academic-years-by-role.dto';
 import { ListAcademicYearsDto } from '../dto/list-academic-years.dto';
 import { UpdateAcademicYearDto } from '../dto/update-academic-year.dto';
 import { AcademicYearService } from '../services/academic-year.service';
@@ -28,6 +31,18 @@ export class AcademicYearController {
   @Post('list')
   findAll(@Body() body: ListAcademicYearsDto) {
     return this.academicYearService.findAll(body);
+  }
+
+  @Auth([RoleId.ADMIN, RoleId.GUARDIAN])
+  @Post('by-role')
+  findAllByRole(
+    @Body() body: ListAcademicYearsByRoleDto,
+    @GetUser() user: JwtPayload,
+  ) {
+    return this.academicYearService.findAllByRoleAndUser(
+      body.role,
+      user.userId,
+    );
   }
 
   @Get('active')
