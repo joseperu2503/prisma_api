@@ -674,8 +674,8 @@ export class AttendanceService {
    *   1. `punctualityRate` DESC  — porcentaje de días asistidos a tiempo
    *      sobre el total de días requeridos de la clase:
    *      `(onTimeCount / totalDays) * 100`
-   *   2. `earlyMinutes` DESC  — minutos acumulados de anticipación
-   *      (suma de cuántos minutos antes del límite de entrada llegó el alumno),
+   *   2. `earlyMinutes` DESC  — promedio de minutos de anticipación por día a tiempo
+   *      (cuántos minutos antes del límite de entrada llegó en promedio),
    *      usado como desempate cuando dos alumnos tienen el mismo rate.
    *
    * Solo incluye alumnos con matrícula activa en el año académico dado.
@@ -750,16 +750,19 @@ export class AttendanceService {
           )
           ELSE 0
         END                                   AS "punctualityRate",
-        COALESCE(SUM(
-          CASE WHEN l.status_id = 'on_time' THEN
-            GREATEST(
-              EXTRACT(EPOCH FROM (
-                sch.entry_end::time - (l.marked_at AT TIME ZONE 'America/Lima')::time
-              )) / 60,
-              0
-            )
-          ELSE 0 END
-        ), 0)                                 AS "earlyMinutes",
+        COALESCE(
+          AVG(
+            CASE WHEN l.status_id = 'on_time' THEN
+              GREATEST(
+                EXTRACT(EPOCH FROM (
+                  sch.entry_end::time - (l.marked_at AT TIME ZONE 'America/Lima')::time
+                )) / 60,
+                0
+              )
+            END
+          ),
+          0
+        )                                     AS "earlyMinutes",
         COUNT(*) OVER ()::int                 AS total
       FROM enrollments e
       JOIN students s         ON s.id = e.student_id
@@ -809,7 +812,8 @@ export class AttendanceService {
    *   1. `tardinessRate` DESC  — porcentaje de días con tardanza
    *      sobre el total de días requeridos de la clase:
    *      `(tardinessCount / totalDays) * 100`
-   *   2. `tardinessCount` DESC  — cantidad absoluta de tardanzas,
+   *   2. `lateMinutes` DESC  — promedio de minutos de tardanza por día tarde
+   *      (cuántos minutos después del límite de entrada llegó en promedio),
    *      usado como desempate cuando dos alumnos tienen el mismo rate.
    *
    * Solo aparecen alumnos con al menos 1 tardanza (`HAVING tardinessCount > 0`).
@@ -868,9 +872,6 @@ export class AttendanceService {
         p.paternal_last_name                  AS "paternalLastName",
         p.maternal_last_name                  AS "maternalLastName",
         c.name                                AS "className",
-        COUNT(*) FILTER (
-          WHERE l.status_id = 'late'
-        )::int                                AS "tardinessCount",
         COALESCE(rd.total_days, 0)            AS "totalDays",
         CASE WHEN COALESCE(rd.total_days, 0) > 0
           THEN ROUND(
@@ -880,6 +881,19 @@ export class AttendanceService {
           )
           ELSE 0
         END                                   AS "tardinessRate",
+        COALESCE(
+          AVG(
+            CASE WHEN l.status_id = 'late' THEN
+              GREATEST(
+                EXTRACT(EPOCH FROM (
+                  (l.marked_at AT TIME ZONE 'America/Lima')::time - sch.entry_end::time
+                )) / 60,
+                0
+              )
+            END
+          ),
+          0
+        )                                     AS "lateMinutes",
         COUNT(*) OVER ()::int                 AS total
       FROM enrollments e
       JOIN students s         ON s.id = e.student_id
@@ -892,12 +906,14 @@ export class AttendanceService {
       LEFT JOIN attendance_logs l
         ON l.attendance_id = a.id
         AND l.type_id = 'entry'
+      LEFT JOIN attendance_schedules sch
+        ON sch.id = a.attendance_schedule_id
       WHERE e.academic_year_id = $1
         AND e.is_active = true
         ${classFilter}
       GROUP BY e.student_id, p.id, c.name, rd.total_days
       HAVING COUNT(*) FILTER (WHERE l.status_id = 'late') > 0
-      ORDER BY "tardinessRate" DESC, "tardinessCount" DESC
+      ORDER BY "tardinessRate" DESC, "lateMinutes" DESC
       LIMIT $${limitIdx} OFFSET $${offsetIdx}
       `,
       params,
@@ -912,9 +928,9 @@ export class AttendanceService {
         maternalLastName: r.maternalLastName,
       },
       className: r.className,
-      tardinessCount: r.tardinessCount,
       totalDays: r.totalDays,
       tardinessRate: parseFloat(r.tardinessRate),
+      lateMinutes: parseFloat(r.lateMinutes),
     }));
 
     return { data, total, page, limit };
