@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateProductPriceDto } from '../dto/create-product-price.dto';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { ListProductDto } from '../dto/list-product.dto';
@@ -9,6 +13,7 @@ import { UpdateProductDto } from '../dto/update-product.dto';
 import { ProductPrice } from '../entities/product-price.entity';
 import { Product } from '../entities/product.entity';
 import { ProductPriceTypeId } from '../enums/product-price-type-id.enum';
+import { ProductPriceService } from './product-price.service';
 
 @Injectable()
 export class ProductService {
@@ -18,30 +23,51 @@ export class ProductService {
 
     @InjectRepository(ProductPrice)
     private readonly priceRepo: Repository<ProductPrice>,
+
+    private readonly priceSvc: ProductPriceService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateProductDto) {
     const { price, ...productData } = dto;
-    const product = this.repo.create({ isActive: true, ...productData });
-    const saved = await this.repo.save(product);
 
-    if (price !== undefined && price !== null) {
-      const productPrice = this.priceRepo.create({
-        productId: saved.id,
-        price,
-        academicYearId: null,
-        classId: null,
-        enrollmentId: null,
-        isActive: true,
-      });
-      await this.priceRepo.save(productPrice);
+    const existing = await this.repo.findOneBy({ name: dto.name });
+    if (existing) {
+      throw new ConflictException(
+        `Ya existe un producto con el nombre "${dto.name}"`,
+      );
     }
 
-    return this.findOne(saved.id);
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      const product = qr.manager.create(Product, {
+        isActive: true,
+        ...productData,
+      });
+      const saved = await qr.manager.save(product);
+
+      if (price !== undefined && price !== null) {
+        await this.priceSvc.createGlobalPrice(
+          { productId: saved.id, price },
+          qr,
+        );
+      }
+
+      await qr.commitTransaction();
+      return this.findOne(saved.id);
+    } catch (error) {
+      await qr.rollbackTransaction();
+      throw error;
+    } finally {
+      await qr.release();
+    }
   }
 
   async findAll(params: ListProductDto) {
-    const { pagination, search } = params;
+    const { pagination, search, classId, academicYearId } = params;
     const page = pagination?.page;
     const limit = pagination?.limit;
 
@@ -49,8 +75,23 @@ export class ProductService {
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.unitCode', 'uc')
       .leftJoinAndSelect('p.igvAffectationType', 'igv')
-      .leftJoinAndSelect('p.prices', 'pr')
       .orderBy('p.name', 'ASC');
+
+    if (classId && academicYearId) {
+      qb.leftJoinAndSelect(
+        'p.prices',
+        'pr',
+        'pr.classId = :classId AND pr.academicYearId = :academicYearId AND pr.priceTypeId = :cay',
+        { classId, academicYearId, cay: ProductPriceTypeId.CLASS_ACADEMIC_YEAR },
+      );
+    } else {
+      qb.leftJoinAndSelect(
+        'p.prices',
+        'pr',
+        'pr.priceTypeId = :global AND pr.academicYearId IS NULL AND pr.classId IS NULL AND pr.enrollmentId IS NULL AND pr.personId IS NULL',
+        { global: ProductPriceTypeId.GLOBAL },
+      );
+    }
 
     if (search) {
       qb.where('LOWER(p.name) LIKE :search', {
@@ -96,9 +137,51 @@ export class ProductService {
 
   async update(id: string, dto: UpdateProductDto) {
     const product = await this.findOne(id);
+
+    if (dto.name && dto.name !== product.name) {
+      const existing = await this.repo.findOneBy({ name: dto.name });
+      if (existing) {
+        throw new ConflictException(
+          `Ya existe un producto con el nombre "${dto.name}"`,
+        );
+      }
+    }
+
     const { price, ...productData } = dto;
-    Object.assign(product, productData);
-    return this.repo.save(product);
+
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      Object.assign(product, productData);
+      await qr.manager.save(product);
+
+      const globalPrice = await this.priceRepo.findOne({
+        where: {
+          productId: id,
+          priceTypeId: ProductPriceTypeId.GLOBAL,
+        },
+      });
+
+      if (price !== undefined && price !== null) {
+        if (globalPrice) {
+          await qr.manager.save(ProductPrice, { ...globalPrice, price });
+        } else {
+          await this.priceSvc.createGlobalPrice({ productId: id, price }, qr);
+        }
+      } else if (price === null && globalPrice) {
+        await qr.manager.remove(ProductPrice, globalPrice);
+      }
+
+      await qr.commitTransaction();
+      return this.findOne(id);
+    } catch (error) {
+      await qr.rollbackTransaction();
+      throw error;
+    } finally {
+      await qr.release();
+    }
   }
 
   async remove(id: string) {

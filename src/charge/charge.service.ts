@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BulkChargeDto } from 'src/enrollment/dto/bulk-charge.dto';
+import { BulkChargeDto } from 'src/charge/dto/bulk-charge.dto';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { PlanConfiguration } from 'src/plan/entities/plan-configuration.entity';
 import { Product } from 'src/product/entities/product.entity';

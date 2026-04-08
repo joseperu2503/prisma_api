@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProductPriceController } from './controllers/product-price.controller';
 import { ProductController } from './controllers/product.controller';
 import { IgvAffectationType } from './entities/igv-affectation-type.entity';
 import { ProductPrice } from './entities/product-price.entity';
@@ -11,7 +12,7 @@ import { ProductService } from './services/product.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Product, ProductPrice, ProductPriceType, UnitCode, IgvAffectationType])],
-  controllers: [ProductController],
+  controllers: [ProductController, ProductPriceController],
   providers: [ProductService, ProductPriceService],
   exports: [ProductService, ProductPriceService, TypeOrmModule],
 })

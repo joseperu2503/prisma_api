@@ -11,7 +11,7 @@ import { DefaultPlan } from '../entities/default-plan.entity';
 import { DefaultProduct } from '../entities/default-product.entity';
 
 @Injectable()
-export class EnrollmentDefaultService {
+export class ClassAcademicYearService {
   constructor(
     @InjectRepository(DefaultProduct)
     private readonly defaultProductRepo: Repository<DefaultProduct>,

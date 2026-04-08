@@ -16,5 +16,6 @@ import { SubscriptionService } from './services/subscription.service';
   ],
   controllers: [PlanController],
   providers: [PlanService, PlanConfigurationService, SubscriptionService],
+  exports: [PlanConfigurationService],
 })
 export class PlanModule {}

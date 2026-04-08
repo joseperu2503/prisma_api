@@ -41,20 +41,18 @@ export class EnrollmentController {
     return this.enrollmentService.findAll(body);
   }
 
-  @Get('form-options/products')
+  @Post('form-options/products')
   getFormProducts(
-    @Query('classId', ParseUUIDPipe) classId: string,
-    @Query('academicYearId', ParseUUIDPipe) academicYearId: string,
+    @Body() dto: { classId: string; academicYearId: string },
   ) {
-    return this.enrollmentFormOptionsService.getProducts(classId, academicYearId);
+    return this.enrollmentFormOptionsService.getProducts(dto.classId, dto.academicYearId);
   }
 
-  @Get('form-options/plans')
+  @Post('form-options/plans')
   getFormPlans(
-    @Query('classId', ParseUUIDPipe) classId: string,
-    @Query('academicYearId', ParseUUIDPipe) academicYearId: string,
+    @Body() dto: { classId: string; academicYearId: string },
   ) {
-    return this.enrollmentFormOptionsService.getPlans(classId, academicYearId);
+    return this.enrollmentFormOptionsService.getPlans(dto.classId, dto.academicYearId);
   }
 
   @Get('by-class')

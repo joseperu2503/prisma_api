@@ -16,9 +16,7 @@ import { Charge } from 'src/charge/entities/charge.entity';
 import { ClassAcademicYear } from 'src/class/entities/class-academic-year.entity';
 import { PlanConfiguration } from 'src/plan/entities/plan-configuration.entity';
 import { Subscription } from 'src/plan/entities/subscription.entity';
-import { ProductPrice } from 'src/product/entities/product-price.entity';
 import { Product } from 'src/product/entities/product.entity';
-import { ProductPriceTypeId } from 'src/product/enums/product-price-type-id.enum';
 import { ProductPriceService } from 'src/product/services/product-price.service';
 import { StudentService } from 'src/student/services/student.service';
 import { DataSource, In, Repository } from 'typeorm';
@@ -76,21 +74,16 @@ export class EnrollmentService {
       await queryRunner.manager.save(enrollment);
 
       if (dto.prices && dto.prices.length > 0) {
-        await queryRunner.manager.save(
-          ProductPrice,
-          dto.prices.map((p) =>
-            queryRunner.manager.create(ProductPrice, {
-              productId: p.productId,
-              price: p.price,
-              enrollmentId: enrollment.id,
-              personId: savedStudent.personId,
-              academicYearId: dto.academicYearId,
-              classId: dto.classId,
-              isActive: true,
-              priceTypeId: ProductPriceTypeId.ENROLLMENT,
-            }),
-          ),
-        );
+        for (const p of dto.prices) {
+          await this.productPriceSvc.createEnrollmentPrice({
+            productId: p.productId,
+            price: p.price,
+            academicYearId: dto.academicYearId,
+            classId: dto.classId,
+            enrollmentId: enrollment.id,
+            personId: savedStudent.personId,
+          });
+        }
       }
 
       const personId = savedStudent.personId;
