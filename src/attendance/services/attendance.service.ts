@@ -763,6 +763,14 @@ export class AttendanceService {
           ),
           0
         )                                     AS "earlyMinutes",
+        TO_CHAR(
+          (AVG(
+            CASE WHEN l.status_id = 'on_time' THEN
+              EXTRACT(EPOCH FROM (l.marked_at AT TIME ZONE 'America/Lima')::time)
+            END
+          ) || ' seconds')::interval,
+          'HH12:MI AM'
+        )                                     AS "avgEntryTime",
         COUNT(*) OVER ()::int                 AS total
       FROM enrollments e
       JOIN students s         ON s.id = e.student_id
@@ -800,6 +808,7 @@ export class AttendanceService {
       totalDays: r.totalDays,
       punctualityRate: parseFloat(r.punctualityRate),
       earlyMinutes: parseFloat(r.earlyMinutes),
+      avgEntryTime: r.avgEntryTime ?? null,
     }));
 
     return { data, total, page, limit };
@@ -894,6 +903,14 @@ export class AttendanceService {
           ),
           0
         )                                     AS "lateMinutes",
+        TO_CHAR(
+          (AVG(
+            CASE WHEN l.status_id = 'late' THEN
+              EXTRACT(EPOCH FROM (l.marked_at AT TIME ZONE 'America/Lima')::time)
+            END
+          ) || ' seconds')::interval,
+          'HH12:MI AM'
+        )                                     AS "avgEntryTime",
         COUNT(*) OVER ()::int                 AS total
       FROM enrollments e
       JOIN students s         ON s.id = e.student_id
@@ -931,6 +948,7 @@ export class AttendanceService {
       totalDays: r.totalDays,
       tardinessRate: parseFloat(r.tardinessRate),
       lateMinutes: parseFloat(r.lateMinutes),
+      avgEntryTime: r.avgEntryTime ?? null,
     }));
 
     return { data, total, page, limit };
