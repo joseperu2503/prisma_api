@@ -592,73 +592,79 @@ export class AttendanceService {
     date: string,
     classId?: string,
   ) {
-    const enrollmentRepo = this.dataSource.getRepository(Enrollment);
-    const whereClause: any = { academicYearId, isActive: true };
-    if (classId) whereClause.classId = classId;
+    const params: any[] = [academicYearId, date];
+    let idx = 3;
 
-    const enrollments = await enrollmentRepo.find({
-      where: whereClause,
-      relations: { student: { person: true }, class: true },
-      order: { class: { name: 'ASC' } },
-    });
+    const classFilter = classId ? `AND e.class_id = $${idx++}` : '';
+    if (classId) params.push(classId);
 
-    if (enrollments.length === 0) return [];
+    const rows = await this.dataSource.query(
+      `
+      SELECT
+        e.student_id                        AS "studentId",
+        p.names                             AS names,
+        p.paternal_last_name                AS "paternalLastName",
+        p.maternal_last_name                AS "maternalLastName",
+        p.document_number                   AS "documentNumber",
+        p.document_type_id                  AS "documentTypeId",
+        c.id                                AS "classId",
+        c.name                              AS "className",
+        -- entry log
+        entry_l.status_id                   AS "entryStatusId",
+        entry_s.name                        AS "entryStatusName",
+        entry_l.marked_at                   AS "entryMarkedAt",
+        -- exit log
+        exit_l.status_id                    AS "exitStatusId",
+        exit_s.name                         AS "exitStatusName",
+        exit_l.marked_at                    AS "exitMarkedAt"
+      FROM enrollments e
+      JOIN students s       ON s.id = e.student_id
+      JOIN people p         ON p.id = s.person_id
+      JOIN classes c        ON c.id = e.class_id
+      LEFT JOIN attendances a
+        ON a.person_id = p.id AND a.date = $2
+      LEFT JOIN attendance_logs entry_l
+        ON entry_l.attendance_id = a.id AND entry_l.type_id = 'entry'
+      LEFT JOIN attendance_statuses entry_s
+        ON entry_s.id = entry_l.status_id
+      LEFT JOIN attendance_logs exit_l
+        ON exit_l.attendance_id = a.id AND exit_l.type_id = 'exit'
+      LEFT JOIN attendance_statuses exit_s
+        ON exit_s.id = exit_l.status_id
+      WHERE e.academic_year_id = $1
+        AND e.is_active = true
+        ${classFilter}
+      ORDER BY p.paternal_last_name ASC, p.names ASC
+      `,
+      params,
+    );
 
-    const personIds = enrollments.map((e) => e.student.personId);
-
-    const logs = await this.dataSource
-      .getRepository(AttendanceLog)
-      .createQueryBuilder('log')
-      .innerJoinAndSelect('log.attendance', 'att')
-      .leftJoinAndSelect('log.status', 'status')
-      .where('att.personId IN (:...personIds)', { personIds })
-      .andWhere('att.date = :date', { date })
-      .getMany();
-
-    const logsByPerson = new Map<string, AttendanceLog[]>();
-    for (const log of logs) {
-      const pid = log.attendance.personId;
-      if (!logsByPerson.has(pid)) logsByPerson.set(pid, []);
-      logsByPerson.get(pid)!.push(log);
-    }
-
-    return enrollments.map((e) => {
-      const person = e.student.person;
-      const studentLogs = logsByPerson.get(person.id) ?? [];
-      const entryLog = studentLogs.find(
-        (l) => l.typeId === AttendanceTypeId.ENTRY,
-      );
-      const exitLog = studentLogs.find(
-        (l) => l.typeId === AttendanceTypeId.EXIT,
-      );
-      return {
-        studentId: e.studentId,
-        person: {
-          names: person.names,
-          paternalLastName: person.paternalLastName,
-          maternalLastName: person.maternalLastName,
-          documentNumber: person.documentNumber,
-          documentTypeId: person.documentTypeId,
-        },
-
-        className: e.class.name,
-        classId: e.classId,
-        entry: entryLog
-          ? {
-              statusId: entryLog.statusId,
-              statusName: entryLog.status?.name ?? null,
-              markedAt: entryLog.markedAt,
-            }
-          : null,
-        exit: exitLog
-          ? {
-              markedAt: exitLog.markedAt,
-              statusId: exitLog.statusId,
-              statusName: exitLog.status?.name ?? null,
-            }
-          : null,
-      };
-    });
+    return rows.map((r: any) => ({
+      studentId: r.studentId,
+      person: {
+        names: r.names,
+        paternalLastName: r.paternalLastName,
+        maternalLastName: r.maternalLastName,
+        documentNumber: r.documentNumber,
+        documentTypeId: r.documentTypeId,
+      },
+      classId: r.classId,
+      className: r.className,
+      entry: r.entryMarkedAt
+        ? {
+            statusId: r.entryStatusId,
+            statusName: r.entryStatusName,
+            markedAt: r.entryMarkedAt,
+          }
+        : null,
+      exit: r.exitMarkedAt
+        ? {
+            statusId: r.exitStatusId,
+            statusName: r.exitStatusName,
+            markedAt: r.exitMarkedAt,
+          }
+        : null,
+    }));
   }
 
   /**
