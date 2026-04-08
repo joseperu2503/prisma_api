@@ -881,6 +881,9 @@ export class AttendanceService {
         p.paternal_last_name                  AS "paternalLastName",
         p.maternal_last_name                  AS "maternalLastName",
         c.name                                AS "className",
+        COUNT(*) FILTER (
+          WHERE l.status_id = 'late'
+        )::int                                AS "tardinessCount",
         COALESCE(rd.total_days, 0)            AS "totalDays",
         CASE WHEN COALESCE(rd.total_days, 0) > 0
           THEN ROUND(
@@ -945,6 +948,7 @@ export class AttendanceService {
         maternalLastName: r.maternalLastName,
       },
       className: r.className,
+      tardinessCount: r.tardinessCount,
       totalDays: r.totalDays,
       tardinessRate: parseFloat(r.tardinessRate),
       lateMinutes: parseFloat(r.lateMinutes),
