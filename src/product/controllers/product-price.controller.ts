@@ -9,9 +9,9 @@ import {
 } from '@nestjs/common';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { RoleId } from 'src/auth/enums/role-id.enum';
-import { ClassAcademicYearDto } from 'src/class-academic-year/dto/class-academic-year.dto';
-import { CreateClassProductPriceDto } from 'src/class-academic-year/dto/create-product-price.dto';
-import { UpdateClassProductPriceDto } from 'src/class-academic-year/dto/update-product-price.dto';
+import { ClassAcademicYearDto } from '../dto/class-academic-year.dto';
+import { CreateClassProductPriceDto } from '../dto/create-class-product-price.dto';
+import { UpdateClassProductPriceDto } from '../dto/update-class-product-price.dto';
 import { ListClassAcademicYearPricesDto } from '../dto/list-class-academic-year-prices.dto';
 import { ProductPriceService } from '../services/product-price.service';
 

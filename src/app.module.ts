@@ -14,7 +14,6 @@ import { AppVersionMiddleware } from './app-version/middleware/app-version.middl
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
-import { ClassAcademicYearModule } from './class-academic-year/class-academic-year.module';
 import { ClassModule } from './class/class.module';
 import { CommonModule } from './common/common.module';
 import { EmployeeModule } from './employee/employee.module';
@@ -65,7 +64,6 @@ import { TeacherModule } from './teacher/teacher.module';
     AppVersionModule,
     NotificationsModule,
     ProductModule,
-    ClassAcademicYearModule,
   ],
   providers: [SeedCommand],
 })
