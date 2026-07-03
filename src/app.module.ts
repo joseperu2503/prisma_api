@@ -14,7 +14,6 @@ import { AppVersionMiddleware } from './app-version/middleware/app-version.middl
 import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
-import { ChargeModule } from './charge/charge.module';
 import { ClassAcademicYearModule } from './class-academic-year/class-academic-year.module';
 import { ClassModule } from './class/class.module';
 import { CommonModule } from './common/common.module';
@@ -25,9 +24,7 @@ import { GuardianModule } from './guardian/guardian.module';
 import { LevelModule } from './level/level.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PersonModule } from './person/person.module';
-import { PlanModule } from './plan/plan.module';
 import { ProductModule } from './product/product.module';
-import { SaleModule } from './sale/sale.module';
 import { SeedCommand } from './seed/commands/seed.command';
 import { SeedModule } from './seed/seed.module';
 import { StudentModule } from './student/student.module';
@@ -68,9 +65,6 @@ import { TeacherModule } from './teacher/teacher.module';
     AppVersionModule,
     NotificationsModule,
     ProductModule,
-    SaleModule,
-    PlanModule,
-    ChargeModule,
     ClassAcademicYearModule,
   ],
   providers: [SeedCommand],

@@ -48,13 +48,6 @@ export class EnrollmentController {
     return this.enrollmentFormOptionsService.getProducts(dto.classId, dto.academicYearId);
   }
 
-  @Post('form-options/plans')
-  getFormPlans(
-    @Body() dto: { classId: string; academicYearId: string },
-  ) {
-    return this.enrollmentFormOptionsService.getPlans(dto.classId, dto.academicYearId);
-  }
-
   @Get('by-class')
   findByClass(
     @Query('classId', ParseUUIDPipe) classId: string,

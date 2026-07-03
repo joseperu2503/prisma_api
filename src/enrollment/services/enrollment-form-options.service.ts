@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PlanConfiguration } from 'src/plan/entities/plan-configuration.entity';
 import { ProductPrice } from 'src/product/entities/product-price.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { Repository } from 'typeorm';
@@ -8,15 +7,6 @@ import { Repository } from 'typeorm';
 export interface EnrollmentFormProduct {
   id: string;
   name: string;
-  price: number;
-}
-
-export interface EnrollmentFormPlan {
-  planConfigurationId: string;
-  planId: string;
-  planName: string;
-  startDate: string;
-  endDate: string;
   price: number;
 }
 
@@ -28,9 +18,6 @@ export class EnrollmentFormOptionsService {
 
     @InjectRepository(ProductPrice)
     private readonly priceRepo: Repository<ProductPrice>,
-
-    @InjectRepository(PlanConfiguration)
-    private readonly configRepo: Repository<PlanConfiguration>,
   ) {}
 
   async getProducts(
@@ -55,40 +42,6 @@ export class EnrollmentFormOptionsService {
     }
 
     return result.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  async getPlans(
-    classId: string,
-    academicYearId: string,
-  ): Promise<EnrollmentFormPlan[]> {
-    const configs = await this.configRepo
-      .createQueryBuilder('config')
-      .innerJoinAndSelect('config.plan', 'plan')
-      .innerJoinAndSelect('plan.product', 'product')
-      .leftJoinAndSelect('product.prices', 'price')
-      .where('config.classId = :classId', { classId })
-      .andWhere('config.academicYearId = :academicYearId', { academicYearId })
-      .andWhere('config.isActive = true')
-      .orderBy('config.startDate', 'ASC')
-      .getMany();
-
-    const result: EnrollmentFormPlan[] = [];
-
-    for (const config of configs) {
-      const prices = config.plan?.product?.prices ?? [];
-      const price = this.resolvePrice(prices, classId, academicYearId);
-      if (price === null) continue;
-      result.push({
-        planConfigurationId: config.id,
-        planId: config.planId,
-        planName: config.plan.name,
-        startDate: config.startDate,
-        endDate: config.endDate,
-        price,
-      });
-    }
-
-    return result;
   }
 
   /**

@@ -17,7 +17,6 @@ import { Grade } from 'src/grade/entities/grade.entity';
 import { GradeModule } from 'src/grade/grade.module';
 import { Level } from 'src/level/entities/level.entity';
 import { LevelModule } from 'src/level/level.module';
-import { PaymentModule } from 'src/payment/payment.module';
 import { Person } from 'src/person/entities/person.entity';
 import { IgvAffectationType } from 'src/product/entities/igv-affectation-type.entity';
 import { ProductPriceType } from 'src/product/entities/product-price-type.entity';
@@ -37,7 +36,6 @@ import { GenderSeed } from './services/gender.seed';
 import { GradeSeed } from './services/grade.seed';
 import { IgvAffectationTypeSeed } from './services/igv-affectation-type.seed';
 import { LevelSeed } from './services/level.seed';
-import { PaymentMethodSeed } from './services/payment-method.seed';
 import { PermissionSeed } from './services/permission.seed';
 import { ProductPriceTypeSeed } from './services/product-price-type.seed';
 import { RelationshipTypeSeed } from './services/relationship-type.seed';
@@ -67,7 +65,6 @@ import { UnitCodeSeed } from './services/unit-code.seed';
     AppPlatformSeed,
     UnitCodeSeed,
     IgvAffectationTypeSeed,
-    PaymentMethodSeed,
     ProductPriceTypeSeed,
   ],
   imports: [
@@ -83,7 +80,6 @@ import { UnitCodeSeed } from './services/unit-code.seed';
     EnrollmentModule,
     AdminModule,
     AppVersionModule,
-    PaymentModule,
     TypeOrmModule.forFeature([
       AcademicYear,
       Class,

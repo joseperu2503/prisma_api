@@ -2,7 +2,6 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
-  IsDateString,
   IsNumber,
   IsOptional,
   IsUUID,
@@ -18,31 +17,6 @@ export class CreateEnrollmentPriceDto {
   @IsNumber()
   @Min(0)
   price: number;
-}
-
-export class CreateEnrollmentSubscriptionDto {
-  @IsUUID()
-  planConfigurationId: string;
-}
-
-export class CreateEnrollmentChargeProductDto {
-  @IsUUID()
-  productId: string;
-}
-
-export class CreateEnrollmentChargeSubscriptionPeriodDto {
-  @IsDateString()
-  dueDate: string;
-}
-
-export class CreateEnrollmentChargeSubscriptionDto {
-  @IsUUID()
-  planConfigurationId: string;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateEnrollmentChargeSubscriptionPeriodDto)
-  periods: CreateEnrollmentChargeSubscriptionPeriodDto[];
 }
 
 export class CreateEnrollmentDto {
@@ -68,22 +42,4 @@ export class CreateEnrollmentDto {
   @ValidateNested({ each: true })
   @Type(() => CreateEnrollmentPriceDto)
   prices?: CreateEnrollmentPriceDto[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateEnrollmentSubscriptionDto)
-  subscriptions?: CreateEnrollmentSubscriptionDto[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateEnrollmentChargeProductDto)
-  chargeProducts?: CreateEnrollmentChargeProductDto[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateEnrollmentChargeSubscriptionDto)
-  chargeSubscriptions?: CreateEnrollmentChargeSubscriptionDto[];
 }
